@@ -44,11 +44,11 @@ function MainApp() {
       <nav className="fixed top-0 left-0 w-full z-50 bg-[#0a0a0f] border-b-2 border-f1-red h-16 flex items-center px-4 md:px-12 justify-between">
         {/* Logo */}
         <NavLink to="/" className="flex items-center gap-2 relative z-50">
-          <span className="bg-f1-red text-f1-light font-black px-2.5 py-0.5 rounded-sm tracking-wider text-xl transform -skew-x-12 shadow-md shadow-f1-red/20">
-            F1
-          </span>
           <span className="font-extrabold tracking-wider text-f1-light text-md md:text-lg">
-            INSIGHT HUB
+            FORMULA
+          </span>
+          <span className="font-extrabold tracking-wider text-[#e10600] text-md md:text-lg">
+            DC-1
           </span>
         </NavLink>
 
