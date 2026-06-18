@@ -1,0 +1,222 @@
+[
+  {
+    "id": "ferrari",
+    "name": "Ferrari",
+    "fullName": "Scuderia Ferrari",
+    "nationality": "Italian",
+    "yearsActive": "1950–Present",
+    "championships": 16,
+    "drivers": ["Michael Schumacher", "Niki Lauda", "Kimi Räikkönen"],
+    "teamColor": "#e10600",
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/en/c/c4/Scuderia_Ferrari_logo.svg"
+  },
+  {
+    "id": "mclaren",
+    "name": "McLaren",
+    "fullName": "McLaren Formula 1 Team",
+    "nationality": "British",
+    "yearsActive": "1966–Present",
+    "championships": 8,
+    "drivers": ["Ayrton Senna", "Alain Prost", "Mika Häkkinen"],
+    "teamColor": "#FF8700",
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/en/6/66/McLaren_Racing_logo.svg"
+  },
+  {
+    "id": "williams",
+    "name": "Williams",
+    "fullName": "Williams Racing",
+    "nationality": "British",
+    "yearsActive": "1977–Present",
+    "championships": 9,
+    "drivers": ["Nigel Mansell", "Alain Prost", "Damon Hill"],
+    "teamColor": "#002B49",
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/en/7/7e/Williams_Racing_logo_2020.svg"
+  },
+  {
+    "id": "mercedes",
+    "name": "Mercedes",
+    "fullName": "Mercedes-AMG Petronas F1 Team",
+    "nationality": "German",
+    "yearsActive": "1954–1955, 2010–Present",
+    "championships": 8,
+    "drivers": ["Lewis Hamilton", "Nico Rosberg", "Juan Manuel Fangio"],
+    "teamColor": "#00A19B",
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fb/Mercedes_AMG_Petronas_F1_Logo.svg"
+  },
+  {
+    "id": "redbull",
+    "name": "Red Bull",
+    "fullName": "Oracle Red Bull Racing",
+    "nationality": "Austrian",
+    "yearsActive": "2005–Present",
+    "championships": 6,
+    "drivers": ["Sebastian Vettel", "Max Verstappen", "Daniel Ricciardo"],
+    "teamColor": "#0C2340",
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/en/9/94/Red_Bull_Racing_logo.svg"
+  },
+  {
+    "id": "lotus",
+    "name": "Lotus",
+    "fullName": "Team Lotus",
+    "nationality": "British",
+    "yearsActive": "1958–1994",
+    "championships": 7,
+    "drivers": ["Jim Clark", "Graham Hill", "Mario Andretti"],
+    "teamColor": "#004225",
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/en/b/b3/Team_Lotus_logo.svg"
+  },
+  {
+    "id": "renault",
+    "name": "Renault",
+    "fullName": "Renault F1 Team",
+    "nationality": "French",
+    "yearsActive": "1977–1985, 2002–2011, 2016–2020",
+    "championships": 2,
+    "drivers": ["Fernando Alonso", "Alain Prost", "Giancarlo Fisichella"],
+    "teamColor": "#FFF500",
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/a/ae/Renault_F1_logo.svg"
+  },
+  {
+    "id": "brabham",
+    "name": "Brabham",
+    "fullName": "Motor Racing Developments Ltd.",
+    "nationality": "British",
+    "yearsActive": "1962–1992",
+    "championships": 2,
+    "drivers": ["Jack Brabham", "Denny Hulme", "Nelson Piquet"],
+    "teamColor": "#002E1B",
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/en/d/db/Brabham_logo.svg"
+  },
+  {
+    "id": "benetton",
+    "name": "Benetton",
+    "fullName": "Benetton Formula Ltd.",
+    "nationality": "Italian",
+    "yearsActive": "1986–2001",
+    "championships": 1,
+    "drivers": ["Michael Schumacher", "Nelson Piquet", "Gerhard Berger"],
+    "teamColor": "#009639",
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/en/4/4e/Benetton_Formula_logo.svg"
+  },
+  {
+    "id": "tyrrell",
+    "name": "Tyrrell",
+    "fullName": "Tyrrell Racing Organisation",
+    "nationality": "British",
+    "yearsActive": "1970–1998",
+    "championships": 1,
+    "drivers": ["Jackie Stewart", "François Cevert", "Jody Scheckter"],
+    "teamColor": "#001A4E",
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Tyrrell_Logo.svg"
+  },
+  {
+    "id": "cooper",
+    "name": "Cooper",
+    "fullName": "Cooper Car Company",
+    "nationality": "British",
+    "yearsActive": "1950–1969",
+    "championships": 2,
+    "drivers": ["Jack Brabham", "Bruce McLaren", "Stirling Moss"],
+    "teamColor": "#003300",
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b5/Cooper_logo.svg"
+  },
+  {
+    "id": "brm",
+    "name": "BRM",
+    "fullName": "British Racing Motors",
+    "nationality": "British",
+    "yearsActive": "1951–1977",
+    "championships": 1,
+    "drivers": ["Graham Hill", "Jackie Stewart", "Jo Siffert"],
+    "teamColor": "#21281A",
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/en/b/b4/British_Racing_Motors_logo.svg"
+  },
+  {
+    "id": "alfa",
+    "name": "Alfa Romeo",
+    "fullName": "Alfa Romeo Racing",
+    "nationality": "Italian",
+    "yearsActive": "1950–1951, 1979–1985, 2019–2023",
+    "championships": 0,
+    "drivers": ["Giuseppe Farina", "Juan Manuel Fangio", "Valtteri Bottas"],
+    "teamColor": "#900020",
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f6/Alfa_Romeo_F1_Team_Orlen_logo.svg"
+  },
+  {
+    "id": "maserati",
+    "name": "Maserati",
+    "fullName": "Officine Alfieri Maserati",
+    "nationality": "Italian",
+    "yearsActive": "1950–1957",
+    "championships": 0,
+    "drivers": ["Juan Manuel Fangio", "Stirling Moss", "Jean Behra"],
+    "teamColor": "#0F2D59",
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f8/Maserati_logo.svg"
+  },
+  {
+    "id": "astonmartin",
+    "name": "Aston Martin",
+    "fullName": "Aston Martin Aramco F1 Team",
+    "nationality": "British",
+    "yearsActive": "1959–1960, 2021–Present",
+    "championships": 0,
+    "drivers": ["Sebastian Vettel", "Fernando Alonso", "Lance Stroll"],
+    "teamColor": "#005A49",
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/en/e/e3/Aston_Martin_F1_logo.svg"
+  },
+  {
+    "id": "alpine",
+    "name": "Alpine",
+    "fullName": "BWT Alpine F1 Team",
+    "nationality": "French",
+    "yearsActive": "2021–Present",
+    "championships": 0,
+    "drivers": ["Fernando Alonso", "Esteban Ocon", "Pierre Gasly"],
+    "teamColor": "#0078C1",
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Alpine_F1_Team_logo.svg"
+  },
+  {
+    "id": "sauber",
+    "name": "Sauber",
+    "fullName": "Sauber Motorsport AG",
+    "nationality": "Swiss",
+    "yearsActive": "1993–2018, 2024–Present",
+    "championships": 0,
+    "drivers": ["Kamui Kobayashi", "Nick Heidfeld", "Kimi Räikkönen"],
+    "teamColor": "#52E252",
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fb/Sauber_Motorsport_logo.svg"
+  },
+  {
+    "id": "haas",
+    "name": "Haas",
+    "fullName": "MoneyGram Haas F1 Team",
+    "nationality": "American",
+    "yearsActive": "2016–Present",
+    "championships": 0,
+    "drivers": ["Romain Grosjean", "Kevin Magnussen", "Nico Hülkenberg"],
+    "teamColor": "#E60000",
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/en/4/4e/Haas_F1_Team_logo.svg"
+  },
+  {
+    "id": "rb",
+    "name": "RB",
+    "fullName": "Visa Cash App RB F1 Team",
+    "nationality": "Italian",
+    "yearsActive": "2024–Present",
+    "championships": 0,
+    "drivers": ["Daniel Ricciardo", "Yuki Tsunoda", "Liam Lawson"],
+    "teamColor": "#0000FF",
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/en/5/5a/Visa_Cash_App_RB_F1_Team_Logo.svg"
+  },
+  {
+    "id": "brawn",
+    "name": "Brawn GP",
+    "fullName": "Brawn GP Formula One Team",
+    "nationality": "British",
+    "yearsActive": "2009",
+    "championships": 1,
+    "drivers": ["Jenson Button", "Rubens Barrichello", "Anthony Davidson"],
+    "teamColor": "#E3FC00",
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/en/4/4c/Brawn_GP_logo.svg"
+  }
+]

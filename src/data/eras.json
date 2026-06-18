@@ -1,0 +1,66 @@
+[
+  {
+    "id": "early_years",
+    "name": "The Founding Years",
+    "years": "1950–1959",
+    "description": "F1 is established with front-engined grand prix cars derived from pre-war designs. The era was dominated by legendary drivers like Juan Manuel Fangio driving legendary machinery.",
+    "representativeCar": "Alfa Romeo Alfetta 159",
+    "engineType": "1.5L Supercharged L8 / 2.5L Naturally Aspirated L4/L6/V12"
+  },
+  {
+    "id": "rear_engine",
+    "name": "Rear-Engine Revolution",
+    "years": "1960–1967",
+    "description": "Cooper pioneers the rear-engine layout, making front-engined cars obsolete almost overnight. Lotus introduces the monocoque chassis, making cars much lighter and stiffer.",
+    "representativeCar": "Lotus 25",
+    "engineType": "1.5L to 3.0L Naturally Aspirated V8/V12"
+  },
+  {
+    "id": "wings_dfv",
+    "name": "Cosworth DFV & Wings",
+    "years": "1968–1976",
+    "description": "Inverted wings are introduced to produce aerodynamic downforce, dramatically increasing cornering speeds. The Ford-Cosworth DFV V8 engine becomes the standard power unit for most teams on the grid.",
+    "representativeCar": "Lotus 72",
+    "engineType": "3.0L Naturally Aspirated V8/V12"
+  },
+  {
+    "id": "turbo_ground_effect",
+    "name": "Ground Effect & Turbo Era",
+    "years": "1977–1988",
+    "description": "Teams exploit under-car Venturi tunnels to pull cars to the track using ground effects. High-boost turbochargers push engine outputs past 1,000 horsepower in qualifying trims.",
+    "representativeCar": "McLaren MP4/4",
+    "engineType": "1.5L Turbocharged V6/L4 / 3.0L Naturally Aspirated V8"
+  },
+  {
+    "id": "v10_era",
+    "name": "The Golden V10 Era",
+    "years": "1989–2005",
+    "description": "Naturally aspirated 3.5L and later 3.0L V10 engines produce legendary high-pitched screams and extreme power curves. Electronic driver aids like traction control and active suspension are briefly introduced and then restricted.",
+    "representativeCar": "Ferrari F2004",
+    "engineType": "3.0L Naturally Aspirated V10"
+  },
+  {
+    "id": "v8_era",
+    "name": "The High-RPM V8 Era",
+    "years": "2006–2013",
+    "description": "Formula 1 mandates 2.4L V8 engines limited to high RPMs to reduce costs and speeds. Kinetic energy recovery systems (KERS) and drag reduction systems (DRS) make their debut.",
+    "representativeCar": "Red Bull RB9",
+    "engineType": "2.4L Naturally Aspirated V8"
+  },
+  {
+    "id": "turbo_hybrid",
+    "name": "V6 Turbo Hybrid Era",
+    "years": "2014–2021",
+    "description": "The sport introduces 1.6L turbocharged hybrid power units with sophisticated heat and kinetic energy recovery systems. Mercedes dominates the early years of this highly efficient, high-torque era.",
+    "representativeCar": "Mercedes-AMG F1 W11 EQ Performance",
+    "engineType": "1.6L Turbocharged Hybrid V6"
+  },
+  {
+    "id": "ground_effect_hybrid",
+    "name": "Ground Effect Revival",
+    "years": "2022–Present",
+    "description": "The regulations are overhauled to bring back ground effect aerodynamics to improve close racing and overtaking. Over-wheel winglets and simplified front wings give cars a futuristic look.",
+    "representativeCar": "Red Bull RB19",
+    "engineType": "1.6L Turbocharged Hybrid V6"
+  }
+]
