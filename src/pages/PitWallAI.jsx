@@ -7,6 +7,7 @@ import podiumPredictions from '../data/podium_predictions.json';
 import anomalySummary from '../data/lap_anomalies/summary.json';
 import networkData from '../data/sna/constructor_network.json';
 import FadeInSection from '../components/FadeInSection';
+import { SkeletonCard } from '../components';
 
 const STRATEGIES = {
   oneStopSoftHard: {
@@ -211,6 +212,13 @@ const ConstructorNetworkGraph = ({ data, onTooltip }) => {
     });
 
     simulation.on('tick', () => {
+      // Constrain nodes within bounds
+      nodes.forEach(d => {
+        const r = Math.max(8, Math.sqrt(d.wins) * 4);
+        d.x = Math.max(r + 10, Math.min(width - r - 10, d.x));
+        d.y = Math.max(r + 10, Math.min(height - r - 10, d.y));
+      });
+
       link
         .attr('x1', d => d.source.x)
         .attr('y1', d => d.source.y)
@@ -225,6 +233,8 @@ const ConstructorNetworkGraph = ({ data, onTooltip }) => {
         .attr('x', d => d.x)
         .attr('y', d => d.y);
     });
+
+    return () => simulation.stop();
 
     function drag(simulation) {
       function dragstarted(event) {
@@ -282,6 +292,12 @@ function PitWallAI() {
 
   // Mobile state
   const [isMobile, setIsMobile] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -377,8 +393,14 @@ function PitWallAI() {
         <p className="text-f1-muted text-sm mt-2 max-w-2xl">Advanced telemetry, driver archetypes, optimal race strategy simulations, and AI-driven predictive modeling.</p>
       </div>
 
-      {/* SECTION 1: Driver Clustering */}
-      <FadeInSection>
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)}
+        </div>
+      ) : (
+        <div className="space-y-20">
+          {/* SECTION 1: Driver Clustering */}
+          <FadeInSection>
         <h2 className="text-xl md:text-2xl font-bold text-f1-light mb-6 flex items-center gap-2 border-b-2 border-f1-border pb-2 uppercase tracking-wide">
           🏎️ Driver Archetypes
         </h2>
@@ -827,6 +849,8 @@ function PitWallAI() {
         </div>
       </FadeInSection>
 
+        </div>
+      )}
     </div>
   );
 }

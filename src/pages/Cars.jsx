@@ -41,14 +41,14 @@ const ICONIC_CARS_DATA = [
 ];
 
 const ERA_IMAGES = {
-  early_years: 'https://upload.wikimedia.org/wikipedia/commons/1/18/Alfa_Romeo_159_Alfetta_1.jpg',
-  rear_engine: 'https://upload.wikimedia.org/wikipedia/commons/0/05/Lotus-climax-25.jpg',
-  wings_dfv: 'https://upload.wikimedia.org/wikipedia/commons/c/ce/Lotus_72_John_Player_Special.jpg',
-  turbo_ground_effect: 'https://upload.wikimedia.org/wikipedia/commons/b/b3/McLaren_MP4-4.jpg',
-  v10_era: 'https://upload.wikimedia.org/wikipedia/commons/9/93/Ferrari_F2004_front-left_2019_Ferrari_Museum.jpg',
-  v8_era: 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Red_Bull_RB9_Vettel.jpg',
-  turbo_hybrid: 'https://upload.wikimedia.org/wikipedia/commons/f/f6/Lewis_Hamilton_Mercedes_W11_2020.jpg',
-  ground_effect_hybrid: 'https://upload.wikimedia.org/wikipedia/commons/4/44/Red_Bull_RB19_front_right_2023.jpg'
+  early_years: 'https://images.unsplash.com/photo-1544829728-e5cb9eedc20e?auto=format&fit=crop&q=80&w=800',
+  rear_engine: 'https://images.unsplash.com/photo-1616004975510-9114f7b60da4?auto=format&fit=crop&q=80&w=800',
+  wings_dfv: 'https://images.unsplash.com/photo-1574526315843-c0d235c5c00e?auto=format&fit=crop&q=80&w=800',
+  turbo_ground_effect: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=800',
+  v10_era: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800',
+  v8_era: 'https://images.unsplash.com/photo-1506469717960-433cebe3f181?auto=format&fit=crop&q=80&w=800',
+  turbo_hybrid: 'https://images.unsplash.com/photo-1535732820275-9ffd998cac22?auto=format&fit=crop&q=80&w=800',
+  ground_effect_hybrid: 'https://images.unsplash.com/photo-1707038166547-8a8f15d74268?auto=format&fit=crop&q=80&w=800'
 };
 
 const ERA_DETAILS = {
@@ -93,7 +93,7 @@ const CONSTRUCTOR_DETAILS = {
     poles: 244,
     podiums: 807,
     iconicCar: "Ferrari F2004",
-    iconicCarImage: "https://upload.wikimedia.org/wikipedia/commons/9/93/Ferrari_F2004_front-left_2019_Ferrari_Museum.jpg",
+    iconicCarImage: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800",
     championshipsDecade: [
       { decade: "1960s", championships: 2 },
       { decade: "1970s", championships: 4 },
@@ -110,7 +110,7 @@ const CONSTRUCTOR_DETAILS = {
     poles: 156,
     podiums: 501,
     iconicCar: "McLaren MP4/4",
-    iconicCarImage: "https://upload.wikimedia.org/wikipedia/commons/b/b3/McLaren_MP4-4.jpg",
+    iconicCarImage: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=800",
     championshipsDecade: [
       { decade: "1970s", championships: 1 },
       { decade: "1980s", championships: 4 },
@@ -126,7 +126,7 @@ const CONSTRUCTOR_DETAILS = {
     poles: 128,
     podiums: 313,
     iconicCar: "Williams FW14B",
-    iconicCarImage: "https://upload.wikimedia.org/wikipedia/commons/f/f7/Williams_FW14B_Donington.jpg",
+    iconicCarImage: "https://images.unsplash.com/photo-1574526315843-c0d235c5c00e?auto=format&fit=crop&q=80&w=800",
     championshipsDecade: [
       { decade: "1980s", championships: 4 },
       { decade: "1990s", championships: 5 },
@@ -141,7 +141,7 @@ const CONSTRUCTOR_DETAILS = {
     poles: 137,
     podiums: 289,
     iconicCar: "Mercedes-AMG F1 W11",
-    iconicCarImage: "https://upload.wikimedia.org/wikipedia/commons/f/f6/Lewis_Hamilton_Mercedes_W11_2020.jpg",
+    iconicCarImage: "https://images.unsplash.com/photo-1535732820275-9ffd998cac22?auto=format&fit=crop&q=80&w=800",
     championshipsDecade: [
       { decade: "1950s", championships: 0 },
       { decade: "2010s", championships: 6 },
@@ -154,7 +154,7 @@ const CONSTRUCTOR_DETAILS = {
     poles: 95,
     podiums: 268,
     iconicCar: "Red Bull RB19",
-    iconicCarImage: "https://upload.wikimedia.org/wikipedia/commons/4/44/Red_Bull_RB19_front_right_2023.jpg",
+    iconicCarImage: "https://images.unsplash.com/photo-1707038166547-8a8f15d74268?auto=format&fit=crop&q=80&w=800",
     championshipsDecade: [
       { decade: "2010s", championships: 4 },
       { decade: "2020s", championships: 2 }
@@ -166,7 +166,7 @@ const CONSTRUCTOR_DETAILS = {
     poles: 107,
     podiums: 172,
     iconicCar: "Lotus 72",
-    iconicCarImage: "https://upload.wikimedia.org/wikipedia/commons/c/ce/Lotus_72_John_Player_Special.jpg",
+    iconicCarImage: "https://images.unsplash.com/photo-1616004975510-9114f7b60da4?auto=format&fit=crop&q=80&w=800",
     championshipsDecade: [
       { decade: "1960s", championships: 3 },
       { decade: "1970s", championships: 4 }
@@ -178,7 +178,7 @@ const CONSTRUCTOR_DETAILS = {
     poles: 51,
     podiums: 103,
     iconicCar: "Renault R25",
-    iconicCarImage: "https://upload.wikimedia.org/wikipedia/commons/5/52/Renault_R25_front_2019_Renault_Classic.jpg",
+    iconicCarImage: "https://images.unsplash.com/photo-1506469717960-433cebe3f181?auto=format&fit=crop&q=80&w=800",
     championshipsDecade: [
       { decade: "2000s", championships: 2 }
     ]
@@ -189,7 +189,7 @@ const CONSTRUCTOR_DETAILS = {
     poles: 39,
     podiums: 124,
     iconicCar: "Brabham BT46B 'Fan Car'",
-    iconicCarImage: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Brabham_BT46B_2019_Goodwood.jpg",
+    iconicCarImage: "https://images.unsplash.com/photo-1544829728-e5cb9eedc20e?auto=format&fit=crop&q=80&w=800",
     championshipsDecade: [
       { decade: "1960s", championships: 2 }
     ]
@@ -200,7 +200,7 @@ const CONSTRUCTOR_DETAILS = {
     poles: 15,
     podiums: 102,
     iconicCar: "Benetton B195",
-    iconicCarImage: "https://upload.wikimedia.org/wikipedia/commons/a/ae/Benetton_B195_front-left_2019_Michael_Schumacher_Private_Collection.jpg",
+    iconicCarImage: "https://images.unsplash.com/photo-1592919119100-a54823485750?auto=format&fit=crop&q=80&w=800",
     championshipsDecade: [
       { decade: "1990s", championships: 1 }
     ]

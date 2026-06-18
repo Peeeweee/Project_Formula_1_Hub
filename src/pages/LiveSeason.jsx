@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  getCurrentStandings, 
-  getConstructorStandings, 
+  getCurrentDriverStandings, 
+  getCurrentConstructorStandings, 
   getSeasonRaces, 
   getRaceResults,
   getLastRaceResults 
-} from '../services/ergastApi';
-import { StatCard, LoadingSpinner } from '../components';
+} from '../services/jolpicaApi';
+import { getLatestSession, getRaceWeather, getDriverPositions } from '../services/openf1Api';
+import { StatCard, SkeletonTable } from '../components';
 import FadeInSection from '../components/FadeInSection';
 import { 
   ResponsiveContainer, 
@@ -158,14 +159,57 @@ function LiveSeason() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // OpenF1 State
+  const [openF1Data, setOpenF1Data] = useState({ session: null, weather: null, positions: [] });
+  const [openF1Loading, setOpenF1Loading] = useState(true);
+  const [openF1Refreshing, setOpenF1Refreshing] = useState(false);
+
+  const fetchOpenF1Data = async (isRefresh = false) => {
+    if (isRefresh) setOpenF1Refreshing(true);
+    else setOpenF1Loading(true);
+    try {
+      const sessions = await getLatestSession();
+      if (!sessions || sessions.length === 0) {
+        setOpenF1Data({ session: null, weather: null, positions: [] });
+        return;
+      }
+      const session = sessions[0];
+      const sessionKey = session.session_key;
+
+      const [weatherData, positionsData] = await Promise.all([
+        getRaceWeather(sessionKey),
+        getDriverPositions(sessionKey)
+      ]);
+
+      const latestWeather = weatherData.length > 0 ? weatherData[weatherData.length - 1] : null;
+      
+      const latestPosMap = {};
+      positionsData.forEach(p => {
+        const driver = p.driver_number;
+        if (!latestPosMap[driver] || new Date(p.date) > new Date(latestPosMap[driver].date)) {
+          latestPosMap[driver] = p;
+        }
+      });
+      const rankedPositions = Object.values(latestPosMap).sort((a, b) => a.position - b.position);
+
+      setOpenF1Data({ session, weather: latestWeather, positions: rankedPositions });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setOpenF1Loading(false);
+      setOpenF1Refreshing(false);
+    }
+  };
+
   useEffect(() => {
+    fetchOpenF1Data();
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
         const [driversRes, constructorsRes, calendarRes, lastRaceRes] = await Promise.all([
-          getCurrentStandings(),
-          getConstructorStandings(),
+          getCurrentDriverStandings(),
+          getCurrentConstructorStandings(),
           getSeasonRaces(2024),
           getLastRaceResults()
         ]);
@@ -350,7 +394,7 @@ function LiveSeason() {
   if (loading) {
     return (
       <div className="pt-32 pb-12 text-center max-w-7xl mx-auto">
-        <LoadingSpinner />
+        <SkeletonTable rows={5} cols={4} />
         <p className="text-xs text-f1-muted uppercase font-bold tracking-wider mt-4">Synchronizing telemetry data feeds...</p>
       </div>
     );
@@ -435,6 +479,105 @@ function LiveSeason() {
           delta={`${constructorPoints} PTS`} 
         />
       </div>
+        </FadeInSection>
+
+      {/* SECTION: Latest Session Snapshot */}
+      <FadeInSection>
+        <div className="border-l-2 border-f1-red pl-2 mb-4 mt-8">
+          <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
+            OpenF1 API
+          </h4>
+        </div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light tracking-tight">
+            Latest Session Snapshot
+          </h2>
+          <motion.button 
+            whileTap={{ scale: 0.97 }}
+            onClick={() => fetchOpenF1Data(true)}
+            className="flex items-center gap-2 bg-[#1a1a24] hover:bg-[#2a2a35] text-f1-light text-[10px] font-black uppercase tracking-wider px-4 py-2 rounded-sm border border-f1-border transition duration-200"
+          >
+            🔄 Refresh
+          </motion.button>
+        </div>
+
+        <div className={`bg-f1-panel border border-f1-border rounded-lg p-6 shadow-xl relative transition duration-300 ${openF1Refreshing ? 'ring-2 ring-f1-red ring-opacity-50 border-f1-red animate-pulse' : ''}`}>
+          {openF1Loading && !openF1Refreshing ? (
+            <div className="py-8 text-center text-f1-muted text-sm font-bold uppercase tracking-widest flex justify-center items-center gap-3">
+              <div className="w-4 h-4 border-2 border-f1-red border-t-transparent rounded-full animate-spin"></div>
+              Connecting to OpenF1 Live Feed...
+            </div>
+          ) : !openF1Data.session ? (
+            <div className="py-8 text-center text-f1-muted text-sm">
+              No active session right now. Data will update before the next race weekend.
+            </div>
+          ) : (
+            <div>
+              <div className="mb-6">
+                <h3 className="text-lg font-bold text-f1-light">{openF1Data.session.session_name}</h3>
+                <p className="text-xs text-f1-muted">{new Date(openF1Data.session.date_start).toLocaleString()}</p>
+              </div>
+
+              {openF1Data.weather && (
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
+                  <div className="bg-[#0a0a0f] border border-f1-border p-3 rounded flex flex-col items-center justify-center">
+                    <span className="text-lg mb-1">🌡️</span>
+                    <span className="text-[10px] text-f1-muted uppercase font-bold text-center">Air Temp</span>
+                    <span className="text-sm font-black text-f1-light">{openF1Data.weather.air_temperature}°C</span>
+                  </div>
+                  <div className="bg-[#0a0a0f] border border-f1-border p-3 rounded flex flex-col items-center justify-center">
+                    <span className="text-lg mb-1">🏎️</span>
+                    <span className="text-[10px] text-f1-muted uppercase font-bold text-center">Track Temp</span>
+                    <span className="text-sm font-black text-f1-light">{openF1Data.weather.track_temperature}°C</span>
+                  </div>
+                  <div className="bg-[#0a0a0f] border border-f1-border p-3 rounded flex flex-col items-center justify-center">
+                    <span className="text-lg mb-1">💧</span>
+                    <span className="text-[10px] text-f1-muted uppercase font-bold text-center">Humidity</span>
+                    <span className="text-sm font-black text-f1-light">{openF1Data.weather.humidity}%</span>
+                  </div>
+                  <div className="bg-[#0a0a0f] border border-f1-border p-3 rounded flex flex-col items-center justify-center">
+                    <span className="text-lg mb-1">💨</span>
+                    <span className="text-[10px] text-f1-muted uppercase font-bold text-center">Wind</span>
+                    <span className="text-sm font-black text-f1-light">{openF1Data.weather.wind_speed} m/s</span>
+                  </div>
+                  <div className="bg-[#0a0a0f] border border-f1-border p-3 rounded flex flex-col items-center justify-center">
+                    <span className="text-lg mb-1">🌧️</span>
+                    <span className="text-[10px] text-f1-muted uppercase font-bold text-center">Rainfall</span>
+                    <span className="text-sm font-black text-f1-light">{openF1Data.weather.rainfall ? 'Yes' : 'No'}</span>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <h4 className="text-xs font-bold text-f1-muted uppercase tracking-wider mb-3">Live Positions</h4>
+                <motion.div 
+                  className="bg-[#0a0a0f] border border-f1-border rounded divide-y divide-f1-border/40 overflow-hidden max-h-64 overflow-y-auto"
+                  variants={{
+                    hidden: { opacity: 0 },
+                    show: { opacity: 1, transition: { staggerChildren: 0.05 } }
+                  }}
+                  initial="hidden"
+                  animate="show"
+                >
+                  {openF1Data.positions.map((p, i) => (
+                    <motion.div 
+                      key={p.driver_number}
+                      variants={{
+                        hidden: { opacity: 0, x: -10 },
+                        show: { opacity: 1, x: 0 }
+                      }}
+                      className="px-4 py-2 flex items-center gap-4 hover:bg-[#1a1a24] transition"
+                    >
+                      <span className="text-xs font-bold text-f1-red w-6">P{p.position}</span>
+                      <span className="text-xs font-bold text-f1-light w-8">#{p.driver_number}</span>
+                      <span className="text-[10px] text-f1-muted ml-auto font-mono">{new Date(p.date).toLocaleTimeString()}</span>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </div>
+            </div>
+          )}
+        </div>
       </FadeInSection>
 
       {/* Standings Tables */}
@@ -668,7 +811,7 @@ function LiveSeason() {
                 </h3>
                 <p className="text-[10px] text-f1-muted mb-6 uppercase">Top 5 Teams by Average Pit Stop Duration (Seconds).</p>
                 
-                <div className="h-64 w-full">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} className="h-64 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart 
                       data={PIT_STOP_DATA} 
@@ -695,7 +838,7 @@ function LiveSeason() {
                       />
                     </BarChart>
                   </ResponsiveContainer>
-                </div>
+                </motion.div>
               </div>
 
               <div className="mt-4 p-3.5 bg-f1-dark/60 border border-f1-border rounded text-[11px] text-f1-muted leading-relaxed">
@@ -720,7 +863,7 @@ function LiveSeason() {
           </div>
 
           <div className="bg-f1-panel border border-f1-border p-6 rounded-lg shadow-xl">
-            <div className="h-96 w-full">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} className="h-96 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={progressionData} margin={{ top: 20, right: 30, left: -10, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1a1a24" opacity={0.4} />
@@ -764,7 +907,7 @@ function LiveSeason() {
                   })}
                 </LineChart>
               </ResponsiveContainer>
-            </div>
+            </motion.div>
 
             {/* Custom Interactive Legend */}
             <div className="flex flex-wrap gap-3 justify-center mt-6 border-t border-f1-border/30 pt-4">
@@ -773,7 +916,8 @@ function LiveSeason() {
                 const isVisible = visibleDrivers[id] !== false;
                 const color = DRIVER_COLORS[id] || '#ffffff';
                 return (
-                  <button
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
                     key={id}
                     onClick={() => toggleDriverVisibility(id)}
                     className={`px-3 py-1.5 rounded-sm border text-[11px] font-bold transition duration-200 flex items-center gap-2 select-none ${
@@ -785,7 +929,7 @@ function LiveSeason() {
                   >
                     <span className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
                     <span>{d.Driver.givenName} {d.Driver.familyName}</span>
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>

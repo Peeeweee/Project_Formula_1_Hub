@@ -6,6 +6,8 @@ import Racers from './pages/Racers';
 import Cars from './pages/Cars';
 import LiveSeason from './pages/LiveSeason';
 import PitWallAI from './pages/PitWallAI';
+import { ErrorBoundary } from './components';
+import { useOnlineStatus } from './hooks/useOnlineStatus';
 
 const navLinks = [
   { path: '/', label: 'Start Here' },
@@ -24,7 +26,9 @@ const PageWrapper = ({ children }) => {
       transition={{ duration: 0.25, ease: "easeInOut" }}
       className="w-full"
     >
-      {children}
+      <ErrorBoundary>
+        {children}
+      </ErrorBoundary>
     </motion.div>
   );
 };
@@ -32,6 +36,7 @@ const PageWrapper = ({ children }) => {
 function MainApp() {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const isOnline = useOnlineStatus();
 
   // Close menu when route changes
   React.useEffect(() => {
@@ -53,23 +58,32 @@ function MainApp() {
         </NavLink>
 
         {/* Desktop Navigation Links */}
-        <div className="hidden md:flex gap-6 h-full items-center">
-          {navLinks.map(tab => (
-            <NavLink
-              key={tab.path}
-              to={tab.path}
-              className={({ isActive }) => 
-                `h-full flex items-center px-4 border-b-2 font-bold uppercase tracking-wider text-xs transition-all duration-300 ${
-                  isActive 
-                    ? 'border-f1-red text-f1-light bg-f1-red/5' 
-                    : 'border-transparent text-f1-muted hover:text-f1-light'
-                }`
-              }
-              end={tab.path === '/'}
-            >
-              {tab.label}
-            </NavLink>
-          ))}
+        <div className="hidden md:flex h-full items-center">
+          {navLinks.map(tab => {
+            const isActive = location.pathname === tab.path || (tab.path === '/' && location.pathname === '');
+            return (
+              <NavLink
+                key={tab.path}
+                to={tab.path}
+                className={`relative h-full flex items-center px-6 font-bold uppercase tracking-wider text-xs transition-colors duration-300 ${isActive ? 'text-f1-light' : 'text-f1-muted hover:text-f1-light'}`}
+                end={tab.path === '/'}
+              >
+                <span className="relative z-10">{tab.label}</span>
+                {isActive && (
+                  <>
+                    <motion.div
+                      layoutId="activeTabBorder"
+                      className="absolute bottom-0 left-0 right-0 h-[2px] bg-f1-red z-0"
+                    />
+                    <motion.div
+                      layoutId="activeTabBg"
+                      className="absolute inset-0 bg-f1-red/5 z-0"
+                    />
+                  </>
+                )}
+              </NavLink>
+            );
+          })}
         </div>
 
         {/* Mobile Hamburger Icon */}
@@ -121,6 +135,20 @@ function MainApp() {
                 {tab.label}
               </NavLink>
             ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Offline Banner */}
+      <AnimatePresence>
+        {!isOnline && (
+          <motion.div
+            initial={{ y: -40, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -40, opacity: 0 }}
+            className="fixed top-16 left-0 right-0 z-40 bg-f1-red text-white text-center py-2 text-sm font-bold uppercase tracking-wider shadow-lg"
+          >
+            You are offline. Some data may be outdated.
           </motion.div>
         )}
       </AnimatePresence>

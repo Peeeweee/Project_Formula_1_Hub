@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import circuitsData from '../data/circuits.json';
 import FadeInSection from '../components/FadeInSection';
+import { SkeletonCard } from '../components';
 
 const TIMELINE_STEPS = [
   {
@@ -214,6 +215,12 @@ function StartHere() {
   const [expandedIndex, setExpandedIndex] = useState(null);
   const [hoveredCircuit, setHoveredCircuit] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [glossaryLoading, setGlossaryLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setGlossaryLoading(false), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const sectionRefs = {
     timeline: useRef(null),
@@ -290,11 +297,11 @@ function StartHere() {
 
       {/* Navigation Pills */}
       <div className="max-w-7xl mx-auto px-6 mt-6 mb-12 flex flex-wrap gap-3">
-        <button onClick={() => scrollToSection('timeline')} className="bg-f1-panel border border-f1-border text-f1-light px-4 py-2 rounded-full text-sm font-semibold hover:border-f1-red transition">How a Race Works</button>
-        <button onClick={() => scrollToSection('points')} className="bg-f1-panel border border-f1-border text-f1-light px-4 py-2 rounded-full text-sm font-semibold hover:border-f1-red transition">Points</button>
-        <button onClick={() => scrollToSection('tires')} className="bg-f1-panel border border-f1-border text-f1-light px-4 py-2 rounded-full text-sm font-semibold hover:border-f1-red transition">Tires</button>
-        <button onClick={() => scrollToSection('circuits')} className="bg-f1-panel border border-f1-border text-f1-light px-4 py-2 rounded-full text-sm font-semibold hover:border-f1-red transition">Circuits</button>
-        <button onClick={() => scrollToSection('glossary')} className="bg-f1-panel border border-f1-border text-f1-light px-4 py-2 rounded-full text-sm font-semibold hover:border-f1-red transition">Glossary</button>
+        <motion.button whileTap={{ scale: 0.97 }} onClick={() => scrollToSection('timeline')} className="bg-f1-panel border border-f1-border text-f1-light px-4 py-2 rounded-full text-sm font-semibold hover:border-f1-red transition">How a Race Works</motion.button>
+        <motion.button whileTap={{ scale: 0.97 }} onClick={() => scrollToSection('points')} className="bg-f1-panel border border-f1-border text-f1-light px-4 py-2 rounded-full text-sm font-semibold hover:border-f1-red transition">Points</motion.button>
+        <motion.button whileTap={{ scale: 0.97 }} onClick={() => scrollToSection('tires')} className="bg-f1-panel border border-f1-border text-f1-light px-4 py-2 rounded-full text-sm font-semibold hover:border-f1-red transition">Tires</motion.button>
+        <motion.button whileTap={{ scale: 0.97 }} onClick={() => scrollToSection('circuits')} className="bg-f1-panel border border-f1-border text-f1-light px-4 py-2 rounded-full text-sm font-semibold hover:border-f1-red transition">Circuits</motion.button>
+        <motion.button whileTap={{ scale: 0.97 }} onClick={() => scrollToSection('glossary')} className="bg-f1-panel border border-f1-border text-f1-light px-4 py-2 rounded-full text-sm font-semibold hover:border-f1-red transition">Glossary</motion.button>
       </div>
 
       <div className="px-6 max-w-7xl mx-auto">
@@ -381,7 +388,8 @@ function StartHere() {
               {POINTS_SYSTEM.map((p) => {
                 const isP1 = p.position === 'P1';
                 return (
-                  <div 
+                  <motion.div 
+                    whileHover={{ scale: 1.02, transition: { duration: 0.15 } }}
                     key={p.position}
                     className={`border rounded-lg p-4 flex flex-col justify-between transition duration-300 ${
                       isP1 
@@ -403,7 +411,7 @@ function StartHere() {
                       </span>
                       <span className="text-[10px] text-f1-muted ml-1 font-bold uppercase">pts</span>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
@@ -413,7 +421,7 @@ function StartHere() {
                 <h3 className="text-lg font-bold text-f1-light mb-2">Points Chart</h3>
                 <p className="text-xs text-f1-muted mb-6">The winner gets 25 points, but the 10th place driver only gets 1. You want to finish as high as possible.</p>
               </div>
-              <div className="h-72 w-full">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} className="h-72 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={POINTS_SYSTEM} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#1a1a24" opacity={0.6} />
@@ -439,7 +447,7 @@ function StartHere() {
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
-              </div>
+              </motion.div>
             </div>
           </div>
         </FadeInSection>
@@ -457,7 +465,8 @@ function StartHere() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
             {TIRES.map((tire) => (
-              <div 
+              <motion.div 
+                whileHover={{ scale: 1.02, transition: { duration: 0.15 } }}
                 key={tire.name} 
                 className="bg-f1-panel border border-f1-border p-5 rounded-lg flex flex-col justify-between hover:border-f1-muted transition-all duration-300"
               >
@@ -501,7 +510,7 @@ function StartHere() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </FadeInSection>
@@ -607,11 +616,17 @@ function StartHere() {
           </h2>
 
           {/* Glossary Results */}
-          {filteredGlossary.length > 0 ? (
+          {glossaryLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <SkeletonCard />
+              <SkeletonCard />
+            </div>
+          ) : filteredGlossary.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <AnimatePresence>
                 {filteredGlossary.map((item) => (
                   <motion.div 
+                    whileHover={{ scale: 1.02, transition: { duration: 0.15 } }}
                     key={item.term}
                     layout
                     initial={{ opacity: 0, scale: 0.95 }}

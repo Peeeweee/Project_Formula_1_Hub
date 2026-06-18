@@ -15,9 +15,9 @@ import {
   PolarRadiusAxis,
   Radar
 } from 'recharts';
-import { SearchBar, LoadingSpinner } from '../components';
+import { SearchBar, SkeletonDriverRow, SkeletonCard } from '../components';
 import championsData from '../data/champions.json';
-import { getDriverInfo, getDriverStandings } from '../services/ergastApi';
+import { getAllDrivers, getDriverInfo, getDriverStandings } from '../services/jolpicaApi';
 import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
 import FadeInSection from '../components/FadeInSection';
@@ -111,7 +111,7 @@ function Racers() {
     setLoadingDrivers(true);
     setErrorDrivers(null);
     try {
-      const data = await getDriverInfo(null, 1000, currentOffset);
+      const data = await getAllDrivers(1000, currentOffset);
       setDriversList(data);
       setHasMore(false); // Since 1000 returns the entire history, no more paging needed
     } catch (err) {
@@ -447,12 +447,13 @@ function Racers() {
                       <td className="py-3 px-4 text-f1-muted font-medium">{driver.nationality}</td>
                       <td className="py-3 px-4 text-f1-muted font-mono">{driver.dateOfBirth}</td>
                       <td className="py-3 px-4 text-center">
-                        <button
-                          onClick={() => setSelectedDetailDriver(driver)}
-                          className="bg-f1-red/10 text-f1-red hover:bg-f1-red hover:text-f1-light px-3 py-1.5 rounded-sm font-bold tracking-wider uppercase text-[10px] transition duration-200"
+                        <motion.button
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() => handleViewDriver(driver)}
+                          className="w-full py-1.5 bg-transparent border border-f1-border text-f1-light text-[10px] font-bold uppercase tracking-wider rounded hover:border-f1-red transition group"
                         >
                           View
-                        </button>
+                        </motion.button>
                       </td>
                     </tr>
                   ))}
@@ -460,7 +461,7 @@ function Racers() {
               </table>
             </div>
 
-            {loadingDrivers && <LoadingSpinner />}
+            {loadingDrivers && <div className="flex flex-col gap-3 p-4">{Array.from({ length: 5 }).map((_, i) => <SkeletonDriverRow key={i} />)}</div>}
             {errorDrivers && (
               <div className="text-center py-6 text-xs text-f1-red font-bold">{errorDrivers}</div>
             )}
@@ -483,7 +484,7 @@ function Racers() {
 
                 {loadingCareer ? (
                   <div className="py-12 flex flex-col items-center justify-center space-y-3">
-                    <LoadingSpinner />
+                    <SkeletonCard />
                     <span className="text-[10px] text-f1-muted uppercase font-bold tracking-wider animate-pulse">
                       Analyzing telemetry...
                     </span>
@@ -553,13 +554,21 @@ function Racers() {
                 )}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-center py-20">
-                <span className="text-4xl mb-4 opacity-50">🏎️</span>
-                <h4 className="text-sm font-bold text-f1-light uppercase tracking-wider">Telemetry Spotlight</h4>
-                <p className="text-xs text-f1-muted mt-2 max-w-[200px] leading-relaxed">
-                  Select a driver from the database to examine their full career progression and standings telemetry.
-                </p>
-              </div>
+              <AnimatePresence>
+                <motion.div 
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 12 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col items-center justify-center h-full text-center py-20"
+                >
+                  <span className="text-4xl mb-4 opacity-50">🏎️</span>
+                  <h4 className="text-sm font-bold text-f1-light uppercase tracking-wider">Telemetry Spotlight</h4>
+                  <p className="text-xs text-f1-muted mt-2 max-w-[200px] leading-relaxed">
+                    Select a driver from the database to examine their full career progression and standings telemetry.
+                  </p>
+                </motion.div>
+              </AnimatePresence>
             )}
           </div>
         </div>
@@ -586,7 +595,8 @@ function Racers() {
                   <h4 className="font-extrabold text-f1-light text-sm">{driverA.givenName} {driverA.familyName}</h4>
                   <span className="text-[9px] text-f1-muted uppercase font-bold tracking-wider">{driverA.nationality}</span>
                 </div>
-                <button 
+                <motion.button 
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => {
                     setDriverA(null);
                     setStatsA(null);
@@ -594,21 +604,17 @@ function Racers() {
                   className="text-f1-muted hover:text-f1-red text-[10px] font-bold uppercase transition"
                 >
                   Remove
-                </button>
+                </motion.button>
               </div>
             ) : (
               <div>
-                <input 
-                  type="text"
-                  placeholder="Type to search and select Driver A..."
-                  value={searchA}
-                  onChange={(e) => {
-                    setSearchA(e.target.value);
-                    setShowDropdownA(true);
-                  }}
-                  onFocus={() => setShowDropdownA(true)}
-                  className="w-full bg-[#07070a] border border-f1-border text-f1-light placeholder-f1-muted text-xs px-4 py-3 rounded focus:ring-1 focus:ring-f1-red outline-none transition"
-                />
+                <motion.button 
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setSelectingFor('A')} 
+                  className="w-full bg-[#0a0a0f] border border-f1-border text-f1-light text-xs font-bold py-3 rounded hover:border-f1-red transition"
+                >
+                  Select Driver A...
+                </motion.button>
                 {showDropdownA && searchA && (
                   <div className="absolute left-0 right-0 mt-1 bg-[#0f0f18] border border-f1-border rounded shadow-2xl max-h-48 overflow-y-auto z-40 divide-y divide-f1-border/40">
                     {(driversList || [])
@@ -619,13 +625,14 @@ function Racers() {
                       })
                       .slice(0, 8)
                       .map(d => (
-                        <div 
+                        <motion.button
+                          whileTap={{ scale: 0.97 }}
                           key={d.driverId}
-                          onClick={() => selectCompareDriver('A', d)}
-                          className="p-2.5 text-xs text-f1-light hover:bg-f1-red/10 cursor-pointer transition"
+                          onClick={() => handleSelectForCompare(d.driverId)}
+                          className="w-full text-left p-3 border-b border-f1-border hover:bg-f1-red/10 hover:border-f1-red transition group flex justify-between items-center"
                         >
                           {d.givenName} {d.familyName} ({d.nationality})
-                        </div>
+                        </motion.button>
                       ))
                     }
                   </div>
@@ -642,7 +649,8 @@ function Racers() {
                   <h4 className="font-extrabold text-f1-light text-sm">{driverB.givenName} {driverB.familyName}</h4>
                   <span className="text-[9px] text-f1-muted uppercase font-bold tracking-wider">{driverB.nationality}</span>
                 </div>
-                <button 
+                <motion.button 
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => {
                     setDriverB(null);
                     setStatsB(null);
@@ -650,21 +658,17 @@ function Racers() {
                   className="text-f1-muted hover:text-f1-red text-[10px] font-bold uppercase transition"
                 >
                   Remove
-                </button>
+                </motion.button>
               </div>
             ) : (
               <div>
-                <input 
-                  type="text"
-                  placeholder="Type to search and select Driver B..."
-                  value={searchB}
-                  onChange={(e) => {
-                    setSearchB(e.target.value);
-                    setShowDropdownB(true);
-                  }}
-                  onFocus={() => setShowDropdownB(true)}
-                  className="w-full bg-[#07070a] border border-f1-border text-f1-light placeholder-f1-muted text-xs px-4 py-3 rounded focus:ring-1 focus:ring-f1-red outline-none transition"
-                />
+                <motion.button 
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setSelectingFor('B')} 
+                  className="w-full bg-[#0a0a0f] border border-f1-border text-f1-light text-xs font-bold py-3 rounded hover:border-f1-red transition"
+                >
+                  Select Driver B...
+                </motion.button>
                 {showDropdownB && searchB && (
                   <div className="absolute left-0 right-0 mt-1 bg-[#0f0f18] border border-f1-border rounded shadow-2xl max-h-48 overflow-y-auto z-40 divide-y divide-f1-border/40">
                     {(driversList || [])
@@ -675,13 +679,14 @@ function Racers() {
                       })
                       .slice(0, 8)
                       .map(d => (
-                        <div 
+                        <motion.button
+                          whileTap={{ scale: 0.97 }}
                           key={d.driverId}
-                          onClick={() => selectCompareDriver('B', d)}
-                          className="p-2.5 text-xs text-f1-light hover:bg-f1-red/10 cursor-pointer transition"
+                          onClick={() => handleSelectForCompare(d.driverId)}
+                          className="w-full text-left p-3 border-b border-f1-border hover:bg-f1-red/10 hover:border-f1-red transition group flex justify-between items-center"
                         >
                           {d.givenName} {d.familyName} ({d.nationality})
-                        </div>
+                        </motion.button>
                       ))
                     }
                   </div>
@@ -693,7 +698,7 @@ function Racers() {
 
         {(loadingCompare.a || loadingCompare.b) && (
           <div className="py-12 flex flex-col items-center justify-center space-y-2">
-            <LoadingSpinner />
+            <SkeletonCard />
             <span className="text-xs text-f1-muted font-bold uppercase tracking-wider animate-pulse">Running diagnostics compare...</span>
           </div>
         )}
@@ -754,12 +759,13 @@ function Racers() {
               </div>
 
               <div className="mt-6 flex justify-end">
-                <button 
+                <motion.button 
+                  whileTap={{ scale: 0.97 }}
                   onClick={handleClearComparison}
                   className="bg-f1-red hover:bg-red-700 text-f1-light px-5 py-2.5 rounded-sm text-[10px] font-black uppercase tracking-wider transition duration-300 transform -skew-x-12"
                 >
                   Clear Comparison
-                </button>
+                </motion.button>
               </div>
             </div>
 
@@ -843,7 +849,7 @@ function Racers() {
             </svg>
           ) : (
             <div className="flex flex-col items-center justify-center space-y-3">
-              <LoadingSpinner />
+              <SkeletonCard />
               <span className="text-[10px] text-f1-muted uppercase font-bold tracking-wider animate-pulse">
                 Calibrating telemetry coordinates...
               </span>
@@ -909,12 +915,13 @@ function Racers() {
               onClick={(e) => e.stopPropagation()}
               className="bg-f1-panel border border-f1-red rounded-lg overflow-hidden max-w-lg w-full relative"
             >
-              <button 
+              <motion.button 
+                whileTap={{ scale: 0.97 }}
                 onClick={() => setSelectedChampion(null)}
                 className="absolute top-4 right-4 text-f1-muted hover:text-f1-light text-base font-bold z-10 bg-[#0f0f18]/60 p-2 rounded-full w-8 h-8 flex items-center justify-center transition duration-300"
               >
                 ✕
-              </button>
+              </motion.button>
 
               <div className="relative h-60 w-full bg-[#09090f]">
                 <img 

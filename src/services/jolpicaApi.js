@@ -9,7 +9,7 @@ export const getCurrentDriverStandings = async () => {
   return cachedFetch('current_driver_standings', async () => {
     try {
       const response = await api.get('/current/driverStandings.json');
-      return response.data?.MRData?.StandingsTable?.StandingsLists?.[0]?.DriverStandings || [];
+      return response.data?.MRData?.StandingsTable?.StandingsLists?.[0] || {};
     } catch (error) {
       console.error('Error fetching getCurrentDriverStandings:', error);
       throw error;
@@ -21,7 +21,7 @@ export const getCurrentConstructorStandings = async () => {
   return cachedFetch('current_constructor_standings', async () => {
     try {
       const response = await api.get('/current/constructorStandings.json');
-      return response.data?.MRData?.StandingsTable?.StandingsLists?.[0]?.ConstructorStandings || [];
+      return response.data?.MRData?.StandingsTable?.StandingsLists?.[0] || {};
     } catch (error) {
       console.error('Error fetching getCurrentConstructorStandings:', error);
       throw error;
@@ -45,7 +45,7 @@ export const getLastRaceResults = async () => {
   return cachedFetch('last_race_results', async () => {
     try {
       const response = await api.get('/current/last/results.json');
-      return response.data?.MRData?.RaceTable?.Races?.[0]?.Results || [];
+      return response.data?.MRData?.RaceTable?.Races?.[0] || null;
     } catch (error) {
       console.error('Error fetching getLastRaceResults:', error);
       throw error;
@@ -72,6 +72,42 @@ export const getDriverSeasonResults = async (driverId, year) => {
       return response.data?.MRData?.RaceTable?.Races || [];
     } catch (error) {
       console.error(`Error fetching getDriverSeasonResults for driver ${driverId} and year ${year}:`, error);
+      throw error;
+    }
+  }, 360);
+};
+
+export const getDriverInfo = async (driverId) => {
+  return cachedFetch(`driver_info_${driverId}`, async () => {
+    try {
+      const response = await api.get(`/drivers/${driverId}.json`);
+      return response.data?.MRData?.DriverTable?.Drivers?.[0] || null;
+    } catch (error) {
+      console.error(`Error fetching getDriverInfo for ${driverId}:`, error);
+      throw error;
+    }
+  }, 720);
+};
+
+export const getDriverStandings = async (driverId) => {
+  return cachedFetch(`driver_standings_${driverId}`, async () => {
+    try {
+      const response = await api.get(`/drivers/${driverId}/driverStandings.json`);
+      return response.data?.MRData?.StandingsTable?.StandingsLists || [];
+    } catch (error) {
+      console.error(`Error fetching getDriverStandings for ${driverId}:`, error);
+      throw error;
+    }
+  }, 360);
+};
+
+export const getRaceResults = async (year, round) => {
+  return cachedFetch(`race_results_${year}_${round}`, async () => {
+    try {
+      const response = await api.get(`/${year}/${round}/results.json`);
+      return response.data?.MRData?.RaceTable?.Races?.[0]?.Results || [];
+    } catch (error) {
+      console.error(`Error fetching getRaceResults for ${year} round ${round}:`, error);
       throw error;
     }
   }, 360);
