@@ -227,10 +227,11 @@ function Racers() {
   };
 
   // Client-side filtering for search table
-  const filteredDrivers = driversList.filter((d) => {
-    const fullName = `${d.givenName} ${d.familyName}`.toLowerCase();
-    const nat = d.nationality.toLowerCase();
-    const query = searchQuery.toLowerCase();
+  const filteredDrivers = (driversList || []).filter((d) => {
+    if (!d) return false;
+    const fullName = `${d.givenName || ''} ${d.familyName || ''}`.toLowerCase();
+    const nat = (d.nationality || '').toLowerCase();
+    const query = (searchQuery || '').toLowerCase();
     return fullName.includes(query) || nat.includes(query);
   });
 
@@ -606,8 +607,12 @@ function Racers() {
                 />
                 {showDropdownA && searchA && (
                   <div className="absolute left-0 right-0 mt-1 bg-[#0f0f18] border border-f1-border rounded shadow-2xl max-h-48 overflow-y-auto z-40 divide-y divide-f1-border/40">
-                    {driversList
-                      .filter(d => `${d.givenName} ${d.familyName}`.toLowerCase().includes(searchA.toLowerCase()))
+                    {(driversList || [])
+                      .filter(d => {
+                        if (!d) return false;
+                        const fullName = `${d.givenName || ''} ${d.familyName || ''}`.toLowerCase();
+                        return fullName.includes((searchA || '').toLowerCase());
+                      })
                       .slice(0, 8)
                       .map(d => (
                         <div 
@@ -658,8 +663,12 @@ function Racers() {
                 />
                 {showDropdownB && searchB && (
                   <div className="absolute left-0 right-0 mt-1 bg-[#0f0f18] border border-f1-border rounded shadow-2xl max-h-48 overflow-y-auto z-40 divide-y divide-f1-border/40">
-                    {driversList
-                      .filter(d => `${d.givenName} ${d.familyName}`.toLowerCase().includes(searchB.toLowerCase()))
+                    {(driversList || [])
+                      .filter(d => {
+                        if (!d) return false;
+                        const fullName = `${d.givenName || ''} ${d.familyName || ''}`.toLowerCase();
+                        return fullName.includes((searchB || '').toLowerCase());
+                      })
                       .slice(0, 8)
                       .map(d => (
                         <div 

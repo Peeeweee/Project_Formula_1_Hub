@@ -7,7 +7,7 @@ const api = axios.create({
 export const getCurrentStandings = async () => {
   try {
     const response = await api.get('/current/driverStandings.json');
-    return response.data.MRData.StandingsTable.StandingsLists[0]?.DriverStandings || [];
+    return response.data.MRData.StandingsTable.StandingsLists[0] || {};
   } catch (error) {
     console.error('Error in getCurrentStandings:', error);
     throw error;
@@ -17,7 +17,7 @@ export const getCurrentStandings = async () => {
 export const getConstructorStandings = async () => {
   try {
     const response = await api.get('/current/constructorStandings.json');
-    return response.data.MRData.StandingsTable.StandingsLists[0]?.ConstructorStandings || [];
+    return response.data.MRData.StandingsTable.StandingsLists[0] || {};
   } catch (error) {
     console.error('Error in getConstructorStandings:', error);
     throw error;
@@ -62,7 +62,7 @@ export const getDriverStandings = async (driverId) => {
 export const getLastRaceResults = async () => {
   try {
     const response = await api.get('/current/last/results.json');
-    return response.data.MRData.RaceTable.Races[0]?.Results || [];
+    return response.data.MRData.RaceTable.Races[0] || {};
   } catch (error) {
     console.error('Error in getLastRaceResults:', error);
     throw error;
