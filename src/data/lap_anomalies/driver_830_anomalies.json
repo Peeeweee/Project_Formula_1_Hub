@@ -1,0 +1,6 @@
+[
+  { "lap": 1, "milliseconds": 89000, "isAnomaly": false, "reason": null },
+  { "lap": 15, "milliseconds": 118000, "isAnomaly": true, "reason": "Safety Car / Pit Lap" },
+  { "lap": 30, "milliseconds": 112000, "isAnomaly": true, "reason": "Safety Car / Pit Lap" },
+  { "lap": 55, "milliseconds": 85000, "isAnomaly": false, "reason": null }
+]

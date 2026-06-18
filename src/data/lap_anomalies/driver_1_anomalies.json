@@ -1,0 +1,18 @@
+[
+  { "lap": 1, "milliseconds": 90000, "isAnomaly": false, "reason": null },
+  { "lap": 2, "milliseconds": 88000, "isAnomaly": false, "reason": null },
+  { "lap": 3, "milliseconds": 87500, "isAnomaly": false, "reason": null },
+  { "lap": 4, "milliseconds": 87200, "isAnomaly": false, "reason": null },
+  { "lap": 5, "milliseconds": 87000, "isAnomaly": false, "reason": null },
+  { "lap": 6, "milliseconds": 87100, "isAnomaly": false, "reason": null },
+  { "lap": 7, "milliseconds": 87050, "isAnomaly": false, "reason": null },
+  { "lap": 8, "milliseconds": 87300, "isAnomaly": false, "reason": null },
+  { "lap": 9, "milliseconds": 87400, "isAnomaly": false, "reason": null },
+  { "lap": 10, "milliseconds": 120000, "isAnomaly": true, "reason": "Safety Car / Pit Lap" },
+  { "lap": 11, "milliseconds": 86000, "isAnomaly": false, "reason": null },
+  { "lap": 12, "milliseconds": 85500, "isAnomaly": false, "reason": null },
+  { "lap": 32, "milliseconds": 115000, "isAnomaly": true, "reason": "Safety Car / Pit Lap" },
+  { "lap": 33, "milliseconds": 84000, "isAnomaly": false, "reason": null },
+  { "lap": 54, "milliseconds": 82000, "isAnomaly": true, "reason": "Push Lap / Quali Mode" },
+  { "lap": 55, "milliseconds": 84500, "isAnomaly": false, "reason": null }
+]

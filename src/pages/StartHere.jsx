@@ -11,6 +11,7 @@ import {
   Cell
 } from 'recharts';
 import circuitsData from '../data/circuits.json';
+import FadeInSection from '../components/FadeInSection';
 
 const TIMELINE_STEPS = [
   {
@@ -195,13 +196,13 @@ function StartHere() {
   return (
     <div className="pt-24 pb-12 px-6 max-w-7xl mx-auto">
       {/* 1. Race Weekend Timeline Section */}
-      <section className="mb-16">
+      <FadeInSection className="mb-16">
         <div className="border-l-2 border-f1-red pl-2 mb-4">
           <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
             Race Weekend Blueprint
           </h4>
         </div>
-        <h2 className="text-3xl font-extrabold text-f1-light mb-6 tracking-tight">
+        <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light mb-6 tracking-tight">
           The Timeline of a Grand Prix Weekend
         </h2>
 
@@ -259,16 +260,16 @@ function StartHere() {
             );
           })}
         </motion.div>
-      </section>
+      </FadeInSection>
 
       {/* 2. Points System Section */}
-      <section className="mb-16">
+      <FadeInSection className="mb-16">
         <div className="border-l-2 border-f1-red pl-2 mb-4">
           <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
             Championship System
           </h4>
         </div>
-        <h2 className="text-3xl font-extrabold text-f1-light mb-6 tracking-tight">
+        <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light mb-6 tracking-tight">
           How Points Are Awarded
         </h2>
 
@@ -338,16 +339,16 @@ function StartHere() {
             </div>
           </div>
         </div>
-      </section>
+      </FadeInSection>
 
       {/* 3. Tire Compound Guide Section */}
-      <section className="mb-16">
+      <FadeInSection className="mb-16">
         <div className="border-l-2 border-f1-red pl-2 mb-4">
           <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
             Pirelli Telemetry
           </h4>
         </div>
-        <h2 className="text-3xl font-extrabold text-f1-light mb-6 tracking-tight">
+        <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light mb-6 tracking-tight">
           Tire Compound Guide
         </h2>
 
@@ -400,16 +401,16 @@ function StartHere() {
             </div>
           ))}
         </div>
-      </section>
+      </FadeInSection>
 
       {/* 4. Circuit Map Section */}
-      <section className="mb-16">
+      <FadeInSection className="mb-16">
         <div className="border-l-2 border-f1-red pl-2 mb-4">
           <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
             Global Locations
           </h4>
         </div>
-        <h2 className="text-3xl font-extrabold text-f1-light mb-6 tracking-tight flex justify-between items-center">
+        <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light mb-6 tracking-tight flex justify-between items-center">
           <span>Formula 1 Circuits Map</span>
           {hoveredCircuit && (
             <span className="text-xs text-f1-red font-bold uppercase tracking-wider hidden sm:inline animate-pulse">
@@ -481,16 +482,16 @@ function StartHere() {
             )}
           </AnimatePresence>
         </div>
-      </section>
+      </FadeInSection>
 
       {/* 5. Glossary Section */}
-      <section className="mb-16">
+      <FadeInSection className="mb-16">
         <div className="border-l-2 border-f1-red pl-2 mb-4">
           <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
             F1 Dictionary
           </h4>
         </div>
-        <h2 className="text-3xl font-extrabold text-f1-light mb-6 tracking-tight flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light mb-6 tracking-tight flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <span>Formula 1 Glossary</span>
           {/* Custom Search Bar */}
           <div className="w-full sm:w-80">
@@ -534,15 +535,10 @@ function StartHere() {
             <p className="text-sm text-f1-muted mt-2">No matching glossary terms found.</p>
           </div>
         )}
-      </section>
+      </FadeInSection>
 
       {/* Hero / Welcome Section */}
-      <motion.div 
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="relative bg-gradient-to-r from-f1-panel to-f1-dark border border-f1-border rounded-lg p-8 md:p-12 mb-8 overflow-hidden"
-      >
+      <FadeInSection className="relative bg-gradient-to-r from-f1-panel to-f1-dark border border-f1-border rounded-lg p-8 md:p-12 mb-8 overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-f1-red/5 rounded-full blur-3xl pointer-events-none"></div>
         <div className="relative z-10 max-w-2xl">
           <span className="text-f1-red font-bold tracking-widest text-sm uppercase">Welcome to the Command Center</span>
@@ -562,7 +558,7 @@ function StartHere() {
             </a>
           </div>
         </div>
-      </motion.div>
+      </FadeInSection>
     </div>
   );
 }

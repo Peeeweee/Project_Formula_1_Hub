@@ -20,6 +20,7 @@ import championsData from '../data/champions.json';
 import { getDriverInfo, getDriverStandings } from '../services/ergastApi';
 import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
+import FadeInSection from '../components/FadeInSection';
 
 const cardVariants = {
   hidden: { opacity: 0, y: 30 },
@@ -341,13 +342,13 @@ function Racers() {
   return (
     <div className="pt-24 pb-12 px-6 max-w-7xl mx-auto space-y-16">
       {/* SECTION 1: Champions Hall of Fame */}
-      <section>
+      <FadeInSection>
         <div className="border-l-2 border-f1-red pl-2 mb-4">
           <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
             Formula 1 Legendarium
           </h4>
         </div>
-        <h2 className="text-3xl font-extrabold text-f1-light mb-6 tracking-tight">
+        <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light mb-6 tracking-tight">
           Champions Hall of Fame
         </h2>
 
@@ -395,16 +396,16 @@ function Racers() {
             </motion.div>
           ))}
         </div>
-      </section>
+      </FadeInSection>
 
       {/* SECTION 2: Full Driver Database */}
-      <section>
+      <FadeInSection>
         <div className="border-l-2 border-f1-red pl-2 mb-4">
           <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
             All-Time Registry
           </h4>
         </div>
-        <h2 className="text-3xl font-extrabold text-f1-light mb-6 tracking-tight">
+        <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light mb-6 tracking-tight">
           Full Driver Database
         </h2>
 
@@ -417,6 +418,9 @@ function Racers() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           <div className="lg:col-span-2 bg-f1-panel border border-f1-border rounded-lg overflow-hidden shadow-xl">
+            <div className="md:hidden text-[10px] text-f1-muted p-2 text-center border-b border-f1-border/40 animate-pulse">
+              ← Swipe to view details →
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
@@ -559,17 +563,17 @@ function Racers() {
             )}
           </div>
         </div>
-      </section>
+      </FadeInSection>
 
       {/* SECTION 3: Driver Comparison Tool */}
-      <section>
+      <FadeInSection>
         <div className="border-l-2 border-f1-red pl-2 mb-4">
           <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
             Head-to-Head Analytics
           </h4>
         </div>
         <div className="mb-8">
-          <h2 className="text-3xl font-extrabold text-f1-light tracking-tight">Driver Comparison Tool</h2>
+          <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light tracking-tight">Driver Comparison Tool</h2>
           <p className="text-f1-muted text-xs mt-1">Search and select two F1 drivers from the registry to benchmark their metrics side-by-side.</p>
         </div>
 
@@ -793,16 +797,16 @@ function Racers() {
             </div>
           </div>
         )}
-      </section>
+      </FadeInSection>
 
       {/* SECTION 4: Nationality Heatmap */}
-      <section>
+      <FadeInSection>
         <div className="border-l-2 border-f1-red pl-2 mb-4">
           <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
             Global Demographic Density
           </h4>
         </div>
-        <h2 className="text-3xl font-extrabold text-f1-light mb-6 tracking-tight">
+        <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light mb-6 tracking-tight">
           F1 Drivers Nationality Heatmap
         </h2>
 
@@ -886,7 +890,7 @@ function Racers() {
             <span>{maxHeatmapDrivers}+ Drivers (UK)</span>
           </div>
         </div>
-      </section>
+      </FadeInSection>
 
       {/* CHAMPION OVERLAY MODAL */}
       <AnimatePresence>

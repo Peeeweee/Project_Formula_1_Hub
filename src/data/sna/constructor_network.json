@@ -1,0 +1,80 @@
+{
+  "2010-2013": {
+    "nodes": [
+      { "id": "Red Bull", "wins": 41, "color": "#1e41ff" },
+      { "id": "Ferrari", "wins": 13, "color": "#dc0000" },
+      { "id": "McLaren", "wins": 18, "color": "#ff8700" },
+      { "id": "Mercedes", "wins": 4, "color": "#00d2be" },
+      { "id": "Lotus", "wins": 2, "color": "#e5c158" },
+      { "id": "Williams", "wins": 1, "color": "#005aff" }
+    ],
+    "links": [
+      { "source": "Ferrari", "target": "McLaren", "value": 2 },
+      { "source": "Red Bull", "target": "Ferrari", "value": 1 },
+      { "source": "Mercedes", "target": "McLaren", "value": 1 },
+      { "source": "Williams", "target": "Lotus", "value": 2 },
+      { "source": "Lotus", "target": "Ferrari", "value": 1 }
+    ],
+    "centrality": [
+      { "constructor": "Ferrari", "degree": 0.6, "betweenness": 0.45, "mostConnected": "McLaren" },
+      { "constructor": "McLaren", "degree": 0.4, "betweenness": 0.3, "mostConnected": "Ferrari" },
+      { "constructor": "Red Bull", "degree": 0.2, "betweenness": 0.0, "mostConnected": "Ferrari" },
+      { "constructor": "Lotus", "degree": 0.4, "betweenness": 0.5, "mostConnected": "Williams" },
+      { "constructor": "Mercedes", "degree": 0.2, "betweenness": 0.0, "mostConnected": "McLaren" },
+      { "constructor": "Williams", "degree": 0.2, "betweenness": 0.0, "mostConnected": "Lotus" }
+    ]
+  },
+  "2014-2016": {
+    "nodes": [
+      { "id": "Mercedes", "wins": 51, "color": "#00d2be" },
+      { "id": "Red Bull", "wins": 5, "color": "#1e41ff" },
+      { "id": "Ferrari", "wins": 3, "color": "#dc0000" },
+      { "id": "Williams", "wins": 0, "color": "#005aff" },
+      { "id": "Force India", "wins": 0, "color": "#f596c8" },
+      { "id": "Toro Rosso", "wins": 0, "color": "#0000ff" }
+    ],
+    "links": [
+      { "source": "Mercedes", "target": "Williams", "value": 2 },
+      { "source": "Red Bull", "target": "Toro Rosso", "value": 3 },
+      { "source": "Ferrari", "target": "Red Bull", "value": 1 },
+      { "source": "Force India", "target": "Mercedes", "value": 1 },
+      { "source": "Williams", "target": "Force India", "value": 1 }
+    ],
+    "centrality": [
+      { "constructor": "Mercedes", "degree": 0.4, "betweenness": 0.5, "mostConnected": "Williams" },
+      { "constructor": "Williams", "degree": 0.4, "betweenness": 0.3, "mostConnected": "Mercedes" },
+      { "constructor": "Red Bull", "degree": 0.4, "betweenness": 0.4, "mostConnected": "Toro Rosso" },
+      { "constructor": "Toro Rosso", "degree": 0.2, "betweenness": 0.0, "mostConnected": "Red Bull" },
+      { "constructor": "Force India", "degree": 0.4, "betweenness": 0.1, "mostConnected": "Williams" },
+      { "constructor": "Ferrari", "degree": 0.2, "betweenness": 0.0, "mostConnected": "Red Bull" }
+    ]
+  },
+  "2017-2020": {
+    "nodes": [
+      { "id": "Mercedes", "wins": 43, "color": "#00d2be" },
+      { "id": "Ferrari", "wins": 14, "color": "#dc0000" },
+      { "id": "Red Bull", "wins": 12, "color": "#1e41ff" },
+      { "id": "McLaren", "wins": 0, "color": "#ff8700" },
+      { "id": "Renault", "wins": 0, "color": "#fff500" },
+      { "id": "AlphaTauri", "wins": 1, "color": "#2b4562" },
+      { "id": "Racing Point", "wins": 1, "color": "#f596c8" }
+    ],
+    "links": [
+      { "source": "Red Bull", "target": "Renault", "value": 2 },
+      { "source": "Red Bull", "target": "AlphaTauri", "value": 3 },
+      { "source": "McLaren", "target": "Renault", "value": 2 },
+      { "source": "Ferrari", "target": "Mercedes", "value": 1 },
+      { "source": "Racing Point", "target": "Mercedes", "value": 1 },
+      { "source": "Renault", "target": "Racing Point", "value": 1 }
+    ],
+    "centrality": [
+      { "constructor": "Red Bull", "degree": 0.33, "betweenness": 0.4, "mostConnected": "AlphaTauri" },
+      { "constructor": "Renault", "degree": 0.5, "betweenness": 0.6, "mostConnected": "Red Bull" },
+      { "constructor": "McLaren", "degree": 0.16, "betweenness": 0.0, "mostConnected": "Renault" },
+      { "constructor": "AlphaTauri", "degree": 0.16, "betweenness": 0.0, "mostConnected": "Red Bull" },
+      { "constructor": "Mercedes", "degree": 0.33, "betweenness": 0.2, "mostConnected": "Racing Point" },
+      { "constructor": "Racing Point", "degree": 0.33, "betweenness": 0.2, "mostConnected": "Renault" },
+      { "constructor": "Ferrari", "degree": 0.16, "betweenness": 0.0, "mostConnected": "Mercedes" }
+    ]
+  }
+}

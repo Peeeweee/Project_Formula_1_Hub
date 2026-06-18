@@ -8,6 +8,7 @@ import {
   getLastRaceResults 
 } from '../services/ergastApi';
 import { StatCard, LoadingSpinner } from '../components';
+import FadeInSection from '../components/FadeInSection';
 import { 
   ResponsiveContainer, 
   BarChart, 
@@ -407,7 +408,8 @@ function LiveSeason() {
       )}
 
       {/* SECTION 1: Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <FadeInSection>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
           label="Championship Leader" 
           value={leaderDriver ? leaderDriver.Driver.code : 'N/A'}
@@ -433,9 +435,11 @@ function LiveSeason() {
           delta={`${constructorPoints} PTS`} 
         />
       </div>
+      </FadeInSection>
 
       {/* Standings Tables */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <FadeInSection>
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Driver Standings Table */}
         <div className="bg-f1-panel border border-f1-border rounded-lg p-6 shadow-xl">
           <h2 className="text-lg font-black text-f1-light mb-4 uppercase tracking-wider border-b border-f1-border/40 pb-2">
@@ -527,10 +531,11 @@ function LiveSeason() {
             </table>
           </div>
         </div>
-      </div>
+        </div>
+      </FadeInSection>
 
       {/* SECTION 2: Season Calendar */}
-      <section className="space-y-6">
+      <FadeInSection className="space-y-6">
         <div className="border-l-2 border-f1-red pl-2 mb-4">
           <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
             Race Schedule
@@ -589,11 +594,11 @@ function LiveSeason() {
             </div>
           ))}
         </div>
-      </section>
+      </FadeInSection>
 
       {/* SECTION 3: Last Race Breakdown */}
       {lastRace && lastRace.Results && (
-        <section className="space-y-6">
+        <FadeInSection className="space-y-6">
           <div className="border-l-2 border-f1-red pl-2 mb-4">
             <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
               Race Analysis
@@ -698,12 +703,12 @@ function LiveSeason() {
               </div>
             </div>
           </div>
-        </section>
+        </FadeInSection>
       )}
 
       {/* SECTION 4: Points Progression Chart */}
       {progressionData.length > 0 && (
-        <section className="space-y-6">
+        <FadeInSection className="space-y-6">
           <div className="border-l-2 border-f1-red pl-2 mb-4">
             <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
               Championship Growth
@@ -785,7 +790,7 @@ function LiveSeason() {
               })}
             </div>
           </div>
-        </section>
+        </FadeInSection>
       )}
     </div>
   );

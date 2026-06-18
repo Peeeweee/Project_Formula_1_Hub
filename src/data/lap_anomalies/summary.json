@@ -1,0 +1,16 @@
+[
+  {
+    "driverId": 1,
+    "driverName": "Lewis Hamilton",
+    "totalLaps": 55,
+    "anomalyCount": 3,
+    "anomalyLaps": [10, 32, 54]
+  },
+  {
+    "driverId": 830,
+    "driverName": "Max Verstappen",
+    "totalLaps": 55,
+    "anomalyCount": 2,
+    "anomalyLaps": [15, 30]
+  }
+]

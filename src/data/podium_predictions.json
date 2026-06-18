@@ -1,0 +1,36 @@
+[
+  { "driverId": 1, "driverName": "Lewis Hamilton", "circuit": "Monaco", "podiumProbability": 0.45, "teamColor": "#00d2be" },
+  { "driverId": 830, "driverName": "Max Verstappen", "circuit": "Monaco", "podiumProbability": 0.85, "teamColor": "#1e41ff" },
+  { "driverId": 844, "driverName": "Charles Leclerc", "circuit": "Monaco", "podiumProbability": 0.65, "teamColor": "#dc0000" },
+  { "driverId": 4, "driverName": "Fernando Alonso", "circuit": "Monaco", "podiumProbability": 0.30, "teamColor": "#006f62" },
+  { "driverId": 815, "driverName": "Sergio Perez", "circuit": "Monaco", "podiumProbability": 0.50, "teamColor": "#1e41ff" },
+  { "driverId": 832, "driverName": "Carlos Sainz", "circuit": "Monaco", "podiumProbability": 0.55, "teamColor": "#dc0000" },
+  
+  { "driverId": 1, "driverName": "Lewis Hamilton", "circuit": "Silverstone", "podiumProbability": 0.70, "teamColor": "#00d2be" },
+  { "driverId": 830, "driverName": "Max Verstappen", "circuit": "Silverstone", "podiumProbability": 0.80, "teamColor": "#1e41ff" },
+  { "driverId": 844, "driverName": "Charles Leclerc", "circuit": "Silverstone", "podiumProbability": 0.40, "teamColor": "#dc0000" },
+  { "driverId": 4, "driverName": "Fernando Alonso", "circuit": "Silverstone", "podiumProbability": 0.20, "teamColor": "#006f62" },
+  { "driverId": 815, "driverName": "Sergio Perez", "circuit": "Silverstone", "podiumProbability": 0.60, "teamColor": "#1e41ff" },
+  { "driverId": 832, "driverName": "Carlos Sainz", "circuit": "Silverstone", "podiumProbability": 0.35, "teamColor": "#dc0000" },
+
+  { "driverId": 1, "driverName": "Lewis Hamilton", "circuit": "Monza", "podiumProbability": 0.30, "teamColor": "#00d2be" },
+  { "driverId": 830, "driverName": "Max Verstappen", "circuit": "Monza", "podiumProbability": 0.90, "teamColor": "#1e41ff" },
+  { "driverId": 844, "driverName": "Charles Leclerc", "circuit": "Monza", "podiumProbability": 0.85, "teamColor": "#dc0000" },
+  { "driverId": 4, "driverName": "Fernando Alonso", "circuit": "Monza", "podiumProbability": 0.15, "teamColor": "#006f62" },
+  { "driverId": 815, "driverName": "Sergio Perez", "circuit": "Monza", "podiumProbability": 0.75, "teamColor": "#1e41ff" },
+  { "driverId": 832, "driverName": "Carlos Sainz", "circuit": "Monza", "podiumProbability": 0.80, "teamColor": "#dc0000" },
+
+  { "driverId": 1, "driverName": "Lewis Hamilton", "circuit": "Spa", "podiumProbability": 0.50, "teamColor": "#00d2be" },
+  { "driverId": 830, "driverName": "Max Verstappen", "circuit": "Spa", "podiumProbability": 0.95, "teamColor": "#1e41ff" },
+  { "driverId": 844, "driverName": "Charles Leclerc", "circuit": "Spa", "podiumProbability": 0.60, "teamColor": "#dc0000" },
+  { "driverId": 4, "driverName": "Fernando Alonso", "circuit": "Spa", "podiumProbability": 0.25, "teamColor": "#006f62" },
+  { "driverId": 815, "driverName": "Sergio Perez", "circuit": "Spa", "podiumProbability": 0.80, "teamColor": "#1e41ff" },
+  { "driverId": 832, "driverName": "Carlos Sainz", "circuit": "Spa", "podiumProbability": 0.55, "teamColor": "#dc0000" },
+
+  { "driverId": 1, "driverName": "Lewis Hamilton", "circuit": "Suzuka", "podiumProbability": 0.40, "teamColor": "#00d2be" },
+  { "driverId": 830, "driverName": "Max Verstappen", "circuit": "Suzuka", "podiumProbability": 0.92, "teamColor": "#1e41ff" },
+  { "driverId": 844, "driverName": "Charles Leclerc", "circuit": "Suzuka", "podiumProbability": 0.50, "teamColor": "#dc0000" },
+  { "driverId": 4, "driverName": "Fernando Alonso", "circuit": "Suzuka", "podiumProbability": 0.35, "teamColor": "#006f62" },
+  { "driverId": 815, "driverName": "Sergio Perez", "circuit": "Suzuka", "podiumProbability": 0.70, "teamColor": "#1e41ff" },
+  { "driverId": 832, "driverName": "Carlos Sainz", "circuit": "Suzuka", "podiumProbability": 0.45, "teamColor": "#dc0000" }
+]

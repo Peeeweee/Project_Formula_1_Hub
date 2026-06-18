@@ -17,6 +17,7 @@ import {
 } from 'recharts';
 import erasData from '../data/eras.json';
 import constructorsData from '../data/constructors.json';
+import FadeInSection from '../components/FadeInSection';
 
 const CARS_DATA = [
   { id: 'ferrari', name: 'Ferrari SF-26', powerUnit: 'Ferrari 069/3', chassis: 'Carbon-fibre composite honeycomb', weight: '798kg', aeroEfficiency: 'High-downforce wing profile', maxRpm: '15,000 RPM' },
@@ -451,7 +452,7 @@ function Cars() {
   return (
     <div className="pt-24 pb-12 px-6 max-w-7xl mx-auto space-y-16">
       {/* SECTION 1: Era Timeline Gallery */}
-      <section>
+      <FadeInSection>
         <div className="border-l-2 border-f1-red pl-2 mb-4">
           <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
             Technological Heritage
@@ -459,7 +460,7 @@ function Cars() {
         </div>
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
           <div>
-            <h2 className="text-3xl font-extrabold text-f1-light tracking-tight">F1 Era Timeline Gallery</h2>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light tracking-tight">F1 Era Timeline Gallery</h2>
             <p className="text-f1-muted text-xs mt-1">Drag or navigate through the historical technical epochs of Formula 1 design.</p>
           </div>
           
@@ -479,6 +480,9 @@ function Cars() {
           </div>
         </div>
 
+        <div className="md:hidden text-[10px] text-f1-muted pb-2 animate-pulse text-center w-full">
+          ← Swipe to explore eras →
+        </div>
         <div 
           ref={containerRef}
           className="relative overflow-hidden cursor-grab active:cursor-grabbing select-none"
@@ -536,17 +540,17 @@ function Cars() {
             style={{ width: `${scrollProgress}%` }}
           />
         </div>
-      </section>
+      </FadeInSection>
 
       {/* SECTION 2: Constructors Gallery */}
-      <section>
+      <FadeInSection>
         <div className="border-l-2 border-f1-red pl-2 mb-4">
           <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
             Pioneering Teams
           </h4>
         </div>
         <div className="mb-6">
-          <h2 className="text-3xl font-extrabold text-f1-light tracking-tight">F1 Constructors Gallery</h2>
+          <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light tracking-tight">F1 Constructors Gallery</h2>
           <p className="text-f1-muted text-xs mt-1">Discover the builders and architects who defined the racing pedigree of Formula 1.</p>
         </div>
 
@@ -592,17 +596,17 @@ function Cars() {
             </motion.div>
           ))}
         </div>
-      </section>
+      </FadeInSection>
 
       {/* SECTION 3: Car Spec Comparator */}
-      <section>
+      <FadeInSection>
         <div className="border-l-2 border-f1-red pl-2 mb-4">
           <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
             Benchmark Telemetry
           </h4>
         </div>
         <div className="mb-6">
-          <h2 className="text-3xl font-extrabold text-f1-light tracking-tight">Car Spec Comparator</h2>
+          <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light tracking-tight">Car Spec Comparator</h2>
           <p className="text-f1-muted text-xs mt-1">Select and benchmark two historical or modern F1 cars to compare their performance parameters.</p>
         </div>
 
@@ -728,17 +732,17 @@ function Cars() {
             </div>
           </div>
         )}
-      </section>
+      </FadeInSection>
 
       {/* SECTION 4: Modern F1 Car Anatomy */}
-      <section>
+      <FadeInSection>
         <div className="border-l-2 border-f1-red pl-2 mb-4">
           <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
             Aerodynamics & Safety
           </h4>
         </div>
         <div className="mb-6">
-          <h2 className="text-3xl font-extrabold text-f1-light tracking-tight">Modern F1 Car Anatomy</h2>
+          <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light tracking-tight">Modern F1 Car Anatomy</h2>
           <p className="text-f1-muted text-xs mt-1">Hover over labels or parts to inspect the engineering anatomy of a formula race car.</p>
         </div>
 
@@ -1002,17 +1006,17 @@ function Cars() {
             )}
           </AnimatePresence>
         </div>
-      </section>
+      </FadeInSection>
 
       {/* SECTION 5: Car Specifications & Aero */}
-      <section>
+      <FadeInSection>
         <div className="border-l-2 border-f1-red pl-2 mb-4">
           <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
             Active Aerodynamics
           </h4>
         </div>
         <div className="mb-6">
-          <h2 className="text-3xl font-extrabold text-f1-light tracking-tight">Car Specifications & Aero</h2>
+          <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light tracking-tight">Car Specifications & Aero</h2>
           <p className="text-f1-muted text-xs mt-1">Technical analysis of the current grid's power units, aerodynamics, and chassis configurations.</p>
         </div>
 
@@ -1087,7 +1091,7 @@ function Cars() {
             </motion.div>
           </div>
         </div>
-      </section>
+      </FadeInSection>
 
       {/* ERA OVERLAY MODAL */}
       <AnimatePresence>
