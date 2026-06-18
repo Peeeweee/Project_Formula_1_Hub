@@ -18,6 +18,7 @@ import {
 import erasData from '../data/eras.json';
 import constructorsData from '../data/constructors.json';
 import FadeInSection from '../components/FadeInSection';
+import getWikipediaImage from '../utils/getWikipediaImage';
 
 const CARS_DATA = [
   { id: 'ferrari', name: 'Ferrari SF-26', powerUnit: 'Ferrari 069/3', chassis: 'Carbon-fibre composite honeycomb', weight: '798kg', aeroEfficiency: 'High-downforce wing profile', maxRpm: '15,000 RPM' },
@@ -369,6 +370,48 @@ function Cars() {
   const [carAId, setCarAId] = useState(ICONIC_CARS_DATA[6].id); // Ferrari F2004 default
   const [carBId, setCarBId] = useState(ICONIC_CARS_DATA[8].id); // Mercedes W11 default
 
+  const [eraImages, setEraImages] = useState({});
+  const [eraImagesLoading, setEraImagesLoading] = useState({});
+  const [eraImagesError, setEraImagesError] = useState({});
+
+  const [constructorImages, setConstructorImages] = useState({});
+  const [constructorImagesLoading, setConstructorImagesLoading] = useState({});
+  const [constructorImagesError, setConstructorImagesError] = useState({});
+
+  useEffect(() => {
+    erasData.forEach(async (era) => {
+      setEraImagesLoading(prev => ({ ...prev, [era.id]: true }));
+      try {
+        const url = await getWikipediaImage(era.wikiSearchTerm);
+        if (url) {
+          setEraImages(prev => ({ ...prev, [era.id]: url }));
+        } else {
+          setEraImagesError(prev => ({ ...prev, [era.id]: true }));
+        }
+      } catch (err) {
+        setEraImagesError(prev => ({ ...prev, [era.id]: true }));
+      } finally {
+        setEraImagesLoading(prev => ({ ...prev, [era.id]: false }));
+      }
+    });
+
+    constructorsData.forEach(async (constructor) => {
+      setConstructorImagesLoading(prev => ({ ...prev, [constructor.id]: true }));
+      try {
+        const url = await getWikipediaImage(constructor.wikiSearchTerm);
+        if (url) {
+          setConstructorImages(prev => ({ ...prev, [constructor.id]: url }));
+        } else {
+          setConstructorImagesError(prev => ({ ...prev, [constructor.id]: true }));
+        }
+      } catch (err) {
+        setConstructorImagesError(prev => ({ ...prev, [constructor.id]: true }));
+      } finally {
+        setConstructorImagesLoading(prev => ({ ...prev, [constructor.id]: false }));
+      }
+    });
+  }, []);
+
   const carA = ICONIC_CARS_DATA.find(c => c.id === carAId);
   const carB = ICONIC_CARS_DATA.find(c => c.id === carBId);
 
@@ -500,12 +543,20 @@ function Cars() {
                 onClick={() => setSelectedEra(era)}
                 className="w-[300px] bg-f1-panel border border-f1-border rounded-lg overflow-hidden hover:border-f1-red/60 transition duration-300 flex flex-col group"
               >
-                <div className="h-40 relative bg-[#09090f]">
-                  <img 
-                    src={ERA_IMAGES[era.id]} 
-                    alt={era.name} 
-                    className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500 pointer-events-none"
-                  />
+                <div className="h-40 relative bg-[#09090f] flex items-center justify-center">
+                  {eraImagesLoading[era.id] || eraImagesError[era.id] || !eraImages[era.id] ? (
+                    <span className="text-lg font-black text-white/50 text-center px-4">{era.name}</span>
+                  ) : (
+                    <img 
+                      src={eraImages[era.id]} 
+                      alt={era.name} 
+                      className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500 pointer-events-none"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        setEraImagesError(prev => ({ ...prev, [era.id]: true }));
+                      }}
+                    />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-f1-panel to-transparent" />
                   <span className="absolute bottom-3 left-4 text-xs bg-f1-red text-f1-light font-black px-2 py-0.5 rounded-sm uppercase tracking-wider">
                     {era.years}
@@ -1117,12 +1168,20 @@ function Cars() {
                 ✕
               </button>
 
-              <div className="relative h-56 w-full bg-[#09090f]">
-                <img 
-                  src={ERA_IMAGES[selectedEra.id]} 
-                  alt={selectedEra.name} 
-                  className="w-full h-full object-cover object-center"
-                />
+              <div className="relative h-56 w-full bg-[#09090f] flex items-center justify-center">
+                {eraImagesLoading[selectedEra.id] || eraImagesError[selectedEra.id] || !eraImages[selectedEra.id] ? (
+                  <span className="text-2xl font-black text-white/50 text-center px-4">{selectedEra.name}</span>
+                ) : (
+                  <img 
+                    src={eraImages[selectedEra.id]} 
+                    alt={selectedEra.name} 
+                    className="w-full h-full object-cover object-center"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      setEraImagesError(prev => ({ ...prev, [selectedEra.id]: true }));
+                    }}
+                  />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f18] via-[#0f0f18]/40 to-transparent" />
                 <div className="absolute bottom-4 left-6 right-6">
                   <span className="text-xs bg-f1-red text-f1-light font-black px-2 py-0.5 rounded-sm uppercase tracking-wider">
@@ -1234,12 +1293,20 @@ function Cars() {
                       Representing the pinnacle of their design history, this chassis delivered outstanding aerodynamics and racing dominance.
                     </p>
                   </div>
-                  <div className="h-28 rounded overflow-hidden bg-[#09090f]">
-                    <img 
-                      src={activeConstructorDetails.iconicCarImage} 
-                      alt={activeConstructorDetails.iconicCar} 
-                      className="w-full h-full object-cover object-center"
-                    />
+                  <div className="h-28 rounded overflow-hidden bg-[#09090f] flex items-center justify-center">
+                    {constructorImagesLoading[selectedConstructor.id] || constructorImagesError[selectedConstructor.id] || !constructorImages[selectedConstructor.id] ? (
+                      <span className="text-sm font-black text-white/50 text-center px-2">{selectedConstructor.name}</span>
+                    ) : (
+                      <img 
+                        src={constructorImages[selectedConstructor.id]} 
+                        alt={activeConstructorDetails.iconicCar} 
+                        className="w-full h-full object-cover object-center"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          setConstructorImagesError(prev => ({ ...prev, [selectedConstructor.id]: true }));
+                        }}
+                      />
+                    )}
                   </div>
                 </div>
 

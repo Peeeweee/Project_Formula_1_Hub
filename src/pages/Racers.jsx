@@ -18,6 +18,7 @@ import {
 import { SearchBar, SkeletonDriverRow, SkeletonCard } from '../components';
 import championsData from '../data/champions.json';
 import { getAllDrivers, getDriverInfo, getDriverStandings } from '../services/jolpicaApi';
+import getWikipediaImage from '../utils/getWikipediaImage';
 import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
 import FadeInSection from '../components/FadeInSection';
@@ -71,6 +72,9 @@ const NATIONALITY_TO_COUNTRY = {
 function Racers() {
   // Champions Hall of Fame states
   const [selectedChampion, setSelectedChampion] = useState(null);
+  const [championImages, setChampionImages] = useState({});
+  const [championImagesLoading, setChampionImagesLoading] = useState({});
+  const [championImagesError, setChampionImagesError] = useState({});
 
   // Full Driver Database states
   const [driversList, setDriversList] = useState([]);
@@ -134,6 +138,23 @@ function Racers() {
         setWorldTopology(countries);
       })
       .catch(err => console.error('Error loading world map:', err));
+
+    // Fetch Champion Images
+    sortedChampions.slice(0, 8).forEach(async (champ) => {
+      setChampionImagesLoading(prev => ({ ...prev, [champ.driverId]: true }));
+      try {
+        const url = await getWikipediaImage(champ.name);
+        if (url) {
+          setChampionImages(prev => ({ ...prev, [champ.driverId]: url }));
+        } else {
+          setChampionImagesError(prev => ({ ...prev, [champ.driverId]: true }));
+        }
+      } catch (err) {
+        setChampionImagesError(prev => ({ ...prev, [champ.driverId]: true }));
+      } finally {
+        setChampionImagesLoading(prev => ({ ...prev, [champ.driverId]: false }));
+      }
+    });
   }, []);
 
   // Fetch driver career standings details
@@ -363,16 +384,23 @@ function Racers() {
               onClick={() => setSelectedChampion(champ)}
               className="bg-f1-panel border border-f1-border rounded-lg overflow-hidden cursor-pointer hover:border-f1-red/60 transition duration-300 flex flex-col group"
             >
-              <div className="relative overflow-hidden h-44 bg-[#09090f]">
-                <img 
-                  src={champ.imageUrl} 
-                  alt={champ.name}
-                  className="w-full h-full object-cover object-top transition duration-500 group-hover:scale-105"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = 'https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg';
-                  }}
-                />
+              <div className="relative overflow-hidden h-44 bg-[#1a1a24] flex items-center justify-center">
+                {championImagesLoading[champ.driverId] || championImagesError[champ.driverId] || !championImages[champ.driverId] ? (
+                  <span className="text-3xl font-black text-white/50">
+                    {champ.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                  </span>
+                ) : (
+                  <img 
+                    src={championImages[champ.driverId]} 
+                    alt={champ.name}
+                    loading="lazy"
+                    className="w-full h-full object-cover object-top transition duration-500 group-hover:scale-105"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      setChampionImagesError(prev => ({ ...prev, [champ.driverId]: true }));
+                    }}
+                  />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-f1-panel via-transparent to-transparent" />
               </div>
               <div className="p-4 flex flex-col justify-between flex-1">

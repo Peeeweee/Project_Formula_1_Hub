@@ -8,6 +8,7 @@
     "championships": 16,
     "drivers": ["Michael Schumacher", "Niki Lauda", "Kimi Räikkönen"],
     "teamColor": "#e10600",
+    "wikiSearchTerm": "Scuderia Ferrari",
     "logoUrl": "https://upload.wikimedia.org/wikipedia/en/c/c4/Scuderia_Ferrari_logo.svg"
   },
   {
@@ -19,6 +20,7 @@
     "championships": 8,
     "drivers": ["Ayrton Senna", "Alain Prost", "Mika Häkkinen"],
     "teamColor": "#FF8700",
+    "wikiSearchTerm": "McLaren in Formula One",
     "logoUrl": "https://upload.wikimedia.org/wikipedia/en/6/66/McLaren_Racing_logo.svg"
   },
   {
@@ -30,6 +32,7 @@
     "championships": 9,
     "drivers": ["Nigel Mansell", "Alain Prost", "Damon Hill"],
     "teamColor": "#002B49",
+    "wikiSearchTerm": "Williams Grand Prix Engineering",
     "logoUrl": "https://upload.wikimedia.org/wikipedia/en/7/7e/Williams_Racing_logo_2020.svg"
   },
   {
@@ -41,6 +44,7 @@
     "championships": 8,
     "drivers": ["Lewis Hamilton", "Nico Rosberg", "Juan Manuel Fangio"],
     "teamColor": "#00A19B",
+    "wikiSearchTerm": "Mercedes-Benz in Formula One",
     "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fb/Mercedes_AMG_Petronas_F1_Logo.svg"
   },
   {
@@ -52,6 +56,7 @@
     "championships": 6,
     "drivers": ["Sebastian Vettel", "Max Verstappen", "Daniel Ricciardo"],
     "teamColor": "#0C2340",
+    "wikiSearchTerm": "Red Bull Racing",
     "logoUrl": "https://upload.wikimedia.org/wikipedia/en/9/94/Red_Bull_Racing_logo.svg"
   },
   {
@@ -63,6 +68,7 @@
     "championships": 7,
     "drivers": ["Jim Clark", "Graham Hill", "Mario Andretti"],
     "teamColor": "#004225",
+    "wikiSearchTerm": "Team Lotus",
     "logoUrl": "https://upload.wikimedia.org/wikipedia/en/b/b3/Team_Lotus_logo.svg"
   },
   {
@@ -74,6 +80,7 @@
     "championships": 2,
     "drivers": ["Fernando Alonso", "Alain Prost", "Giancarlo Fisichella"],
     "teamColor": "#FFF500",
+    "wikiSearchTerm": "Renault in Formula One",
     "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/a/ae/Renault_F1_logo.svg"
   },
   {
@@ -85,6 +92,7 @@
     "championships": 2,
     "drivers": ["Jack Brabham", "Denny Hulme", "Nelson Piquet"],
     "teamColor": "#002E1B",
+    "wikiSearchTerm": "Brabham",
     "logoUrl": "https://upload.wikimedia.org/wikipedia/en/d/db/Brabham_logo.svg"
   },
   {
@@ -96,6 +104,7 @@
     "championships": 1,
     "drivers": ["Michael Schumacher", "Nelson Piquet", "Gerhard Berger"],
     "teamColor": "#009639",
+    "wikiSearchTerm": "Benetton Formula",
     "logoUrl": "https://upload.wikimedia.org/wikipedia/en/4/4e/Benetton_Formula_logo.svg"
   },
   {
@@ -107,6 +116,7 @@
     "championships": 1,
     "drivers": ["Jackie Stewart", "François Cevert", "Jody Scheckter"],
     "teamColor": "#001A4E",
+    "wikiSearchTerm": "Tyrrell Racing",
     "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Tyrrell_Logo.svg"
   },
   {
@@ -118,6 +128,7 @@
     "championships": 2,
     "drivers": ["Jack Brabham", "Bruce McLaren", "Stirling Moss"],
     "teamColor": "#003300",
+    "wikiSearchTerm": "Cooper Car Company",
     "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b5/Cooper_logo.svg"
   },
   {
@@ -129,6 +140,7 @@
     "championships": 1,
     "drivers": ["Graham Hill", "Jackie Stewart", "Jo Siffert"],
     "teamColor": "#21281A",
+    "wikiSearchTerm": "British Racing Motors",
     "logoUrl": "https://upload.wikimedia.org/wikipedia/en/b/b4/British_Racing_Motors_logo.svg"
   },
   {
@@ -140,6 +152,7 @@
     "championships": 0,
     "drivers": ["Giuseppe Farina", "Juan Manuel Fangio", "Valtteri Bottas"],
     "teamColor": "#900020",
+    "wikiSearchTerm": "Alfa Romeo in Formula One",
     "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f6/Alfa_Romeo_F1_Team_Orlen_logo.svg"
   },
   {
@@ -151,6 +164,7 @@
     "championships": 0,
     "drivers": ["Juan Manuel Fangio", "Stirling Moss", "Jean Behra"],
     "teamColor": "#0F2D59",
+    "wikiSearchTerm": "Maserati in motorsport",
     "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f8/Maserati_logo.svg"
   },
   {
@@ -162,6 +176,7 @@
     "championships": 0,
     "drivers": ["Sebastian Vettel", "Fernando Alonso", "Lance Stroll"],
     "teamColor": "#005A49",
+    "wikiSearchTerm": "Aston Martin in Formula One",
     "logoUrl": "https://upload.wikimedia.org/wikipedia/en/e/e3/Aston_Martin_F1_logo.svg"
   },
   {
@@ -173,6 +188,7 @@
     "championships": 0,
     "drivers": ["Fernando Alonso", "Esteban Ocon", "Pierre Gasly"],
     "teamColor": "#0078C1",
+    "wikiSearchTerm": "Alpine F1 Team",
     "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Alpine_F1_Team_logo.svg"
   },
   {
@@ -184,6 +200,7 @@
     "championships": 0,
     "drivers": ["Kamui Kobayashi", "Nick Heidfeld", "Kimi Räikkönen"],
     "teamColor": "#52E252",
+    "wikiSearchTerm": "Sauber Motorsport",
     "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fb/Sauber_Motorsport_logo.svg"
   },
   {
@@ -195,6 +212,7 @@
     "championships": 0,
     "drivers": ["Romain Grosjean", "Kevin Magnussen", "Nico Hülkenberg"],
     "teamColor": "#E60000",
+    "wikiSearchTerm": "Haas F1 Team",
     "logoUrl": "https://upload.wikimedia.org/wikipedia/en/4/4e/Haas_F1_Team_logo.svg"
   },
   {
@@ -206,6 +224,7 @@
     "championships": 0,
     "drivers": ["Daniel Ricciardo", "Yuki Tsunoda", "Liam Lawson"],
     "teamColor": "#0000FF",
+    "wikiSearchTerm": "RB Formula One Team",
     "logoUrl": "https://upload.wikimedia.org/wikipedia/en/5/5a/Visa_Cash_App_RB_F1_Team_Logo.svg"
   },
   {
@@ -217,6 +236,7 @@
     "championships": 1,
     "drivers": ["Jenson Button", "Rubens Barrichello", "Anthony Davidson"],
     "teamColor": "#E3FC00",
+    "wikiSearchTerm": "Brawn GP",
     "logoUrl": "https://upload.wikimedia.org/wikipedia/en/4/4c/Brawn_GP_logo.svg"
   }
 ]

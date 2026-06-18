@@ -21,70 +21,70 @@
         "quali_avg": 3.0,
         "win_rate": 0.28
     },
-    {
-        "driverId": 4,
-        "name": "Fernando Alonso",
-        "cluster": 1,
-        "clusterLabel": "Race Day Warrior",
-        "avg_position_gain": 3.5,
-        "podium_rate": 0.2,
-        "dnf_rate": 0.1,
-        "quali_avg": 8.5,
-        "win_rate": 0.05
-    },
-    {
-        "driverId": 815,
-        "name": "Sergio Perez",
-        "cluster": 1,
-        "clusterLabel": "Race Day Warrior",
-        "avg_position_gain": 2.8,
-        "podium_rate": 0.15,
-        "dnf_rate": 0.12,
-        "quali_avg": 9.0,
-        "win_rate": 0.02
-    },
-    {
-        "driverId": 844,
-        "name": "Charles Leclerc",
-        "cluster": 2,
-        "clusterLabel": "Quali Specialist",
-        "avg_position_gain": -1.5,
-        "podium_rate": 0.25,
-        "dnf_rate": 0.15,
-        "quali_avg": 4.0,
-        "win_rate": 0.04
-    },
-    {
-        "driverId": 832,
-        "name": "Carlos Sainz",
-        "cluster": 2,
-        "clusterLabel": "Quali Specialist",
-        "avg_position_gain": -0.5,
-        "podium_rate": 0.18,
-        "dnf_rate": 0.11,
-        "quali_avg": 5.5,
-        "win_rate": 0.01
-    },
-    {
-        "driverId": 840,
-        "name": "Lance Stroll",
-        "cluster": 3,
-        "clusterLabel": "Backmarker",
-        "avg_position_gain": 0.2,
-        "podium_rate": 0.01,
-        "dnf_rate": 0.2,
-        "quali_avg": 14.0,
-        "win_rate": 0.0
-    },
-    {
-        "driverId": 842,
-        "name": "Pierre Gasly",
-        "cluster": 3,
-        "clusterLabel": "Backmarker",
-        "avg_position_gain": 0.5,
-        "podium_rate": 0.03,
-        "dnf_rate": 0.18,
-        "quali_avg": 12.0,
-        "win_rate": 0.01
-    }
+{
+"driverId": 4,
+"name": "Fernando Alonso",
+"cluster": 1,
+"clusterLabel": "Race Day Warrior",
+"avg_position_gain": 3.5,
+"podium_rate": 0.2,
+"dnf_rate": 0.1,
+"quali_avg": 8.5,
+"win_rate": 0.05
+},
+{
+"driverId": 815,
+"name": "Sergio Perez",
+"cluster": 1,
+"clusterLabel": "Race Day Warrior",
+"avg_position_gain": 2.8,
+"podium_rate": 0.15,
+"dnf_rate": 0.12,
+"quali_avg": 9.0,
+"win_rate": 0.02
+},
+{
+"driverId": 844,
+"name": "Charles Leclerc",
+"cluster": 2,
+"clusterLabel": "Quali Specialist",
+"avg_position_gain": -1.5,
+"podium_rate": 0.25,
+"dnf_rate": 0.15,
+"quali_avg": 4.0,
+"win_rate": 0.04
+},
+{
+"driverId": 832,
+"name": "Carlos Sainz",
+"cluster": 2,
+"clusterLabel": "Quali Specialist",
+"avg_position_gain": -0.5,
+"podium_rate": 0.18,
+"dnf_rate": 0.11,
+"quali_avg": 5.5,
+"win_rate": 0.01
+},
+{
+"driverId": 840,
+"name": "Lance Stroll",
+"cluster": 3,
+"clusterLabel": "Backmarker",
+"avg_position_gain": 0.2,
+"podium_rate": 0.01,
+"dnf_rate": 0.2,
+"quali_avg": 14.0,
+"win_rate": 0.0
+},
+{
+"driverId": 842,
+"name": "Pierre Gasly",
+"cluster": 3,
+"clusterLabel": "Backmarker",
+"avg_position_gain": 0.5,
+"podium_rate": 0.03,
+"dnf_rate": 0.18,
+"quali_avg": 12.0,
+"win_rate": 0.01
+}
 ]
