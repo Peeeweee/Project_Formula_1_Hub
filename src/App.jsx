@@ -6,7 +6,7 @@ import Racers from './pages/Racers';
 import Cars from './pages/Cars';
 import LiveSeason from './pages/LiveSeason';
 import PitWallAI from './pages/PitWallAI';
-import { ErrorBoundary } from './components';
+import { ErrorBoundary, IntroScreen, AnimatedBackground } from './components';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 
 const navLinks = [
@@ -33,7 +33,7 @@ const PageWrapper = ({ children }) => {
   );
 };
 
-function MainApp() {
+function MainApp({ onResetIntro }) {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isOnline = useOnlineStatus();
@@ -45,10 +45,18 @@ function MainApp() {
 
   return (
     <div className="min-h-screen bg-f1-dark text-f1-light overflow-x-hidden flex flex-col">
+      <AnimatedBackground isStartHere={location.pathname === '/'} />
+      <div className="relative z-10 flex-1 flex flex-col w-full">
       {/* Fixed Navigation Bar */}
       <nav className="fixed top-0 left-0 w-full z-50 bg-[#0a0a0f] border-b-2 border-f1-red h-16 flex items-center px-4 md:px-12 justify-between">
         {/* Logo */}
-        <NavLink to="/" className="flex items-center gap-2 relative z-50">
+        <NavLink 
+          to="/" 
+          className="flex items-center gap-2 relative z-50"
+          onClick={() => {
+            if (onResetIntro) onResetIntro();
+          }}
+        >
           <span className="font-extrabold tracking-wider text-f1-light text-md md:text-lg">
             FORMULA
           </span>
@@ -165,14 +173,37 @@ function MainApp() {
           </Routes>
         </AnimatePresence>
       </div>
+      </div>
     </div>
   );
 }
 
 function App() {
+  const [introComplete, setIntroComplete] = useState(false);
+
+  React.useEffect(() => {
+    const hasSeenIntro = sessionStorage.getItem("fdc1_intro_seen");
+    if (hasSeenIntro) {
+      setIntroComplete(true);
+    }
+  }, []);
+
+  const handleResetIntro = () => {
+    sessionStorage.removeItem("fdc1_intro_seen");
+    setIntroComplete(false);
+  };
+
   return (
     <Router>
-      <MainApp />
+      {!introComplete && <IntroScreen onComplete={() => setIntroComplete(true)} />}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: introComplete ? 1 : 0 }}
+        transition={{ duration: 0.4 }}
+        style={{ display: introComplete ? 'block' : 'none' }}
+      >
+        <MainApp onResetIntro={handleResetIntro} />
+      </motion.div>
     </Router>
   );
 }
