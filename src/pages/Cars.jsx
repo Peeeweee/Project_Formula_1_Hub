@@ -19,6 +19,8 @@ import erasData from '../data/eras.json';
 import constructorsData from '../data/constructors.json';
 import FadeInSection from '../components/FadeInSection';
 import getWikipediaImage from '../utils/getWikipediaImage';
+import carVault from '../data/carVault.json';
+import CarViewer3D from '../components/CarViewer3D';
 
 const CARS_DATA = [
   { id: 'ferrari', name: 'Ferrari SF-26', powerUnit: 'Ferrari 069/3', chassis: 'Carbon-fibre composite honeycomb', weight: '798kg', aeroEfficiency: 'High-downforce wing profile', maxRpm: '15,000 RPM' },
@@ -366,6 +368,13 @@ function Cars() {
   const [selectedConstructor, setSelectedConstructor] = useState(null);
   const [hoveredPart, setHoveredPart] = useState(null);
 
+  // Car Vault States
+  const [vaultSelectedEraId, setVaultSelectedEraId] = useState('all');
+  const [vaultSearchTerm, setVaultSearchTerm] = useState('');
+  const [vaultSelectedCar, setVaultSelectedCar] = useState(null);
+  const [vaultCarImages, setVaultCarImages] = useState({});
+  const [vaultCarImagesLoading, setVaultCarImagesLoading] = useState({});
+
   // Comparator states
   const [carAId, setCarAId] = useState(ICONIC_CARS_DATA[6].id); // Ferrari F2004 default
   const [carBId, setCarBId] = useState(ICONIC_CARS_DATA[8].id); // Mercedes W11 default
@@ -491,6 +500,57 @@ function Cars() {
   ];
 
   const activePart = ANATOMY_PARTS.find(p => p.id === hoveredPart);
+
+  // --- CAR VAULT LOGIC ---
+  const allVaultCars = React.useMemo(() => {
+    return carVault.flatMap(era => era.cars.map(car => ({ ...car, eraId: era.eraId, eraName: era.eraName, eraColor: era.eraColor })));
+  }, []);
+
+  const filteredVaultCars = React.useMemo(() => {
+    return allVaultCars.filter(car => {
+      const matchesEra = vaultSelectedEraId === 'all' || car.eraId === vaultSelectedEraId;
+      const term = vaultSearchTerm.toLowerCase();
+      const matchesSearch = term === '' || 
+        car.name.toLowerCase().includes(term) || 
+        car.team.toLowerCase().includes(term) || 
+        car.driver.toLowerCase().includes(term);
+      return matchesEra && matchesSearch;
+    });
+  }, [allVaultCars, vaultSelectedEraId, vaultSearchTerm]);
+
+  useEffect(() => {
+    filteredVaultCars.forEach(async (car) => {
+      if (vaultCarImages[car.carId] || vaultCarImagesLoading[car.carId]) return;
+      
+      setVaultCarImagesLoading(prev => ({ ...prev, [car.carId]: true }));
+      try {
+        const url = await getWikipediaImage(car.wikiSearchTerm);
+        if (url) {
+          setVaultCarImages(prev => ({ ...prev, [car.carId]: url }));
+        }
+      } catch (e) {
+        // Silent catch
+      } finally {
+        setVaultCarImagesLoading(prev => ({ ...prev, [car.carId]: false }));
+      }
+    });
+  }, [filteredVaultCars]);
+
+  const handleNextVaultCar = () => {
+    if (!vaultSelectedCar) return;
+    const currentIndex = filteredVaultCars.findIndex(c => c.carId === vaultSelectedCar.carId);
+    if (currentIndex < filteredVaultCars.length - 1) {
+      setVaultSelectedCar(filteredVaultCars[currentIndex + 1]);
+    }
+  };
+
+  const handlePrevVaultCar = () => {
+    if (!vaultSelectedCar) return;
+    const currentIndex = filteredVaultCars.findIndex(c => c.carId === vaultSelectedCar.carId);
+    if (currentIndex > 0) {
+      setVaultSelectedCar(filteredVaultCars[currentIndex - 1]);
+    }
+  };
 
   return (
     <div className="pt-24 pb-12 px-6 max-w-7xl mx-auto space-y-16">
@@ -647,6 +707,139 @@ function Cars() {
             </motion.div>
           ))}
         </div>
+      </FadeInSection>
+
+      {/* SECTION: Car Vault */}
+      <FadeInSection>
+        <div className="border-l-2 border-f1-red pl-2 mb-4">
+          <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
+            Interactive Encyclopedia
+          </h4>
+        </div>
+        <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light tracking-tight">Car Vault</h2>
+            <p className="text-f1-muted text-xs mt-1">Every iconic F1 car — from 1950 to today. Click any car to explore it in 3D.</p>
+          </div>
+          
+          {/* SEARCH BAR */}
+          <div className="w-full md:w-64">
+            <input 
+              type="text" 
+              placeholder="Search by name, team, or driver..." 
+              value={vaultSearchTerm}
+              onChange={(e) => setVaultSearchTerm(e.target.value)}
+              className="w-full bg-[#0f0f18] border border-f1-border text-f1-light text-xs px-4 py-2 rounded-full outline-none focus:ring-1 focus:ring-f1-red transition"
+            />
+          </div>
+        </div>
+
+        {/* ERA SELECTOR */}
+        <div className="overflow-x-auto pb-4 mb-6 scrollbar-hide">
+          <div className="flex gap-2 w-max">
+            <button
+              onClick={() => setVaultSelectedEraId('all')}
+              className={`relative px-4 py-2 rounded-full text-xs font-bold uppercase transition-colors ${
+                vaultSelectedEraId === 'all' ? 'text-white' : 'text-f1-muted hover:text-white'
+              }`}
+            >
+              {vaultSelectedEraId === 'all' && (
+                <motion.div
+                  layoutId="eraActive"
+                  className="absolute inset-0 bg-f1-red rounded-full"
+                  style={{ zIndex: -1 }}
+                />
+              )}
+              All Eras
+            </button>
+            {carVault.map(era => (
+              <button
+                key={era.eraId}
+                onClick={() => setVaultSelectedEraId(era.eraId)}
+                className={`relative px-4 py-2 rounded-full text-xs font-bold uppercase transition-colors ${
+                  vaultSelectedEraId === era.eraId ? 'text-[#0a0a0f]' : 'text-f1-muted hover:text-white'
+                }`}
+              >
+                {vaultSelectedEraId === era.eraId && (
+                  <motion.div
+                    layoutId="eraActive"
+                    className="absolute inset-0 rounded-full"
+                    style={{ backgroundColor: era.eraColor, zIndex: -1 }}
+                  />
+                )}
+                {era.eraName}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* CAR GRID */}
+        <motion.div 
+          layout
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+        >
+          <AnimatePresence mode="popLayout">
+            {filteredVaultCars.map((car, index) => (
+              <motion.div
+                key={car.carId}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.2, delay: Math.min(index * 0.04, 0.4) }}
+                whileHover={{ scale: 1.02 }}
+                className="bg-[#0f0f18] rounded-lg overflow-hidden border border-f1-border hover:border-f1-red transition-all duration-300 flex flex-col group cursor-pointer"
+                onClick={() => setVaultSelectedCar(car)}
+              >
+                <div className="h-1 w-full" style={{ backgroundColor: car.teamColor }} />
+                
+                <div className="h-40 bg-black relative flex items-center justify-center overflow-hidden">
+                  {vaultCarImages[car.carId] ? (
+                    <img 
+                      src={vaultCarImages[car.carId]} 
+                      alt={car.name} 
+                      className="w-full h-full object-cover object-center opacity-80 group-hover:opacity-100 transition-opacity" 
+                    />
+                  ) : (
+                    <span className="text-4xl font-black text-white/10 uppercase">{car.name.substring(0, 2)}</span>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f18] to-transparent" />
+                  
+                  <div 
+                    className="absolute bottom-3 left-3 px-2 py-0.5 rounded-sm text-[10px] font-black uppercase text-[#0a0a0f]"
+                    style={{ backgroundColor: car.eraColor }}
+                  >
+                    {car.year}
+                  </div>
+                </div>
+
+                <div className="p-4 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-sm font-bold text-white mb-1">{car.name}</h3>
+                    <p className="text-xs text-gray-400 mb-3">{car.team}</p>
+                    
+                    <div className="flex items-center gap-2 text-xs text-gray-300">
+                      <span className="opacity-60">👤</span>
+                      {car.driver}
+                    </div>
+                  </div>
+                  
+                  <button 
+                    className="mt-4 w-full py-2 border border-f1-red text-f1-red text-xs font-bold uppercase rounded hover:bg-f1-red hover:text-white transition-colors"
+                    onClick={(e) => { e.stopPropagation(); setVaultSelectedCar(car); }}
+                  >
+                    View in 3D
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
+        
+        {filteredVaultCars.length === 0 && (
+          <div className="text-center py-12 text-f1-muted text-sm">
+            No cars found matching your search criteria.
+          </div>
+        )}
       </FadeInSection>
 
       {/* SECTION 3: Car Spec Comparator */}
