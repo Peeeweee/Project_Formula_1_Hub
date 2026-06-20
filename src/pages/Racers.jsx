@@ -15,7 +15,7 @@ import {
   PolarRadiusAxis,
   Radar
 } from 'recharts';
-import { SearchBar, SkeletonDriverRow, SkeletonCard } from '../components';
+import { SearchBar, SkeletonDriverRow, SkeletonCard, PlotlyTooltip } from '../components';
 import championsData from '../data/champions.json';
 import { getAllDrivers, getDriverInfo, getDriverStandings } from '../services/jolpicaApi';
 import getWikipediaImage from '../utils/getWikipediaImage';
@@ -555,15 +555,7 @@ function Racers() {
                             <CartesianGrid strokeDasharray="3 3" stroke="#1a1a24" opacity={0.4} />
                             <XAxis dataKey="season" stroke="#666666" fontSize={9} tickLine={false} />
                             <YAxis stroke="#666666" fontSize={9} tickLine={false} />
-                            <Tooltip 
-                              contentStyle={{ 
-                                backgroundColor: '#0f0f18', 
-                                borderColor: '#1a1a24', 
-                                color: '#f0f0f0',
-                                borderRadius: '4px',
-                                fontSize: '10px'
-                              }}
-                            />
+                            <Tooltip content={<PlotlyTooltip xKey="season" />} />
                             <Line 
                               type="monotone" 
                               dataKey="points" 

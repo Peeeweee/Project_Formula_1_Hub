@@ -7,7 +7,7 @@ import podiumPredictions from '../data/podium_predictions.json';
 import anomalySummary from '../data/lap_anomalies/summary.json';
 import networkData from '../data/sna/constructor_network.json';
 import FadeInSection from '../components/FadeInSection';
-import { SkeletonCard } from '../components';
+import { SkeletonCard, PlotlyTooltip } from '../components';
 
 const STRATEGIES = {
   oneStopSoftHard: {
@@ -69,15 +69,24 @@ const CLUSTER_COLORS = {
 const DriverTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
+    const color = CLUSTER_COLORS[data.cluster] || '#e10600';
     return (
-      <div className="bg-[#0f0f18] border border-[#1a1a24] p-3 rounded-md shadow-xl z-50">
-        <p className="text-f1-light font-bold mb-1">{data.name}</p>
-        <div className="flex items-center gap-2 mb-2">
-          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: CLUSTER_COLORS[data.cluster] }}></span>
-          <span className="text-xs font-semibold text-f1-muted">{data.clusterLabel}</span>
+      <div 
+        className="plotly-tooltip bg-[#1f2c3f]/95 border border-white/10 rounded px-3 py-2 text-[11px] text-white shadow-2xl pointer-events-none font-mono z-50"
+        style={{
+          borderLeft: `4px solid ${color}`,
+          boxShadow: '0 4px 15px rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(4px)'
+        }}
+      >
+        <div className="border-b border-white/15 pb-1 mb-1 font-bold text-gray-300">
+          Driver={data.name}
         </div>
-        <p className="text-[10px] text-gray-400">Podium Rate: {(data.podium_rate * 100).toFixed(1)}%</p>
-        <p className="text-[10px] text-gray-400">Avg Pos Gain: {data.avg_position_gain > 0 ? '+' : ''}{data.avg_position_gain.toFixed(2)}</p>
+        <div className="space-y-1">
+          <div><span className="text-gray-400 font-semibold">archetype</span>={data.clusterLabel}</div>
+          <div><span className="text-gray-400 font-semibold">podium_rate</span>={(data.podium_rate * 100).toFixed(1)}%</div>
+          <div><span className="text-gray-400 font-semibold">avg_position_gain</span>={data.avg_position_gain > 0 ? '+' : ''}{data.avg_position_gain.toFixed(2)}</div>
+        </div>
       </div>
     );
   }
@@ -101,15 +110,27 @@ const AnomalyDot = (props) => {
 const AnomalyTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
+    const color = data.isAnomaly ? '#e10600' : '#4a4a5a';
     return (
-      <div className="bg-[#0f0f18] border border-[#1a1a24] p-3 rounded-md shadow-xl z-50">
-        <p className="text-f1-light font-bold mb-1">Lap {data.lap}</p>
-        <p className="text-[12px] text-f1-muted mb-2">Time: {(data.seconds).toFixed(3)}s</p>
-        {data.isAnomaly && (
-          <div className="bg-f1-red/10 border border-f1-red/30 px-2 py-1 rounded text-[10px] text-f1-red font-bold">
-            ⚠️ {data.reason}
-          </div>
-        )}
+      <div 
+        className="plotly-tooltip bg-[#1f2c3f]/95 border border-white/10 rounded px-3 py-2 text-[11px] text-white shadow-2xl pointer-events-none font-mono z-50"
+        style={{
+          borderLeft: `4px solid ${color}`,
+          boxShadow: '0 4px 15px rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(4px)'
+        }}
+      >
+        <div className="border-b border-white/15 pb-1 mb-1 font-bold text-gray-300">
+          lap={data.lap}
+        </div>
+        <div className="space-y-1">
+          <div><span className="text-gray-400 font-semibold">seconds</span>={(data.seconds).toFixed(3)}s</div>
+          {data.isAnomaly && (
+            <div className="mt-1 text-f1-red font-bold">
+              ⚠️ {data.reason}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -823,15 +844,7 @@ function PitWallAI() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#1a1a24" opacity={0.6} />
                     <XAxis dataKey="lap" type="number" domain={[0, 70]} stroke="#666666" fontSize={12} tickLine={false} />
                     <YAxis domain={[0, 100]} stroke="#666666" fontSize={12} tickLine={false} />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: '#0f0f18', 
-                        borderColor: '#1a1a24', 
-                        color: '#f0f0f0',
-                        borderRadius: '4px'
-                      }}
-                      formatter={(value, name, props) => [`${value}% Grip`, `${props.payload.type} Compound`]}
-                    />
+                    <Tooltip content={<PlotlyTooltip xKey="lap" yFormatter={(val, item) => `${val}% Grip (${item.payload.type} Compound)`} />} />
                     <Legend verticalAlign="top" height={36}/>
                     <Line 
                       type="monotone" 

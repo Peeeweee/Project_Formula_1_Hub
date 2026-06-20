@@ -10,3 +10,7 @@ export { default as IntroScreen } from './IntroScreen';
 export { default as AnimatedBackground } from './AnimatedBackground';
 export { default as CarViewer3D } from './CarViewer3D';
 export { default as F1CarSVG } from './F1CarSVG';
+export { default as CarViewer2D } from './CarViewer2D';
+export { default as CarVaultFilters } from './CarVaultFilters';
+export { default as PlotlyTooltip } from './PlotlyTooltip';
+export { default as RealisticTire } from './RealisticTire';

@@ -21,6 +21,84 @@ import FadeInSection from '../components/FadeInSection';
 import getWikipediaImage from '../utils/getWikipediaImage';
 import carVault from '../data/carVault.json';
 import CarViewer3D from '../components/CarViewer3D';
+import CarViewer2D from '../components/CarViewer2D';
+import CarVaultFilters from '../components/CarVaultFilters';
+import { PlotlyTooltip } from '../components';
+
+const CarCard = ({ car, onClick, imageCache, setImageCache }) => {
+  const [loading, setLoading] = useState(!imageCache[car.carId] && !imageCache[`${car.carId}_err`]);
+  
+  useEffect(() => {
+    if (imageCache[car.carId] || imageCache[`${car.carId}_err`]) {
+      setLoading(false);
+      return;
+    }
+    let isMounted = true;
+    getWikipediaImage(car.wikiSearchTerm).then(url => {
+      if (!isMounted) return;
+      if (url) setImageCache(prev => ({...prev, [car.carId]: url}));
+      else setImageCache(prev => ({...prev, [`${car.carId}_err`]: true}));
+      setLoading(false);
+    }).catch(() => {
+      if (isMounted) {
+        setImageCache(prev => ({...prev, [`${car.carId}_err`]: true}));
+        setLoading(false);
+      }
+    });
+    return () => { isMounted = false; };
+  }, [car.carId, car.wikiSearchTerm, imageCache, setImageCache]);
+
+  const driversText = Array.isArray(car.drivers) ? car.drivers : (car.driver ? car.driver.split(',').map(s=>s.trim()) : []);
+  const displayDrivers = driversText.slice(0, 2).join(', ');
+  const driverSuffix = driversText.length > 2 ? ` +${driversText.length - 2} more` : '';
+
+  return (
+    <motion.div
+      layout
+      whileHover={{ scale: 1.02 }}
+      onClick={onClick}
+      className="group relative h-[240px] bg-[#0f0f18] rounded-lg overflow-hidden border border-[#2a2a2a] cursor-pointer flex flex-col transition-colors duration-150"
+      style={{ '--hover-border': car.teamColor }}
+    >
+      <style>{`
+        .group:hover { border-color: var(--hover-border); }
+      `}</style>
+      <div className="h-1 w-full shrink-0" style={{ backgroundColor: car.teamColor }} />
+      <div className="h-[120px] bg-black relative flex items-center justify-center overflow-hidden shrink-0">
+        {loading ? (
+          <div className="w-full h-full bg-[#1a1a24] animate-pulse" />
+        ) : imageCache[car.carId] ? (
+          <img src={imageCache[car.carId]} alt={car.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+        ) : (
+          <span className="text-4xl font-black text-white/10 uppercase">{car.name.substring(0, 2)}</span>
+        )}
+      </div>
+      <div className="h-[100px] p-3 flex flex-col justify-between relative shrink-0">
+        <div className="absolute top-[-10px] left-3 px-2 py-0.5 rounded-full text-[9px] font-black uppercase text-[#0a0a0f] shadow" style={{ backgroundColor: car.eraColor }}>
+          {car.eraName}
+        </div>
+        {car.isChampionshipCar && (
+          <div className="absolute top-[-10px] right-3 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-gradient-to-r from-yellow-400 to-yellow-600 text-black shadow">
+            🏆 WCC
+          </div>
+        )}
+        <div className="mt-2">
+          <h3 className="text-[13px] font-bold text-white leading-tight line-clamp-2">{car.name}</h3>
+          <p className="text-[11px] text-f1-muted mt-0.5">{car.team} • {car.year}</p>
+        </div>
+        <p className="text-[10px] italic text-f1-muted/80 truncate">
+          {displayDrivers}{driverSuffix}
+        </p>
+      </div>
+      <div className="absolute bottom-2 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
+        <button className="w-full py-1.5 border border-f1-red text-f1-red text-[11px] font-bold uppercase rounded bg-[#0f0f18]/90 backdrop-blur-sm transition-colors pointer-events-auto">
+          View Car
+        </button>
+      </div>
+    </motion.div>
+  );
+};
+
 
 const CARS_DATA = [
   { id: 'ferrari', name: 'Ferrari SF-26', powerUnit: 'Ferrari 069/3', chassis: 'Carbon-fibre composite honeycomb', weight: '798kg', aeroEfficiency: 'High-downforce wing profile', maxRpm: '15,000 RPM' },
@@ -368,12 +446,6 @@ function Cars() {
   const [selectedConstructor, setSelectedConstructor] = useState(null);
   const [hoveredPart, setHoveredPart] = useState(null);
 
-  // Car Vault States
-  const [vaultSelectedEraId, setVaultSelectedEraId] = useState('all');
-  const [vaultSearchTerm, setVaultSearchTerm] = useState('');
-  const [vaultSelectedCar, setVaultSelectedCar] = useState(null);
-  const [vaultCarImages, setVaultCarImages] = useState({});
-  const [vaultCarImagesLoading, setVaultCarImagesLoading] = useState({});
 
   // Comparator states
   const [carAId, setCarAId] = useState(ICONIC_CARS_DATA[6].id); // Ferrari F2004 default
@@ -502,55 +574,41 @@ function Cars() {
   const activePart = ANATOMY_PARTS.find(p => p.id === hoveredPart);
 
   // --- CAR VAULT LOGIC ---
-  const allVaultCars = React.useMemo(() => {
-    return carVault.flatMap(era => era.cars.map(car => ({ ...car, eraId: era.eraId, eraName: era.eraName, eraColor: era.eraColor })));
+  const allCars = React.useMemo(() => {
+    return carVault.flatMap(era => era.cars.map(car => ({ ...car, eraName: era.eraName, eraColor: era.eraColor })));
   }, []);
 
-  const filteredVaultCars = React.useMemo(() => {
-    return allVaultCars.filter(car => {
-      const matchesEra = vaultSelectedEraId === 'all' || car.eraId === vaultSelectedEraId;
-      const term = vaultSearchTerm.toLowerCase();
-      const matchesSearch = term === '' || 
-        car.name.toLowerCase().includes(term) || 
-        car.team.toLowerCase().includes(term) || 
-        car.driver.toLowerCase().includes(term);
-      return matchesEra && matchesSearch;
-    });
-  }, [allVaultCars, vaultSelectedEraId, vaultSearchTerm]);
+  const eraMap = React.useMemo(() => {
+    return Object.fromEntries(carVault.map(e => [e.eraId, e]));
+  }, []);
 
+  const [filteredCars, setFilteredCars] = useState(allCars);
+  const [vaultSelectedCar, setVaultSelectedCar] = useState(null);
+  const [selectedCarIndex, setSelectedCarIndex] = useState(0);
+  const [imageCache, setImageCache] = useState({});
+  const [isGroupedView, setIsGroupedView] = useState(false);
+
+  // Keyboard navigation for modal
   useEffect(() => {
-    filteredVaultCars.forEach(async (car) => {
-      if (vaultCarImages[car.carId] || vaultCarImagesLoading[car.carId]) return;
-      
-      setVaultCarImagesLoading(prev => ({ ...prev, [car.carId]: true }));
-      try {
-        const url = await getWikipediaImage(car.wikiSearchTerm);
-        if (url) {
-          setVaultCarImages(prev => ({ ...prev, [car.carId]: url }));
+    const handleKeyDown = (e) => {
+      if (!vaultSelectedCar) return;
+      if (e.key === 'Escape') {
+        setVaultSelectedCar(null);
+      } else if (e.key === 'ArrowLeft') {
+        if (selectedCarIndex > 0) {
+          setVaultSelectedCar(filteredCars[selectedCarIndex - 1]);
+          setSelectedCarIndex(selectedCarIndex - 1);
         }
-      } catch (e) {
-        // Silent catch
-      } finally {
-        setVaultCarImagesLoading(prev => ({ ...prev, [car.carId]: false }));
+      } else if (e.key === 'ArrowRight') {
+        if (selectedCarIndex < filteredCars.length - 1) {
+          setVaultSelectedCar(filteredCars[selectedCarIndex + 1]);
+          setSelectedCarIndex(selectedCarIndex + 1);
+        }
       }
-    });
-  }, [filteredVaultCars]);
-
-  const handleNextVaultCar = () => {
-    if (!vaultSelectedCar) return;
-    const currentIndex = filteredVaultCars.findIndex(c => c.carId === vaultSelectedCar.carId);
-    if (currentIndex < filteredVaultCars.length - 1) {
-      setVaultSelectedCar(filteredVaultCars[currentIndex + 1]);
-    }
-  };
-
-  const handlePrevVaultCar = () => {
-    if (!vaultSelectedCar) return;
-    const currentIndex = filteredVaultCars.findIndex(c => c.carId === vaultSelectedCar.carId);
-    if (currentIndex > 0) {
-      setVaultSelectedCar(filteredVaultCars[currentIndex - 1]);
-    }
-  };
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [vaultSelectedCar, selectedCarIndex, filteredCars]);
 
   return (
     <div className="pt-24 pb-12 px-6 max-w-7xl mx-auto space-y-16">
@@ -719,127 +777,246 @@ function Cars() {
         <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
           <div>
             <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light tracking-tight">Car Vault</h2>
-            <p className="text-f1-muted text-xs mt-1">Every iconic F1 car — from 1950 to today. Click any car to explore it in 3D.</p>
+            <p className="text-f1-muted text-xs mt-1">89 iconic F1 cars from 1950 to today — explore every era.</p>
           </div>
           
-          {/* SEARCH BAR */}
-          <div className="w-full md:w-64">
-            <input 
-              type="text" 
-              placeholder="Search by name, team, or driver..." 
-              value={vaultSearchTerm}
-              onChange={(e) => setVaultSearchTerm(e.target.value)}
-              className="w-full bg-[#0f0f18] border border-f1-border text-f1-light text-xs px-4 py-2 rounded-full outline-none focus:ring-1 focus:ring-f1-red transition"
-            />
-          </div>
-        </div>
-
-        {/* ERA SELECTOR */}
-        <div className="overflow-x-auto pb-4 mb-6 scrollbar-hide">
-          <div className="flex gap-2 w-max">
-            <button
-              onClick={() => setVaultSelectedEraId('all')}
-              className={`relative px-4 py-2 rounded-full text-xs font-bold uppercase transition-colors ${
-                vaultSelectedEraId === 'all' ? 'text-white' : 'text-f1-muted hover:text-white'
-              }`}
+          <div className="flex bg-[#1a1a24] p-1 rounded-lg border border-[#2a2a2a] shrink-0">
+            <button 
+              onClick={() => setIsGroupedView(false)}
+              className={`px-4 py-1.5 text-xs font-bold rounded transition-colors ${!isGroupedView ? 'bg-[#2a2a35] text-white' : 'text-f1-muted hover:text-white'}`}
             >
-              {vaultSelectedEraId === 'all' && (
-                <motion.div
-                  layoutId="eraActive"
-                  className="absolute inset-0 bg-f1-red rounded-full"
-                  style={{ zIndex: -1 }}
-                />
-              )}
-              All Eras
+              Grid View
             </button>
-            {carVault.map(era => (
-              <button
-                key={era.eraId}
-                onClick={() => setVaultSelectedEraId(era.eraId)}
-                className={`relative px-4 py-2 rounded-full text-xs font-bold uppercase transition-colors ${
-                  vaultSelectedEraId === era.eraId ? 'text-[#0a0a0f]' : 'text-f1-muted hover:text-white'
-                }`}
-              >
-                {vaultSelectedEraId === era.eraId && (
-                  <motion.div
-                    layoutId="eraActive"
-                    className="absolute inset-0 rounded-full"
-                    style={{ backgroundColor: era.eraColor, zIndex: -1 }}
-                  />
-                )}
-                {era.eraName}
-              </button>
-            ))}
+            <button 
+              onClick={() => setIsGroupedView(true)}
+              className={`px-4 py-1.5 text-xs font-bold rounded transition-colors ${isGroupedView ? 'bg-[#2a2a35] text-white' : 'text-f1-muted hover:text-white'}`}
+            >
+              Era Groups
+            </button>
           </div>
         </div>
 
-        {/* CAR GRID */}
-        <motion.div 
-          layout
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-        >
-          <AnimatePresence mode="popLayout">
-            {filteredVaultCars.map((car, index) => (
-              <motion.div
-                key={car.carId}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.2, delay: Math.min(index * 0.04, 0.4) }}
-                whileHover={{ scale: 1.02 }}
-                className="bg-[#0f0f18] rounded-lg overflow-hidden border border-f1-border hover:border-f1-red transition-all duration-300 flex flex-col group cursor-pointer"
-                onClick={() => setVaultSelectedCar(car)}
-              >
-                <div className="h-1 w-full" style={{ backgroundColor: car.teamColor }} />
-                
-                <div className="h-40 bg-black relative flex items-center justify-center overflow-hidden">
-                  {vaultCarImages[car.carId] ? (
-                    <img 
-                      src={vaultCarImages[car.carId]} 
-                      alt={car.name} 
-                      className="w-full h-full object-cover object-center opacity-80 group-hover:opacity-100 transition-opacity" 
+        <CarVaultFilters cars={allCars} onFilterChange={setFilteredCars} />
+
+        <div className="mt-8">
+          <AnimatePresence mode="wait">
+            {isGroupedView ? (
+              <motion.div key="grouped" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                {carVault.map(era => {
+                  const eraCars = filteredCars.filter(c => c.eraId === era.eraId);
+                  if (eraCars.length === 0) return null;
+                  return (
+                    <div key={era.eraId} className="mb-10">
+                      <div className="mb-4 pb-2 border-b border-[#2a2a2a] flex items-end gap-4">
+                        <h3 className="text-xl font-black" style={{ color: era.eraColor }}>{era.eraName}</h3>
+                        <span className="text-xs text-f1-muted font-bold mb-1">{era.years}</span>
+                        <span className="text-[10px] text-f1-muted ml-auto mb-1">{eraCars.length} cars</span>
+                      </div>
+                      <div className="flex gap-4 overflow-x-auto pb-4 snap-x">
+                        {eraCars.map((car) => (
+                          <div key={car.carId} className="w-[260px] shrink-0 snap-start">
+                            <CarCard 
+                              car={car} 
+                              imageCache={imageCache} 
+                              setImageCache={setImageCache} 
+                              onClick={() => {
+                                setVaultSelectedCar(car);
+                                setSelectedCarIndex(filteredCars.findIndex(c => c.carId === car.carId));
+                              }} 
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </motion.div>
+            ) : (
+              <motion.div key="grid" layout className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                <AnimatePresence mode="popLayout">
+                  {filteredCars.map((car) => (
+                    <CarCard 
+                      key={car.carId}
+                      car={car} 
+                      imageCache={imageCache} 
+                      setImageCache={setImageCache} 
+                      onClick={() => {
+                        setVaultSelectedCar(car);
+                        setSelectedCarIndex(filteredCars.indexOf(car));
+                      }} 
                     />
-                  ) : (
-                    <span className="text-4xl font-black text-white/10 uppercase">{car.name.substring(0, 2)}</span>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f18] to-transparent" />
-                  
-                  <div 
-                    className="absolute bottom-3 left-3 px-2 py-0.5 rounded-sm text-[10px] font-black uppercase text-[#0a0a0f]"
-                    style={{ backgroundColor: car.eraColor }}
-                  >
-                    {car.year}
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* MODAL */}
+        <AnimatePresence>
+          {vaultSelectedCar && (
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black/92 z-[100] flex items-center justify-center p-2 sm:p-4"
+            >
+              <div className="w-full max-w-[1000px] max-h-[90vh] bg-[#0f0f18] border border-[#2a2a2a] rounded-xl flex flex-col relative overflow-hidden shadow-2xl">
+                
+                <button 
+                  onClick={() => {
+                    if (selectedCarIndex > 0) {
+                      setVaultSelectedCar(filteredCars[selectedCarIndex - 1]);
+                      setSelectedCarIndex(selectedCarIndex - 1);
+                    }
+                  }}
+                  disabled={selectedCarIndex === 0}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#1a1a24] text-white flex items-center justify-center z-50 hover:bg-f1-red disabled:opacity-30 disabled:hover:bg-[#1a1a24] transition-all"
+                >
+                  ◀
+                </button>
+                <button 
+                  onClick={() => {
+                    if (selectedCarIndex < filteredCars.length - 1) {
+                      setVaultSelectedCar(filteredCars[selectedCarIndex + 1]);
+                      setSelectedCarIndex(selectedCarIndex + 1);
+                    }
+                  }}
+                  disabled={selectedCarIndex === filteredCars.length - 1}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#1a1a24] text-white flex items-center justify-center z-50 hover:bg-f1-red disabled:opacity-30 disabled:hover:bg-[#1a1a24] transition-all"
+                >
+                  ▶
+                </button>
+
+                <div className="flex justify-between items-center p-4 border-b border-[#2a2a2a] bg-[#1a1a24] shrink-0 pl-14 pr-4">
+                  <div className="flex items-center gap-3">
+                    <span className="px-2 py-0.5 rounded-sm text-[10px] font-black uppercase text-[#0a0a0f]" style={{ backgroundColor: vaultSelectedCar.eraColor }}>
+                      {vaultSelectedCar.eraName}
+                    </span>
+                    <AnimatePresence mode="wait">
+                      <motion.div key={vaultSelectedCar.carId} initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+                        <h2 className="text-xl font-black text-white leading-tight">{vaultSelectedCar.name}</h2>
+                        <div className="text-[11px] text-f1-muted font-bold">{vaultSelectedCar.team} • {vaultSelectedCar.year}</div>
+                      </motion.div>
+                    </AnimatePresence>
                   </div>
+                  <motion.button 
+                    whileTap={{ scale: 0.9 }} 
+                    onClick={() => setVaultSelectedCar(null)}
+                    className="w-8 h-8 rounded-full bg-[#2a2a35] hover:bg-f1-red text-white flex items-center justify-center transition-colors shrink-0"
+                  >
+                    ✕
+                  </motion.button>
                 </div>
 
-                <div className="p-4 flex-1 flex flex-col justify-between">
-                  <div>
-                    <h3 className="text-sm font-bold text-white mb-1">{car.name}</h3>
-                    <p className="text-xs text-gray-400 mb-3">{car.team}</p>
-                    
-                    <div className="flex items-center gap-2 text-xs text-gray-300">
-                      <span className="opacity-60">👤</span>
-                      {car.driver}
-                    </div>
-                  </div>
-                  
-                  <button 
-                    className="mt-4 w-full py-2 border border-f1-red text-f1-red text-xs font-bold uppercase rounded hover:bg-f1-red hover:text-white transition-colors"
-                    onClick={(e) => { e.stopPropagation(); setVaultSelectedCar(car); }}
-                  >
-                    View in 3D
-                  </button>
+                <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-12 custom-scrollbar">
+                  <AnimatePresence mode="wait">
+                    <motion.div 
+                      key={vaultSelectedCar.carId}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                      className="flex flex-col md:flex-row gap-6 md:gap-8"
+                    >
+                      <div className="w-full md:w-[55%] flex flex-col gap-6">
+                        <div className="h-[300px] md:h-[360px] bg-[#0a0a0f] rounded-lg border border-[#2a2a2a] overflow-hidden flex items-center justify-center shadow-inner relative">
+                          <CarViewer2D car={vaultSelectedCar} />
+                        </div>
+                        {imageCache[vaultSelectedCar.carId] && (
+                          <div>
+                            <h4 className="text-[10px] text-f1-muted font-bold uppercase tracking-wider mb-2">Historical Reference Photo</h4>
+                            <div className="w-full aspect-video rounded-lg overflow-hidden border border-[#2a2a2a]">
+                              <img src={imageCache[vaultSelectedCar.carId]} alt={vaultSelectedCar.name} className="w-full h-full object-cover" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="w-full md:w-[45%] flex flex-col gap-6">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-[#1a1a24] p-3 border border-[#2a2a2a] rounded">
+                            <div className="text-[9px] text-f1-muted uppercase font-black tracking-wider mb-1">Engine</div>
+                            <div className="text-sm font-extrabold text-white truncate">{vaultSelectedCar.engineType}</div>
+                          </div>
+                          <div className="bg-[#1a1a24] p-3 border border-[#2a2a2a] rounded">
+                            <div className="text-[9px] text-f1-muted uppercase font-black tracking-wider mb-1">Power</div>
+                            <div className="text-sm font-extrabold text-white">{vaultSelectedCar.horsepowerEst} hp <span className="text-[10px] font-normal text-f1-muted">(est.)</span></div>
+                          </div>
+                          <div className="bg-[#1a1a24] p-3 border border-[#2a2a2a] rounded">
+                            <div className="text-[9px] text-f1-muted uppercase font-black tracking-wider mb-1">Weight</div>
+                            <div className="text-sm font-extrabold text-white">{vaultSelectedCar.weightKg} kg</div>
+                          </div>
+                          <div className="bg-[#1a1a24] p-3 border border-[#2a2a2a] rounded">
+                            <div className="text-[9px] text-f1-muted uppercase font-black tracking-wider mb-1">Top Speed</div>
+                            <div className="text-sm font-extrabold text-white">{vaultSelectedCar.topSpeedKmh} km/h</div>
+                          </div>
+                          <div className="bg-[#1a1a24] p-3 border border-[#2a2a2a] rounded col-span-2 sm:col-span-1">
+                            <div className="text-[9px] text-f1-muted uppercase font-black tracking-wider mb-1 flex justify-between">
+                              Downforce <span>{vaultSelectedCar.downforceLevel}/10</span>
+                            </div>
+                            <div className="flex gap-1 h-2 mt-2">
+                              {[...Array(10)].map((_, i) => (
+                                <div key={i} className={`flex-1 rounded-full ${i < vaultSelectedCar.downforceLevel ? 'bg-f1-red' : 'bg-[#333]'}`} />
+                              ))}
+                            </div>
+                          </div>
+                          <div className="bg-[#1a1a24] p-3 border border-[#2a2a2a] rounded col-span-2 sm:col-span-1">
+                            <div className="text-[9px] text-f1-muted uppercase font-black tracking-wider mb-1 flex justify-between">
+                              Reliability <span>{vaultSelectedCar.reliabilityScore}/10</span>
+                            </div>
+                            <div className="flex gap-1 h-2 mt-2">
+                              {[...Array(10)].map((_, i) => (
+                                <div key={i} className={`flex-1 rounded-full ${i < vaultSelectedCar.reliabilityScore ? 'bg-[#52B788]' : 'bg-[#333]'}`} />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <h4 className="text-[10px] text-f1-muted font-bold uppercase tracking-wider mb-2">Drivers</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {Array.isArray(vaultSelectedCar.drivers) ? vaultSelectedCar.drivers.map(d => (
+                              <span key={d} className="px-3 py-1 bg-[#2a2a35] text-white text-[11px] rounded font-bold">{d}</span>
+                            )) : (vaultSelectedCar.driver || '').split(',').map(d => (
+                              <span key={d.trim()} className="px-3 py-1 bg-[#2a2a35] text-white text-[11px] rounded font-bold">{d.trim()}</span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <h4 className="text-[10px] text-f1-muted font-bold uppercase tracking-wider mb-2">Championships</h4>
+                          <div className="text-[13px] font-bold text-white flex items-center gap-2">
+                            {vaultSelectedCar.championships > 0 ? (
+                              <>
+                                <span className="text-yellow-500 text-lg">🏆</span>
+                                {vaultSelectedCar.championships} World Championship(s)
+                              </>
+                            ) : (
+                              <span className="text-f1-muted font-normal italic text-xs">No championships won with this car.</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="text-[13px] leading-[1.7] text-f1-muted border-t border-[#2a2a2a] pt-4">
+                          {vaultSelectedCar.description}
+                        </div>
+
+                        {vaultSelectedCar.funFact && (
+                          <div className="border-l-4 border-f1-red pl-4 py-3 bg-[#1a1a24]/50 rounded-r">
+                            <span className="block text-[10px] font-black uppercase text-f1-red mb-1">Did you know?</span>
+                            <p className="text-[12px] italic text-white leading-relaxed">{vaultSelectedCar.funFact}</p>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
                 </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
-        
-        {filteredVaultCars.length === 0 && (
-          <div className="text-center py-12 text-f1-muted text-sm">
-            No cars found matching your search criteria.
-          </div>
-        )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </FadeInSection>
 
       {/* SECTION 3: Car Spec Comparator */}
@@ -1514,15 +1691,7 @@ function Cars() {
                           <CartesianGrid strokeDasharray="3 3" stroke="#1a1a24" opacity={0.4} />
                           <XAxis dataKey="decade" stroke="#666666" fontSize={9} tickLine={false} />
                           <YAxis stroke="#666666" fontSize={9} tickLine={false} allowDecimals={false} />
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: '#0f0f18', 
-                              borderColor: '#1a1a24', 
-                              color: '#f0f0f0',
-                              borderRadius: '4px',
-                              fontSize: '10px'
-                            }}
-                          />
+                          <Tooltip content={<PlotlyTooltip xKey="decade" />} />
                           <Bar 
                             dataKey="championships" 
                             fill={selectedConstructor.teamColor} 

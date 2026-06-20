@@ -8,12 +8,13 @@ import {
   getLastRaceResults 
 } from '../services/jolpicaApi';
 import { getLatestSession, getRaceWeather, getDriverPositions } from '../services/openf1Api';
-import { StatCard, SkeletonTable } from '../components';
+import { StatCard, SkeletonTable, PlotlyTooltip } from '../components';
 import FadeInSection from '../components/FadeInSection';
 import { 
   ResponsiveContainer, 
   BarChart, 
   Bar, 
+  Cell,
   XAxis, 
   YAxis, 
   CartesianGrid, 
@@ -821,21 +822,16 @@ function LiveSeason() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#1a1a24" opacity={0.4} />
                       <XAxis type="number" stroke="#666666" fontSize={9} domain={[0, 3.5]} tickLine={false} />
                       <YAxis dataKey="team" type="category" stroke="#666666" fontSize={8} width={80} tickLine={false} />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: '#0f0f18', 
-                          borderColor: '#1a1a24', 
-                          color: '#f0f0f0',
-                          borderRadius: '4px',
-                          fontSize: '10px'
-                        }}
-                      />
+                      <Tooltip content={<PlotlyTooltip xKey="team" yFormatter={(val) => `${val}s`} />} />
                       <Bar 
                         dataKey="avgTime" 
-                        fill="#e10600"
                         radius={[0, 2, 2, 0]}
                         barSize={12}
-                      />
+                      >
+                        {PIT_STOP_DATA.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color || '#e10600'} />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </motion.div>
@@ -869,16 +865,7 @@ function LiveSeason() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#1a1a24" opacity={0.4} />
                   <XAxis dataKey="round" stroke="#666666" fontSize={10} tickLine={false} />
                   <YAxis stroke="#666666" fontSize={10} tickLine={false} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#0f0f18', 
-                      borderColor: '#1a1a24', 
-                      color: '#f0f0f0',
-                      borderRadius: '4px',
-                      fontSize: '11px',
-                      fontFamily: 'monospace'
-                    }}
-                  />
+                  <Tooltip content={<PlotlyTooltip xKey="round" />} />
                   
                   <ReferenceLine 
                     x={latestCompletedRoundKey} 

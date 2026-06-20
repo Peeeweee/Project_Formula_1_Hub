@@ -12,7 +12,7 @@ import {
 } from 'recharts';
 import circuitsData from '../data/circuits.json';
 import FadeInSection from '../components/FadeInSection';
-import { SkeletonCard } from '../components';
+import { SkeletonCard, PlotlyTooltip, RealisticTire } from '../components';
 
 const TIMELINE_STEPS = [
   {
@@ -216,6 +216,7 @@ function StartHere() {
   const [hoveredCircuit, setHoveredCircuit] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [glossaryLoading, setGlossaryLoading] = useState(true);
+  const [selectedTire, setSelectedTire] = useState(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setGlossaryLoading(false), 1500);
@@ -416,25 +417,18 @@ function StartHere() {
               })}
             </div>
 
-            <div className="bg-f1-panel border border-f1-border p-6 rounded-lg shadow-xl flex flex-col justify-between">
+            <div className="bg-f1-panel border border-f1-border p-6 rounded-lg shadow-xl flex flex-col">
               <div>
                 <h3 className="text-lg font-bold text-f1-light mb-2">Points Chart</h3>
-                <p className="text-xs text-f1-muted mb-6">The winner gets 25 points, but the 10th place driver only gets 1. You want to finish as high as possible.</p>
+                <p className="text-xs text-f1-muted mb-4">The winner gets 25 points, but the 10th place driver only gets 1. You want to finish as high as possible.</p>
               </div>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} className="h-72 w-full">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} className="flex-1 min-h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={POINTS_SYSTEM} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#1a1a24" opacity={0.6} />
                     <XAxis dataKey="position" stroke="#666666" fontSize={11} tickLine={false} />
                     <YAxis stroke="#666666" fontSize={12} tickLine={false} />
-                    <ChartTooltip 
-                      contentStyle={{ 
-                        backgroundColor: '#0f0f18', 
-                        borderColor: '#1a1a24', 
-                        color: '#f0f0f0',
-                        borderRadius: '4px'
-                      }}
-                    />
+                    <ChartTooltip content={<PlotlyTooltip xKey="position" />} />
                     <Bar dataKey="points">
                       {POINTS_SYSTEM.map((entry, index) => (
                         <Cell 
@@ -468,7 +462,8 @@ function StartHere() {
               <motion.div 
                 whileHover={{ scale: 1.02, transition: { duration: 0.15 } }}
                 key={tire.name} 
-                className="bg-f1-panel border border-f1-border p-5 rounded-lg flex flex-col justify-between hover:border-f1-muted transition-all duration-300"
+                onClick={() => setSelectedTire(tire)}
+                className="cursor-pointer bg-f1-panel border border-f1-border p-5 rounded-lg flex flex-col justify-between hover:border-f1-muted transition-all duration-300"
               >
                 <div>
                   <div className="flex items-center gap-2.5 mb-3">
@@ -654,6 +649,97 @@ function StartHere() {
         </FadeInSection>
 
       </div>
+
+      {/* Tire Preview Modal */}
+      <AnimatePresence>
+        {selectedTire && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            onClick={() => setSelectedTire(null)}
+          >
+            <motion.div 
+              initial={{ scale: 0.8, y: 50, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.8, y: 50, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-f1-panel border border-f1-border rounded-xl shadow-2xl max-w-4xl w-full flex flex-col md:flex-row overflow-hidden relative"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Close Button Desktop */}
+              <button 
+                onClick={() => setSelectedTire(null)}
+                className="hidden md:flex absolute top-6 right-6 w-10 h-10 rounded-full hover:bg-f1-border items-center justify-center text-f1-light transition-colors z-20"
+              >
+                ✕
+              </button>
+
+              <div className="w-full md:w-1/2 p-8 flex items-center justify-center relative bg-gradient-to-br from-black/60 to-transparent">
+                {/* Close Button Mobile */}
+                <button 
+                  onClick={() => setSelectedTire(null)}
+                  className="md:hidden absolute top-4 right-4 w-8 h-8 rounded-full bg-f1-border flex items-center justify-center text-f1-light z-20"
+                >
+                  ✕
+                </button>
+                <div className="w-full aspect-square max-w-[350px]">
+                  <RealisticTire compoundName={selectedTire.name} color={selectedTire.color} />
+                </div>
+              </div>
+              
+              <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-f1-panel border-t md:border-t-0 md:border-l border-f1-border relative z-10">
+                <div className="flex items-center gap-4 mb-6">
+                  <div 
+                    className="w-8 h-8 rounded-full border-[6px] shadow-lg" 
+                    style={{ borderColor: selectedTire.color, backgroundColor: 'transparent', boxShadow: `0 0 15px ${selectedTire.color}40` }} 
+                  />
+                  <h2 className="text-3xl md:text-4xl font-black text-f1-light uppercase tracking-tight">{selectedTire.name} <span className="text-xl md:text-2xl text-f1-muted">Compound</span></h2>
+                </div>
+
+                <p className="text-base md:text-lg text-f1-muted leading-relaxed mb-10">
+                  {selectedTire.use}
+                </p>
+
+                <div className="space-y-6">
+                  <div>
+                    <div className="flex justify-between text-xs md:text-sm font-bold text-f1-muted uppercase tracking-widest mb-2">
+                      <span>Top Speed</span>
+                      <span className="text-f1-light">{selectedTire.speed}%</span>
+                    </div>
+                    <div className="w-full h-3 bg-[#111] rounded-full overflow-hidden border border-white/5">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${selectedTire.speed}%` }}
+                        transition={{ delay: 0.3, duration: 0.8, ease: "easeOut" }}
+                        className="h-full rounded-full" 
+                        style={{ backgroundColor: selectedTire.color }} 
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-xs md:text-sm font-bold text-f1-muted uppercase tracking-widest mb-2">
+                      <span>Durability</span>
+                      <span className="text-f1-light">{selectedTire.durability}%</span>
+                    </div>
+                    <div className="w-full h-3 bg-[#111] rounded-full overflow-hidden border border-white/5">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${selectedTire.durability}%` }}
+                        transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
+                        className="h-full rounded-full" 
+                        style={{ backgroundColor: selectedTire.color }} 
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
