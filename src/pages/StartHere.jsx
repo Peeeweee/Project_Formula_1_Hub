@@ -214,6 +214,7 @@ function AnimatedCounter({ end, label }) {
 function StartHere() {
   const [expandedIndex, setExpandedIndex] = useState(null);
   const [hoveredCircuit, setHoveredCircuit] = useState(null);
+  const [selectedCircuit, setSelectedCircuit] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [glossaryLoading, setGlossaryLoading] = useState(true);
   const [selectedTire, setSelectedTire] = useState(null);
@@ -548,6 +549,7 @@ function StartHere() {
                   style={{ left: `${x}%`, top: `${y}%` }}
                   onMouseEnter={() => setHoveredCircuit(c)}
                   onMouseLeave={() => setHoveredCircuit(null)}
+                  onClick={() => setSelectedCircuit(c)}
                 >
                   {/* Pulsing red dot */}
                   <div className={`absolute inset-0 rounded-full bg-f1-red transition-all duration-300 ${isHovered ? 'scale-150 ring-4 ring-f1-red/20' : 'animate-ping opacity-75'}`} />
@@ -556,36 +558,7 @@ function StartHere() {
               );
             })}
 
-            {/* Floating Tooltip Card */}
-            <AnimatePresence>
-              {hoveredCircuit && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute bottom-4 left-4 z-30 bg-[#0f0f18]/95 backdrop-blur-md border border-f1-red p-4 rounded shadow-2xl max-w-sm"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xl">
-                      {COUNTRY_FLAGS[hoveredCircuit.country] || '🏁'}
-                    </span>
-                    <h4 className="font-extrabold text-f1-light text-sm">
-                      {hoveredCircuit.name}
-                    </h4>
-                  </div>
-                  <div className="space-y-1 text-[11px] text-f1-muted">
-                    <p>City & Country: <span className="text-f1-light font-medium">{hoveredCircuit.city}, {hoveredCircuit.country}</span></p>
-                    <p>Track Length: <span className="text-f1-light font-medium">{hoveredCircuit.lapLength} km</span></p>
-                    <p>Corners: <span className="text-f1-light font-medium">{hoveredCircuit.turns}</span></p>
-                    <p>Speed Boost Zones: <span className="text-f1-light font-medium">{hoveredCircuit.drsZones}</span></p>
-                    <p className="border-t border-f1-border/40 pt-1 mt-1 text-f1-red font-semibold">
-                      Fastest Lap Ever: {hoveredCircuit.lapRecord}
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {/* Removed Hover Tooltip Card. Now handled by click-to-open Gran Turismo Modal. */}
           </div>
         </FadeInSection>
 
@@ -733,6 +706,89 @@ function StartHere() {
                         style={{ backgroundColor: selectedTire.color }} 
                       />
                     </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Gran Turismo Circuit Preview Modal */}
+      <AnimatePresence>
+        {selectedCircuit && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-10 bg-black/80 backdrop-blur-md"
+            onClick={() => setSelectedCircuit(null)}
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 30 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-f1-panel border border-f1-border rounded-xl shadow-2xl max-w-6xl w-full flex flex-col overflow-hidden relative max-h-[90vh]"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Close Button Desktop */}
+              <button 
+                onClick={() => setSelectedCircuit(null)}
+                className="hidden md:flex absolute top-6 right-6 w-10 h-10 rounded-full bg-black/50 hover:bg-f1-border items-center justify-center text-f1-light transition-colors z-20 backdrop-blur-sm"
+              >
+                ✕
+              </button>
+
+              <div className="w-full h-64 md:h-96 relative">
+                {/* Gran Turismo Track Photo */}
+                <img 
+                  src={selectedCircuit.imageUrl} 
+                  alt={selectedCircuit.name} 
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-f1-panel to-transparent" />
+                
+                {/* Close Button Mobile */}
+                <button 
+                  onClick={() => setSelectedCircuit(null)}
+                  className="md:hidden absolute top-4 right-4 w-8 h-8 rounded-full bg-black/50 border border-white/10 flex items-center justify-center text-f1-light z-20 backdrop-blur-sm"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <div className="p-8 md:p-12 relative z-10 -mt-20 md:-mt-32">
+                <div className="flex items-end gap-4 mb-8">
+                  <div className="text-6xl md:text-8xl drop-shadow-lg">
+                    {COUNTRY_FLAGS[selectedCircuit.country] || '🏁'}
+                  </div>
+                  <div>
+                    <h4 className="text-f1-red font-black tracking-widest uppercase text-xs md:text-sm mb-1 drop-shadow-md">
+                      {selectedCircuit.city}, {selectedCircuit.country}
+                    </h4>
+                    <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight drop-shadow-xl">
+                      {selectedCircuit.name}
+                    </h2>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-[#0a0a0f]/80 backdrop-blur-md p-6 rounded-lg border border-white/5 shadow-inner">
+                  <div>
+                    <span className="text-[10px] text-f1-muted font-bold uppercase tracking-wider block mb-1">Track Length</span>
+                    <span className="text-xl md:text-2xl font-black text-f1-light">{selectedCircuit.lapLength} <span className="text-sm font-bold text-f1-muted">km</span></span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-f1-muted font-bold uppercase tracking-wider block mb-1">Corners</span>
+                    <span className="text-xl md:text-2xl font-black text-f1-light">{selectedCircuit.turns}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-f1-muted font-bold uppercase tracking-wider block mb-1">Speed Boost Zones</span>
+                    <span className="text-xl md:text-2xl font-black text-f1-light">{selectedCircuit.drsZones} <span className="text-sm font-bold text-f1-muted">DRS</span></span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-f1-muted font-bold uppercase tracking-wider block mb-1">Fastest Lap Record</span>
+                    <span className="text-sm md:text-base font-bold text-f1-red">{selectedCircuit.lapRecord}</span>
                   </div>
                 </div>
               </div>
