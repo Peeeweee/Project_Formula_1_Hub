@@ -14,3 +14,4 @@ export { default as CarViewer2D } from './CarViewer2D';
 export { default as CarVaultFilters } from './CarVaultFilters';
 export { default as PlotlyTooltip } from './PlotlyTooltip';
 export { default as RealisticTire } from './RealisticTire';
+export { default as GlossaryModal } from './GlossaryModal';

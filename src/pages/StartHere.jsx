@@ -12,7 +12,8 @@ import {
 } from 'recharts';
 import circuitsData from '../data/circuits.json';
 import FadeInSection from '../components/FadeInSection';
-import { SkeletonCard, PlotlyTooltip, RealisticTire } from '../components';
+import { SkeletonCard, PlotlyTooltip, RealisticTire, GlossaryModal } from '../components';
+import { GLOSSARY } from '../data/glossary';
 
 const TIMELINE_STEPS = [
   {
@@ -129,33 +130,7 @@ const COUNTRY_FLAGS = {
   'Qatar': '🇶🇦'
 };
 
-const GLOSSARY = [
-  { term: 'DRS', definition: 'Drag Reduction System. It is a movable flap on the rear wing that reduces air drag and helps you go faster on straights.' },
-  { term: 'ERS', definition: 'Energy Recovery System. It saves energy when you brake and lets you use it later as an electric boost.' },
-  { term: 'Undercut', definition: 'Pitting earlier than the other driver to gain track position. You get fresh tires first and drive faster while they are still on old tires.' },
-  { term: 'Overcut', definition: 'Staying out longer on old tires while the other driver pits. If they are slow warming up their new tires, you can pass them when you finally stop.' },
-  { term: 'VSC', definition: 'Virtual Safety Car. A digital warning that forces everyone to slow down equally because of a small crash on the track.' },
-  { term: 'Safety Car', definition: 'A real car that drives on the track to slow everyone down after a big crash. It bunches all the racers back together safely.' },
-  { term: 'Parc Fermé', definition: 'It translates to "closed park." It is a locked zone where teams cannot touch the cars overnight after qualifying.' },
-  { term: 'Box', definition: 'The message teams say on the radio when they want you to drive into the pit lane for new tires.' },
-  { term: 'DNF', definition: 'Did Not Finish. This means a driver crashed or their car broke down, so they could not complete the race.' },
-  { term: 'Pit Window', definition: 'The perfect time in the race to stop for new tires. It depends on how worn your current tires are.' },
-  { term: 'Halo', definition: 'A strong metal bar shaped like a wishbone above the driver. It protects your head from flying parts in a crash.' },
-  { term: 'MGUK', definition: 'A part of the engine that catches energy when you brake. It turns that heat into electricity to make the car faster.' },
-  { term: 'MGUH', definition: 'A part of the engine that catches heat from the exhaust pipe. It also turns heat into electricity.' },
-  { term: 'Flat Spot', definition: 'A flat patch on your round tire. It happens if you brake too hard and the wheel stops spinning while the car slides.' },
-  { term: 'Marbles', definition: 'Little bits of rubber that fall off the tires. They pile up on the sides of the track and make it very slippery.' },
-  { term: 'Graining', definition: 'When the tire surface rips slightly and rubber sticks to it. It makes the tire bumpy and you lose grip.' },
-  { term: 'Blistering', definition: 'When the tire gets so hot that the rubber boils and bubbles pop out. It ruins the tire and slows you down.' },
-  { term: 'Quali Mode', definition: 'Turning the engine up to maximum power. You only use it for one lap because it can damage the engine.' },
-  { term: 'Push Lap', definition: 'A lap where you drive as fast as you possibly can. You give it 100% effort to get a good time.' },
-  { term: 'Purple Sector', definition: 'The track is divided into three parts called sectors. Purple means you were the absolute fastest person in that section.' },
-  { term: 'Delta Time', definition: 'The time difference between you and someone else. It shows if you are catching up or falling behind.' },
-  { term: 'Jump Start', definition: 'When you start driving before the red lights turn off. You get a time penalty for cheating the start.' },
-  { term: 'Backmarker', definition: 'A slow driver at the very back of the race. The leaders often have to drive past them.' },
-  { term: 'Lapped Car', definition: 'A car that is so slow the leader has driven a whole extra lap around the track and caught up to them again.' },
-  { term: 'Blue Flag', definition: 'A blue flag tells a slow driver that a fast driver is behind them. The slow driver must move out of the way.' }
-];
+// GLOSSARY array imported from data file
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -214,10 +189,11 @@ function AnimatedCounter({ end, label }) {
 function StartHere() {
   const [expandedIndex, setExpandedIndex] = useState(null);
   const [hoveredCircuit, setHoveredCircuit] = useState(null);
-  const [selectedCircuit, setSelectedCircuit] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [glossaryLoading, setGlossaryLoading] = useState(true);
   const [selectedTire, setSelectedTire] = useState(null);
+  const [selectedCircuit, setSelectedCircuit] = useState(null);
+  const [selectedGlossaryTerm, setSelectedGlossaryTerm] = useState(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setGlossaryLoading(false), 1500);
@@ -601,12 +577,16 @@ function StartHere() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className="bg-f1-panel border border-f1-border p-4 rounded hover:border-f1-red/30 transition-all duration-300"
+                    className="bg-f1-panel border border-f1-border p-4 rounded hover:border-f1-red/30 transition-all duration-300 cursor-pointer group"
+                    onClick={() => setSelectedGlossaryTerm(item)}
                   >
-                    <h3 className="font-extrabold text-f1-light text-base mb-1 tracking-wider">
-                      {item.term}
-                    </h3>
-                    <p className="text-xs text-f1-muted leading-relaxed">
+                    <div className="flex justify-between items-start mb-1">
+                      <h3 className="font-extrabold text-f1-light text-base tracking-wider group-hover:text-f1-red transition-colors">
+                        {item.term}
+                      </h3>
+                      <span className="opacity-0 group-hover:opacity-100 transition-opacity text-f1-red text-xs">Animate ⏵</span>
+                    </div>
+                    <p className="text-xs text-f1-muted leading-relaxed line-clamp-2">
                       {item.definition}
                     </p>
                   </motion.div>
@@ -796,6 +776,12 @@ function StartHere() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Glossary Animation Modal */}
+      <GlossaryModal 
+        termData={selectedGlossaryTerm} 
+        onClose={() => setSelectedGlossaryTerm(null)} 
+      />
     </div>
   );
 }
