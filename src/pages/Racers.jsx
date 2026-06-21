@@ -943,29 +943,98 @@ function Racers() {
                 ✕
               </motion.button>
 
-              <div className="relative h-60 w-full bg-[#09090f]">
-                <img 
-                  src={selectedChampion.imageUrl} 
-                  alt={selectedChampion.name} 
-                  className="w-full h-full object-cover object-top"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = 'https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg';
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f18] via-[#0f0f18]/45 to-transparent" />
-                <div className="absolute bottom-4 left-6 right-6">
-                  <div className="flex gap-1 mb-1">
-                    {Array.from({ length: selectedChampion.championships }).map((_, i) => (
-                      <span key={i} className="text-sm">🏆</span>
-                    ))}
+              <div className="relative h-64 w-full bg-[#09090f] overflow-hidden">
+                {worldTopology ? (
+                  <div className="absolute inset-0 opacity-60 pointer-events-none">
+                    <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid slice" className="w-full h-full">
+                      <g>
+                        {worldTopology.features.map((feature, i) => {
+                          const countryName = feature.properties.name;
+                          const isChampCountry = countryName === (NATIONALITY_TO_COUNTRY[selectedChampion.nationality]?.name);
+                          const fill = isChampCountry ? '#e10600' : '#1a1a24';
+                          
+                          return (
+                            <path
+                              key={feature.id || i}
+                              d={pathGenerator(feature)}
+                              fill={fill}
+                              stroke="#09090f"
+                              strokeWidth={0.5}
+                            />
+                          );
+                        })}
+                        {worldTopology.features.map((feature, i) => {
+                          const countryName = feature.properties.name;
+                          if (countryName === (NATIONALITY_TO_COUNTRY[selectedChampion.nationality]?.name)) {
+                            const centroid = pathGenerator.centroid(feature);
+                            if (centroid && !isNaN(centroid[0]) && !isNaN(centroid[1])) {
+                              return (
+                                <g key={`marker-${i}`}>
+                                  <circle 
+                                    cx={centroid[0]} 
+                                    cy={centroid[1]} 
+                                    r={24} 
+                                    fill="#e10600"
+                                    opacity="0.6"
+                                    className="animate-ping"
+                                    style={{ transformOrigin: `${centroid[0]}px ${centroid[1]}px`, animationDuration: '1.5s' }}
+                                  />
+                                  <circle 
+                                    cx={centroid[0]} 
+                                    cy={centroid[1]} 
+                                    r={6} 
+                                    fill="#ffd300"
+                                    stroke="#000000"
+                                    strokeWidth={1}
+                                  />
+                                </g>
+                              );
+                            }
+                          }
+                          return null;
+                        })}
+                      </g>
+                    </svg>
                   </div>
-                  <h2 className="text-2xl font-black text-f1-light leading-tight">
-                    {selectedChampion.name}
-                  </h2>
-                  <span className="text-xs text-f1-red font-bold uppercase tracking-wider block mt-0.5">
-                    {selectedChampion.nationality} F1 Champion
-                  </span>
+                ) : (
+                  <img 
+                    src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg" 
+                    alt="World Map Background" 
+                    className="w-full h-full object-cover opacity-20"
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f18] via-[#0f0f18]/60 to-transparent" />
+                
+                <div className="absolute bottom-5 left-6 right-6 flex justify-between items-end gap-4">
+                  <div className="flex-1">
+                    <div className="flex gap-1 mb-1.5 flex-wrap">
+                      {Array.from({ length: selectedChampion.championships }).map((_, i) => (
+                        <span key={i} className="text-sm">🏆</span>
+                      ))}
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-black text-f1-light leading-tight">
+                      {selectedChampion.name}
+                    </h2>
+                    <span className="text-xs text-f1-red font-bold uppercase tracking-wider block mt-1">
+                      {selectedChampion.nationality} F1 Champion
+                    </span>
+                    <span className="text-[10px] text-f1-muted font-bold uppercase tracking-wider block mt-1">
+                      Country: {NATIONALITY_TO_COUNTRY[selectedChampion.nationality]?.name || 'Unknown'}
+                    </span>
+                  </div>
+
+                  <div className="w-24 h-32 md:w-28 md:h-36 rounded-md border border-f1-border/50 overflow-hidden shadow-2xl bg-[#1a1a24] flex-shrink-0 relative">
+                    <img 
+                      src={championImages[selectedChampion.driverId] || selectedChampion.imageUrl} 
+                      alt={selectedChampion.name} 
+                      className="w-full h-full object-cover object-top"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg';
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f18]/80 to-transparent opacity-50" />
+                  </div>
                 </div>
               </div>
 
