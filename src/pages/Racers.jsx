@@ -102,9 +102,17 @@ function Racers() {
   const [showDropdownA, setShowDropdownA] = useState(false);
   const [showDropdownB, setShowDropdownB] = useState(false);
 
+  // Pagination and Filter states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(12);
+  const [filterNationality, setFilterNationality] = useState('');
+  const [filterLetter, setFilterLetter] = useState('');
+  const [sortMethod, setSortMethod] = useState('name-asc');
+
   // Nationality Heatmap states
   const [worldTopology, setWorldTopology] = useState(null);
   const [heatmapTooltip, setHeatmapTooltip] = useState(null);
+  const [selectedHeatmapCountry, setSelectedHeatmapCountry] = useState(null);
   const heatmapContainerRef = useRef(null);
 
   // Sort champions descending by championship count
@@ -248,14 +256,42 @@ function Racers() {
     setSearchB('');
   };
 
+  const handleViewDriver = (driver) => {
+    setSelectedDetailDriver(driver);
+  };
+
+  const handleSelectForCompare = (slot, driver) => {
+    selectCompareDriver(slot, driver);
+  };
+
+
   // Client-side filtering for search table
   const filteredDrivers = (driversList || []).filter((d) => {
     if (!d) return false;
     const fullName = `${d.givenName || ''} ${d.familyName || ''}`.toLowerCase();
-    const nat = (d.nationality || '').toLowerCase();
+    const nat = (d.nationality || '');
     const query = (searchQuery || '').toLowerCase();
-    return fullName.includes(query) || nat.includes(query);
+    
+    const matchesSearch = fullName.includes(query) || nat.toLowerCase().includes(query);
+    const matchesNat = filterNationality ? nat === filterNationality : true;
+    const matchesLetter = filterLetter ? (d.familyName || '').toUpperCase().startsWith(filterLetter) : true;
+
+    return matchesSearch && matchesNat && matchesLetter;
+  }).sort((a, b) => {
+    if (sortMethod === 'name-asc') {
+      return (a.familyName || '').localeCompare(b.familyName || '');
+    } else if (sortMethod === 'name-desc') {
+      return (b.familyName || '').localeCompare(a.familyName || '');
+    } else if (sortMethod === 'age-asc') {
+      return new Date(a.dateOfBirth || '9999-12-31') - new Date(b.dateOfBirth || '9999-12-31');
+    } else if (sortMethod === 'age-desc') {
+      return new Date(b.dateOfBirth || '1000-01-01') - new Date(a.dateOfBirth || '1000-01-01');
+    }
+    return 0;
   });
+
+  const totalPages = Math.ceil(filteredDrivers.length / itemsPerPage);
+  const paginatedDrivers = filteredDrivers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   // Calculate career statistics for detail panel
   const totalSeasonsCount = careerStandings.length;
@@ -322,7 +358,7 @@ function Racers() {
       if (!countryDrivers[countryName]) {
         countryDrivers[countryName] = [];
       }
-      countryDrivers[countryName].push(`${d.givenName} ${d.familyName}`);
+      countryDrivers[countryName].push(d);
     }
   });
 
@@ -354,7 +390,7 @@ function Racers() {
     setHeatmapTooltip({
       countryName,
       count,
-      topDrivers: drivers.slice(0, 3),
+      topDrivers: drivers.slice(0, 3).map(d => `${d.givenName} ${d.familyName}`),
       x,
       y
     });
@@ -437,11 +473,92 @@ function Racers() {
           Full Driver Database
         </h2>
 
-        <div className="mb-6 max-w-md">
-          <SearchBar 
-            placeholder="Search all drivers by name or nationality..." 
-            onSearch={(val) => setSearchQuery(val)}
-          />
+        <div className="mb-6 bg-f1-panel border border-f1-border rounded-lg p-4 shadow-xl space-y-4">
+          <div className="flex flex-col md:flex-row gap-4 items-end">
+            <div className="flex-1 w-full">
+              <span className="text-[10px] text-f1-muted font-bold uppercase tracking-wider block mb-1">Search Database</span>
+              <SearchBar 
+                placeholder="Search by name or nationality..." 
+                onSearch={(val) => {
+                  setSearchQuery(val);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+            <div className="w-full md:w-48">
+              <span className="text-[10px] text-f1-muted font-bold uppercase tracking-wider block mb-1">Nationality</span>
+              <select 
+                value={filterNationality} 
+                onChange={(e) => { setFilterNationality(e.target.value); setCurrentPage(1); }}
+                className="w-full bg-[#12121c] border border-f1-border text-f1-light text-xs font-bold py-2.5 px-3 rounded focus:outline-none focus:border-f1-red transition cursor-pointer"
+              >
+                <option value="">All Nationalities</option>
+                {Array.from(new Set((driversList || []).map(d => d.nationality).filter(Boolean))).sort().map(nat => (
+                  <option key={nat} value={nat}>{nat}</option>
+                ))}
+              </select>
+            </div>
+            <div className="w-full md:w-48">
+              <span className="text-[10px] text-f1-muted font-bold uppercase tracking-wider block mb-1">Sort By</span>
+              <select 
+                value={sortMethod} 
+                onChange={(e) => { setSortMethod(e.target.value); setCurrentPage(1); }}
+                className="w-full bg-[#12121c] border border-f1-border text-f1-light text-xs font-bold py-2.5 px-3 rounded focus:outline-none focus:border-f1-red transition cursor-pointer"
+              >
+                <option value="name-asc">Last Name (A-Z)</option>
+                <option value="name-desc">Last Name (Z-A)</option>
+                <option value="age-asc">Age (Oldest First)</option>
+                <option value="age-desc">Age (Youngest First)</option>
+              </select>
+            </div>
+            <div className="w-full md:w-32">
+              <span className="text-[10px] text-f1-muted font-bold uppercase tracking-wider block mb-1">Per Page</span>
+              <select 
+                value={itemsPerPage} 
+                onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                className="w-full bg-[#12121c] border border-f1-border text-f1-light text-xs font-bold py-2.5 px-3 rounded focus:outline-none focus:border-f1-red transition cursor-pointer"
+              >
+                <option value={12}>12 rows</option>
+                <option value={25}>25 rows</option>
+                <option value={50}>50 rows</option>
+              </select>
+            </div>
+            {(filterNationality !== '' || filterLetter !== '' || searchQuery !== '') && (
+              <div className="w-full md:w-auto mt-4 md:mt-0">
+                <button 
+                  onClick={() => {
+                    setFilterNationality('');
+                    setFilterLetter('');
+                    setSearchQuery('');
+                    setCurrentPage(1);
+                  }}
+                  className="w-full md:w-auto h-[38px] px-4 bg-f1-red/10 text-f1-red text-[10px] font-black uppercase tracking-widest rounded border border-f1-red/30 hover:bg-f1-red hover:text-white transition"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            )}
+          </div>
+          
+          <div className="pt-3 border-t border-f1-border/40">
+            <div className="flex flex-wrap gap-1 justify-center md:justify-start">
+              <button 
+                onClick={() => { setFilterLetter(''); setCurrentPage(1); }}
+                className={`px-2 py-1 text-[10px] font-bold rounded transition ${filterLetter === '' ? 'bg-f1-red text-white' : 'bg-[#12121c] text-f1-muted hover:bg-f1-border hover:text-f1-light'}`}
+              >
+                ALL
+              </button>
+              {"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('').map(letter => (
+                <button 
+                  key={letter}
+                  onClick={() => { setFilterLetter(letter); setCurrentPage(1); }}
+                  className={`px-2 py-1 text-[10px] font-bold rounded transition ${filterLetter === letter ? 'bg-f1-red text-white' : 'bg-[#12121c] text-f1-muted hover:bg-f1-border hover:text-f1-light'}`}
+                >
+                  {letter}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -461,16 +578,17 @@ function Racers() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-f1-border/40">
-                  {filteredDrivers.slice(0, 100).map((driver, idx) => ( // Display first 100 filtered results for optimal scroll speed
+                  {paginatedDrivers.map((driver, idx) => ( 
                     <tr 
                       key={driver.driverId} 
                       className={`hover:bg-f1-dark/40 transition duration-150 ${
                         selectedDetailDriver?.driverId === driver.driverId ? 'bg-f1-red/5' : ''
                       }`}
                     >
-                      <td className="py-3 px-4 text-center font-bold text-f1-muted">{idx + 1}</td>
-                      <td className="py-3 px-4 font-bold text-f1-light">
-                        {driver.givenName} {driver.familyName}
+                      <td className="py-3 px-4 text-center font-bold text-f1-muted">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
+                      <td className="py-3 px-4 text-f1-light whitespace-nowrap">
+                        <span className="text-f1-muted font-medium mr-1.5">{driver.givenName}</span>
+                        <span className="font-black uppercase tracking-wide">{driver.familyName}</span>
                       </td>
                       <td className="py-3 px-4 text-f1-muted font-medium">{driver.nationality}</td>
                       <td className="py-3 px-4 text-f1-muted font-mono">{driver.dateOfBirth}</td>
@@ -488,6 +606,31 @@ function Racers() {
                 </tbody>
               </table>
             </div>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && !loadingDrivers && (
+              <div className="flex items-center justify-between p-4 bg-[#12121c] border-t border-f1-border text-xs font-bold">
+                <span className="text-f1-muted">
+                  Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredDrivers.length)} of {filteredDrivers.length} Drivers
+                </span>
+                <div className="flex space-x-2">
+                  <button 
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 rounded border border-f1-border disabled:opacity-30 hover:bg-f1-dark transition text-f1-light"
+                  >
+                    PREV
+                  </button>
+                  <button 
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1.5 rounded border border-f1-border disabled:opacity-30 hover:bg-f1-dark transition text-f1-light"
+                  >
+                    NEXT
+                  </button>
+                </div>
+              </div>
+            )}
 
             {loadingDrivers && <div className="flex flex-col gap-3 p-4">{Array.from({ length: 5 }).map((_, i) => <SkeletonDriverRow key={i} />)}</div>}
             {errorDrivers && (
@@ -495,7 +638,7 @@ function Racers() {
             )}
           </div>
 
-          <div className="lg:col-span-1 bg-f1-panel border border-f1-border p-6 rounded-lg shadow-xl min-h-[500px] flex flex-col justify-between">
+          <div className="lg:col-span-1 bg-f1-panel border border-f1-border p-6 rounded-lg shadow-xl min-h-[500px] flex flex-col justify-between sticky top-28 self-start">
             {selectedDetailDriver ? (
               <div className="space-y-6">
                 <div>
@@ -606,7 +749,8 @@ function Racers() {
           <p className="text-f1-muted text-xs mt-1">Search and select two F1 drivers from the registry to benchmark their metrics side-by-side.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-30">
+        <div className="min-h-[420px] flex flex-col justify-start">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-30">
           <div className="relative">
             <label className="block text-[10px] font-black uppercase text-f1-red mb-2 tracking-wider">Compare Driver A</label>
             {driverA ? (
@@ -627,32 +771,35 @@ function Racers() {
                 </motion.button>
               </div>
             ) : (
-              <div>
-                <motion.button 
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => setSelectingFor('A')} 
-                  className="w-full bg-[#0a0a0f] border border-f1-border text-f1-light text-xs font-bold py-3 rounded hover:border-f1-red transition"
-                >
-                  Select Driver A...
-                </motion.button>
-                {showDropdownA && searchA && (
-                  <div className="absolute left-0 right-0 mt-1 bg-[#0f0f18] border border-f1-border rounded shadow-2xl max-h-48 overflow-y-auto z-40 divide-y divide-f1-border/40">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search and select Driver A..."
+                  value={searchA}
+                  onChange={(e) => {
+                    setSearchA(e.target.value);
+                    setShowDropdownA(true);
+                  }}
+                  onFocus={() => setShowDropdownA(true)}
+                  className="w-full bg-[#0a0a0f] border border-f1-border text-f1-light text-xs font-bold py-3 px-4 rounded focus:outline-none focus:border-f1-red transition placeholder-f1-muted"
+                />
+                {showDropdownA && (
+                  <div className="absolute left-0 right-0 mt-1 bg-[#0f0f18] border border-f1-border rounded shadow-2xl max-h-[400px] overflow-y-auto z-40 divide-y divide-f1-border/40 scrollbar-thin scrollbar-thumb-f1-red scrollbar-track-f1-dark">
                     {(driversList || [])
                       .filter(d => {
                         if (!d) return false;
                         const fullName = `${d.givenName || ''} ${d.familyName || ''}`.toLowerCase();
                         return fullName.includes((searchA || '').toLowerCase());
                       })
-                      .slice(0, 8)
                       .map(d => (
-                        <motion.button
-                          whileTap={{ scale: 0.97 }}
+                        <button
                           key={d.driverId}
-                          onClick={() => handleSelectForCompare(d.driverId)}
+                          onClick={() => handleSelectForCompare('A', d)}
                           className="w-full text-left p-3 border-b border-f1-border hover:bg-f1-red/10 hover:border-f1-red transition group flex justify-between items-center"
                         >
-                          {d.givenName} {d.familyName} ({d.nationality})
-                        </motion.button>
+                          <span><span className="text-f1-muted mr-1">{d.givenName}</span> <span className="font-bold uppercase text-f1-light">{d.familyName}</span></span>
+                          <span className="text-[9px] text-f1-muted uppercase font-bold">{d.nationality}</span>
+                        </button>
                       ))
                     }
                   </div>
@@ -681,32 +828,35 @@ function Racers() {
                 </motion.button>
               </div>
             ) : (
-              <div>
-                <motion.button 
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => setSelectingFor('B')} 
-                  className="w-full bg-[#0a0a0f] border border-f1-border text-f1-light text-xs font-bold py-3 rounded hover:border-f1-red transition"
-                >
-                  Select Driver B...
-                </motion.button>
-                {showDropdownB && searchB && (
-                  <div className="absolute left-0 right-0 mt-1 bg-[#0f0f18] border border-f1-border rounded shadow-2xl max-h-48 overflow-y-auto z-40 divide-y divide-f1-border/40">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search and select Driver B..."
+                  value={searchB}
+                  onChange={(e) => {
+                    setSearchB(e.target.value);
+                    setShowDropdownB(true);
+                  }}
+                  onFocus={() => setShowDropdownB(true)}
+                  className="w-full bg-[#0a0a0f] border border-f1-border text-f1-light text-xs font-bold py-3 px-4 rounded focus:outline-none focus:border-f1-red transition placeholder-f1-muted"
+                />
+                {showDropdownB && (
+                  <div className="absolute left-0 right-0 mt-1 bg-[#0f0f18] border border-f1-border rounded shadow-2xl max-h-[400px] overflow-y-auto z-40 divide-y divide-f1-border/40 scrollbar-thin scrollbar-thumb-f1-red scrollbar-track-f1-dark">
                     {(driversList || [])
                       .filter(d => {
                         if (!d) return false;
                         const fullName = `${d.givenName || ''} ${d.familyName || ''}`.toLowerCase();
                         return fullName.includes((searchB || '').toLowerCase());
                       })
-                      .slice(0, 8)
                       .map(d => (
-                        <motion.button
-                          whileTap={{ scale: 0.97 }}
+                        <button
                           key={d.driverId}
-                          onClick={() => handleSelectForCompare(d.driverId)}
+                          onClick={() => handleSelectForCompare('B', d)}
                           className="w-full text-left p-3 border-b border-f1-border hover:bg-f1-red/10 hover:border-f1-red transition group flex justify-between items-center"
                         >
-                          {d.givenName} {d.familyName} ({d.nationality})
-                        </motion.button>
+                          <span><span className="text-f1-muted mr-1">{d.givenName}</span> <span className="font-bold uppercase text-f1-light">{d.familyName}</span></span>
+                          <span className="text-[9px] text-f1-muted uppercase font-bold">{d.nationality}</span>
+                        </button>
                       ))
                     }
                   </div>
@@ -724,55 +874,56 @@ function Racers() {
         )}
 
         {driverA && driverB && statsA && statsB && !loadingCompare.a && !loadingCompare.b && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
             <div className="bg-f1-panel border border-f1-border p-6 rounded-lg shadow-xl flex flex-col justify-between">
               <div>
                 <h3 className="text-base font-extrabold text-f1-light mb-4 border-b border-f1-border/40 pb-2 uppercase tracking-wide">
                   Side-by-Side Comparison
                 </h3>
-                <table className="w-full text-xs">
+                <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-f1-border text-f1-muted uppercase font-bold">
-                      <th className="py-2.5 text-left">Telemetry Metric</th>
-                      <th className="py-2.5 text-center text-f1-red font-black text-sm">{driverA.familyName}</th>
-                      <th className="py-2.5 text-center text-[#ffd300] font-black text-sm">{driverB.familyName}</th>
+                      <th className="py-4 text-left">Telemetry Metric</th>
+                      <th className="py-4 text-center text-f1-red font-black text-base">{driverA.familyName}</th>
+                      <th className="py-4 text-center text-[#ffd300] font-black text-base">{driverB.familyName}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-f1-border/30 font-mono text-f1-light">
                     <tr>
-                      <td className="py-3 font-bold text-f1-muted text-left">Championships</td>
-                      <td className="py-3 text-center font-bold text-f1-red">{statsA.championships}</td>
-                      <td className="py-3 text-center font-bold text-[#ffd300]">{statsB.championships}</td>
+                      <td className="py-4 font-bold text-f1-muted text-left">Championships</td>
+                      <td className="py-4 text-center font-black text-base text-f1-red">{statsA.championships}</td>
+                      <td className="py-4 text-center font-black text-base text-[#ffd300]">{statsB.championships}</td>
                     </tr>
                     <tr>
-                      <td className="py-3 font-bold text-f1-muted text-left">GP Race Wins</td>
-                      <td className="py-3 text-center font-bold">{statsA.wins}</td>
-                      <td className="py-3 text-center font-bold">{statsB.wins}</td>
+                      <td className="py-4 font-bold text-f1-muted text-left">GP Race Wins</td>
+                      <td className="py-4 text-center font-black text-base">{statsA.wins}</td>
+                      <td className="py-4 text-center font-black text-base">{statsB.wins}</td>
                     </tr>
                     <tr>
-                      <td className="py-3 font-bold text-f1-muted text-left">Poles Positions</td>
-                      <td className="py-3 text-center">{statsA.poles}</td>
-                      <td className="py-3 text-center">{statsB.poles}</td>
+                      <td className="py-4 font-bold text-f1-muted text-left">Poles Positions</td>
+                      <td className="py-4 text-center font-black text-base">{statsA.poles}</td>
+                      <td className="py-4 text-center font-black text-base">{statsB.poles}</td>
                     </tr>
                     <tr>
-                      <td className="py-3 font-bold text-f1-muted text-left">Podiums</td>
-                      <td className="py-3 text-center">{statsA.podiums}</td>
-                      <td className="py-3 text-center">{statsB.podiums}</td>
+                      <td className="py-4 font-bold text-f1-muted text-left">Podiums</td>
+                      <td className="py-4 text-center font-black text-base">{statsA.podiums}</td>
+                      <td className="py-4 text-center font-black text-base">{statsB.podiums}</td>
                     </tr>
                     <tr>
-                      <td className="py-3 font-bold text-f1-muted text-left">Win Rate %</td>
-                      <td className="py-3 text-center">{statsA.winRate}%</td>
-                      <td className="py-3 text-center">{statsB.winRate}%</td>
+                      <td className="py-4 font-bold text-f1-muted text-left">Win Rate %</td>
+                      <td className="py-4 text-center font-black text-base">{statsA.winRate}%</td>
+                      <td className="py-4 text-center font-black text-base">{statsB.winRate}%</td>
                     </tr>
                     <tr>
-                      <td className="py-3 font-bold text-f1-muted text-left">Fastest Laps</td>
-                      <td className="py-3 text-center">{statsA.fastestLaps}</td>
-                      <td className="py-3 text-center">{statsB.fastestLaps}</td>
+                      <td className="py-4 font-bold text-f1-muted text-left">Fastest Laps</td>
+                      <td className="py-4 text-center font-black text-base">{statsA.fastestLaps}</td>
+                      <td className="py-4 text-center font-black text-base">{statsB.fastestLaps}</td>
                     </tr>
                     <tr>
-                      <td className="py-3 font-bold text-f1-muted text-left">Reliability Index</td>
-                      <td className="py-3 text-center">{statsA.reliability}%</td>
-                      <td className="py-3 text-center">{statsB.reliability}%</td>
+                      <td className="py-4 font-bold text-f1-muted text-left">Reliability Index</td>
+                      <td className="py-4 text-center font-black text-base">{statsA.reliability}%</td>
+                      <td className="py-4 text-center font-black text-base">{statsB.reliability}%</td>
                     </tr>
                   </tbody>
                 </table>
@@ -789,40 +940,73 @@ function Racers() {
               </div>
             </div>
 
-            <div className="bg-f1-panel border border-f1-border p-6 rounded-lg shadow-xl flex flex-col justify-between">
+            <div className="bg-f1-panel border border-f1-border p-6 rounded-lg shadow-xl flex flex-col">
               <div>
                 <h3 className="text-base font-extrabold text-f1-light mb-1 uppercase tracking-wide">
                   Radar Performance Overlay
                 </h3>
                 <p className="text-[10px] text-f1-muted mb-4 uppercase">Direct overlay benchmark across 5 core criteria.</p>
               </div>
-              <div className="h-72 w-full flex items-center justify-center">
+              <div className="flex-1 w-full flex items-center justify-center min-h-[300px] mt-2">
                 <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart cx="50%" cy="50%" outerRadius="75%" data={radarData}>
+                  <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
                     <PolarGrid stroke="#1a1a24" />
-                    <PolarAngleAxis dataKey="subject" stroke="#666666" fontSize={10} />
+                    <PolarAngleAxis dataKey="subject" stroke="#888888" fontSize={12} fontWeight="bold" />
                     <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} stroke="#1a1a24" />
                     <Radar 
                       name={driverA.familyName} 
                       dataKey="A" 
                       stroke="#e10600" 
+                      strokeWidth={2}
                       fill="#e10600" 
-                      fillOpacity={0.2} 
+                      fillOpacity={0.25} 
                     />
                     <Radar 
                       name={driverB.familyName} 
                       dataKey="B" 
                       stroke="#ffd300" 
+                      strokeWidth={2}
                       fill="#ffd300" 
-                      fillOpacity={0.2} 
+                      fillOpacity={0.25} 
                     />
-                    <Legend verticalAlign="bottom" height={24} fontSize={10} />
+                    <Legend verticalAlign="bottom" height={24} fontSize={13} iconSize={12} wrapperStyle={{ fontWeight: 'bold' }} />
                   </RadarChart>
                 </ResponsiveContainer>
               </div>
             </div>
-          </div>
-        )}
+            </div>
+
+            {/* Beginner's Verdict */}
+            <div className="mt-8 bg-f1-panel border border-f1-border p-6 rounded-lg shadow-xl relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-f1-red"></div>
+              <h3 className="text-xl font-extrabold text-f1-light mb-3 uppercase tracking-wide">
+                The Verdict (For Beginners)
+              </h3>
+              <p className="text-base text-f1-muted leading-relaxed">
+                <span className="font-bold text-white">{driverA.givenName} {driverA.familyName}</span> vs <span className="font-bold text-white">{driverB.givenName} {driverB.familyName}</span>: 
+                Looking at the raw numbers, 
+                {statsA.wins > statsB.wins ? ` ${driverA.familyName} leads in race victories (${statsA.wins} to ${statsB.wins}).` : statsB.wins > statsA.wins ? ` ${driverB.familyName} leads in race victories (${statsB.wins} to ${statsA.wins}).` : ` both drivers are tied in race victories (${statsA.wins}).`}
+                {statsA.championships > statsB.championships ? ` With ${statsA.championships} World Championship(s), ${driverA.familyName} has reached the absolute pinnacle of the sport more often.` : statsB.championships > statsA.championships ? ` With ${statsB.championships} World Championship(s), ${driverB.familyName} has reached the absolute pinnacle of the sport more often.` : ` They are tied with ${statsA.championships} World Championship(s) each.`}
+              </p>
+              
+              <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-6 border-t border-f1-border/40 pt-5">
+                <div>
+                  <h4 className="text-xs font-black uppercase text-f1-red mb-1.5">What is a Podium?</h4>
+                  <p className="text-sm text-f1-muted">Finishing a race in 1st, 2nd, or 3rd place. You get a trophy, points, and you spray champagne!</p>
+                </div>
+                <div>
+                  <h4 className="text-xs font-black uppercase text-f1-red mb-1.5">What is a Pole Position?</h4>
+                  <p className="text-sm text-f1-muted">Starting the race in 1st place at the very front of the grid because you drove the fastest lap in Saturday Qualifying.</p>
+                </div>
+                <div>
+                  <h4 className="text-xs font-black uppercase text-f1-red mb-1.5">Reliability Index</h4>
+                  <p className="text-sm text-f1-muted">How often the driver actually crosses the finish line without crashing or suffering mechanical failures.</p>
+                </div>
+              </div>
+            </div>
+          </>
+          )}
+        </div>
       </FadeInSection>
 
       {/* SECTION 4: Nationality Heatmap */}
@@ -860,6 +1044,12 @@ function Racers() {
                       stroke="#0a0a0f"
                       strokeWidth={0.5}
                       className="hover:opacity-85 transition duration-150 cursor-pointer"
+                      onClick={() => {
+                        if (count > 0) {
+                          setSelectedHeatmapCountry({ countryName, count, drivers });
+                          setHeatmapTooltip(null);
+                        }
+                      }}
                       onMouseMove={(e) => handleHeatmapMouseMove(e, countryName, count, drivers)}
                       onMouseLeave={() => setHeatmapTooltip(null)}
                     />
@@ -1071,6 +1261,60 @@ function Racers() {
                   <span className="text-xs font-semibold text-f1-light leading-relaxed">
                     {selectedChampion.years.join(', ')}
                   </span>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* HEATMAP COUNTRY OVERLAY MODAL */}
+      <AnimatePresence>
+        {selectedHeatmapCountry && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedHeatmapCountry(null)}
+            className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-f1-panel border border-f1-red rounded-lg overflow-hidden max-w-2xl w-full relative flex flex-col max-h-[80vh]"
+            >
+              <motion.button 
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setSelectedHeatmapCountry(null)}
+                className="absolute top-4 right-4 text-f1-muted hover:text-f1-light text-base font-bold z-10 bg-[#0f0f18]/60 p-2 rounded-full w-8 h-8 flex items-center justify-center transition duration-300"
+              >
+                ✕
+              </motion.button>
+              
+              <div className="p-6 border-b border-f1-border bg-gradient-to-r from-f1-red/20 to-transparent">
+                <h2 className="text-2xl font-extrabold text-f1-light uppercase tracking-wide">
+                  {selectedHeatmapCountry.countryName}
+                </h2>
+                <p className="text-f1-red font-bold text-sm uppercase tracking-wider mt-1">
+                  {selectedHeatmapCountry.count} Drivers Produced
+                </p>
+              </div>
+
+              <div className="p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-f1-red scrollbar-track-f1-dark">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {selectedHeatmapCountry.drivers.map((d, idx) => (
+                    <div key={d.driverId || idx} className="bg-[#0f0f18] border border-f1-border p-3 rounded hover:border-f1-red transition duration-200">
+                      <h4 className="text-f1-light font-bold text-sm">
+                        <span className="text-f1-muted font-normal mr-1">{d.givenName}</span>
+                        <span className="uppercase">{d.familyName}</span>
+                      </h4>
+                      <p className="text-[9px] text-f1-muted uppercase tracking-wider mt-1">
+                        DOB: {d.dateOfBirth}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </motion.div>
