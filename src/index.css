@@ -40,3 +40,70 @@ tbody tr td:first-child::before {
 tbody tr:hover td:first-child::before {
   width: 3px;
 }
+
+/* Checkered Flag Button Hover Effect */
+.btn-checkered {
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.btn-checkered::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(45deg, rgba(255,255,255,0.15) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.15)), 
+    linear-gradient(45deg, rgba(255,255,255,0.15) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.15));
+  background-size: 16px 16px;
+  background-position: 0 0, 8px 8px;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: -1;
+  opacity: 0.8;
+}
+
+.btn-checkered:hover::before {
+  transform: translateX(100%);
+}
+
+/* Speed Lines Background Animation */
+.speed-lines-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.15;
+}
+
+.speed-lines-bg::before,
+.speed-lines-bg::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 200%;
+  height: 100%;
+  background-image: 
+    linear-gradient(90deg, transparent 0%, transparent 40%, rgba(225, 6, 0, 0.8) 40.5%, transparent 41%),
+    linear-gradient(90deg, transparent 0%, transparent 60%, rgba(255, 255, 255, 0.4) 60.5%, transparent 61%),
+    linear-gradient(90deg, transparent 0%, transparent 20%, rgba(225, 6, 0, 0.5) 20.2%, transparent 21%),
+    linear-gradient(90deg, transparent 0%, transparent 80%, rgba(255, 255, 255, 0.2) 80.2%, transparent 81%);
+  background-size: 300px 100%, 400px 100%, 250px 100%, 500px 100%;
+  animation: speedLines 2s linear infinite;
+}
+
+.speed-lines-bg::after {
+  animation-delay: -1s;
+  opacity: 0.6;
+}
+
+@keyframes speedLines {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}

@@ -15,7 +15,7 @@ import {
   PolarRadiusAxis,
   Radar
 } from 'recharts';
-import { SearchBar, SkeletonDriverRow, SkeletonCard, PlotlyTooltip } from '../components';
+import { SearchBar, SkeletonDriverRow, SkeletonCard, PlotlyTooltip, StartingLights, RPMGauge } from '../components';
 import championsData from '../data/champions.json';
 import { getAllDrivers, getDriverInfo, getDriverStandings } from '../services/jolpicaApi';
 import getWikipediaImage from '../utils/getWikipediaImage';
@@ -89,6 +89,7 @@ function Racers() {
   const [careerStandings, setCareerStandings] = useState([]);
   const [loadingCareer, setLoadingCareer] = useState(false);
   const [errorCareer, setErrorCareer] = useState(null);
+  const [detailDriverImage, setDetailDriverImage] = useState(null);
 
   // Driver Comparison states
   const [driverA, setDriverA] = useState(null);
@@ -96,6 +97,8 @@ function Racers() {
   const [statsA, setStatsA] = useState(null);
   const [statsB, setStatsB] = useState(null);
   const [loadingCompare, setLoadingCompare] = useState({ a: false, b: false });
+  const [driverAImage, setDriverAImage] = useState(null);
+  const [driverBImage, setDriverBImage] = useState(null);
 
   const [searchA, setSearchA] = useState('');
   const [searchB, setSearchB] = useState('');
@@ -184,6 +187,11 @@ function Racers() {
   useEffect(() => {
     if (selectedDetailDriver) {
       fetchDriverCareer(selectedDetailDriver.driverId);
+      
+      setDetailDriverImage(null);
+      getWikipediaImage(`${selectedDetailDriver.givenName} ${selectedDetailDriver.familyName}`).then(url => {
+        setDetailDriverImage(url);
+      });
     }
   }, [selectedDetailDriver]);
 
@@ -239,11 +247,15 @@ function Racers() {
       setSearchA('');
       setShowDropdownA(false);
       fetchCompareStats('A', driver);
+      setDriverAImage(null);
+      getWikipediaImage(`${driver.givenName} ${driver.familyName}`).then(url => setDriverAImage(url));
     } else {
       setDriverB(driver);
       setSearchB('');
       setShowDropdownB(false);
       fetchCompareStats('B', driver);
+      setDriverBImage(null);
+      getWikipediaImage(`${driver.givenName} ${driver.familyName}`).then(url => setDriverBImage(url));
     }
   };
 
@@ -254,6 +266,8 @@ function Racers() {
     setStatsB(null);
     setSearchA('');
     setSearchB('');
+    setDriverAImage(null);
+    setDriverBImage(null);
   };
 
   const handleViewDriver = (driver) => {
@@ -532,7 +546,7 @@ function Racers() {
                     setSearchQuery('');
                     setCurrentPage(1);
                   }}
-                  className="w-full md:w-auto h-[38px] px-4 bg-f1-red/10 text-f1-red text-[10px] font-black uppercase tracking-widest rounded border border-f1-red/30 hover:bg-f1-red hover:text-white transition"
+                  className="w-full md:w-auto h-[38px] px-4 bg-f1-red/10 text-f1-red text-[10px] font-black uppercase tracking-widest rounded border border-f1-red/30 hover:bg-f1-red hover:text-white transition btn-checkered"
                 >
                   Clear Filters
                 </button>
@@ -632,7 +646,7 @@ function Racers() {
               </div>
             )}
 
-            {loadingDrivers && <div className="flex flex-col gap-3 p-4">{Array.from({ length: 5 }).map((_, i) => <SkeletonDriverRow key={i} />)}</div>}
+            {loadingDrivers && <div className="p-4"><StartingLights /></div>}
             {errorDrivers && (
               <div className="text-center py-6 text-xs text-f1-red font-bold">{errorDrivers}</div>
             )}
@@ -641,17 +655,28 @@ function Racers() {
           <div className="lg:col-span-1 bg-f1-panel border border-f1-border p-6 rounded-lg shadow-xl min-h-[500px] flex flex-col justify-between sticky top-28 self-start">
             {selectedDetailDriver ? (
               <div className="space-y-6">
-                <div>
-                  <span className="text-[10px] text-f1-red font-black uppercase tracking-widest block mb-0.5">Career Analytics</span>
-                  <h3 className="text-2xl font-black text-f1-light tracking-tight leading-tight">
-                    {selectedDetailDriver.givenName} {selectedDetailDriver.familyName}
-                  </h3>
-                  <div className="mt-1 flex flex-wrap gap-2 text-[10px] font-bold text-f1-muted uppercase">
-                    <span>{selectedDetailDriver.nationality}</span>
-                    <span>•</span>
-                    <span>Born: {selectedDetailDriver.dateOfBirth}</span>
+                <div className="flex gap-5 items-center">
+                  <div className="w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden bg-[#07070a] border-2 border-f1-border flex-shrink-0 flex items-center justify-center shadow-lg">
+                    {detailDriverImage ? (
+                      <img src={detailDriverImage} alt={selectedDetailDriver.familyName} className="w-full h-full object-cover object-top" />
+                    ) : (
+                      <span className="text-4xl opacity-20">👤</span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-f1-red font-black uppercase tracking-widest block mb-0.5">Career Analytics</span>
+                    <h3 className="text-2xl font-black text-f1-light tracking-tight leading-tight">
+                      {selectedDetailDriver.givenName} {selectedDetailDriver.familyName}
+                    </h3>
+                    <div className="mt-1 flex flex-wrap gap-2 text-[10px] font-bold text-f1-muted uppercase">
+                      <span>{selectedDetailDriver.nationality}</span>
+                      <span>•</span>
+                      <span>Born: {selectedDetailDriver.dateOfBirth}</span>
+                    </div>
                   </div>
                 </div>
+
+                <RPMGauge driverId={selectedDetailDriver.driverId} />
 
                 {loadingCareer ? (
                   <div className="py-12 flex flex-col items-center justify-center space-y-3">
@@ -739,14 +764,17 @@ function Racers() {
 
       {/* SECTION 3: Driver Comparison Tool */}
       <FadeInSection>
-        <div className="border-l-2 border-f1-red pl-2 mb-4">
-          <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
-            Head-to-Head Analytics
-          </h4>
-        </div>
-        <div className="mb-8">
-          <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light tracking-tight">Driver Comparison Tool</h2>
-          <p className="text-f1-muted text-xs mt-1">Search and select two F1 drivers from the registry to benchmark their metrics side-by-side.</p>
+        <div className="relative p-6 -mx-6 rounded-xl overflow-hidden mb-4">
+          <div className="speed-lines-bg"></div>
+          <div className="relative z-10 border-l-2 border-f1-red pl-2 mb-4">
+            <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
+              Head-to-Head Analytics
+            </h4>
+          </div>
+          <div className="relative z-10 mb-2">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light tracking-tight">Driver Comparison Tool</h2>
+            <p className="text-f1-muted text-xs mt-1">Search and select two F1 drivers from the registry to benchmark their metrics side-by-side.</p>
+          </div>
         </div>
 
         <div className="min-h-[420px] flex flex-col justify-start">
@@ -755,9 +783,18 @@ function Racers() {
             <label className="block text-[10px] font-black uppercase text-f1-red mb-2 tracking-wider">Compare Driver A</label>
             {driverA ? (
               <div className="bg-[#0f0f18] border border-f1-red p-4 rounded flex justify-between items-center shadow-lg shadow-f1-red/5">
-                <div>
-                  <h4 className="font-extrabold text-f1-light text-sm">{driverA.givenName} {driverA.familyName}</h4>
-                  <span className="text-[9px] text-f1-muted uppercase font-bold tracking-wider">{driverA.nationality}</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-[#1a1a24] border border-f1-border flex items-center justify-center flex-shrink-0">
+                    {driverAImage ? (
+                      <img src={driverAImage} alt={driverA.familyName} className="w-full h-full object-cover object-top" />
+                    ) : (
+                      <span className="text-lg opacity-20">👤</span>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-f1-light text-sm">{driverA.givenName} {driverA.familyName}</h4>
+                    <span className="text-[9px] text-f1-muted uppercase font-bold tracking-wider">{driverA.nationality}</span>
+                  </div>
                 </div>
                 <motion.button 
                   whileTap={{ scale: 0.97 }}
@@ -812,9 +849,18 @@ function Racers() {
             <label className="block text-[10px] font-black uppercase text-f1-red mb-2 tracking-wider">Compare Driver B</label>
             {driverB ? (
               <div className="bg-[#0f0f18] border border-f1-red p-4 rounded flex justify-between items-center shadow-lg shadow-f1-red/5">
-                <div>
-                  <h4 className="font-extrabold text-f1-light text-sm">{driverB.givenName} {driverB.familyName}</h4>
-                  <span className="text-[9px] text-f1-muted uppercase font-bold tracking-wider">{driverB.nationality}</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-[#1a1a24] border border-f1-border flex items-center justify-center flex-shrink-0">
+                    {driverBImage ? (
+                      <img src={driverBImage} alt={driverB.familyName} className="w-full h-full object-cover object-top" />
+                    ) : (
+                      <span className="text-lg opacity-20">👤</span>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-f1-light text-sm">{driverB.givenName} {driverB.familyName}</h4>
+                    <span className="text-[9px] text-f1-muted uppercase font-bold tracking-wider">{driverB.nationality}</span>
+                  </div>
                 </div>
                 <motion.button 
                   whileTap={{ scale: 0.97 }}
@@ -933,9 +979,9 @@ function Racers() {
                 <motion.button 
                   whileTap={{ scale: 0.97 }}
                   onClick={handleClearComparison}
-                  className="bg-f1-red hover:bg-red-700 text-f1-light px-5 py-2.5 rounded-sm text-[10px] font-black uppercase tracking-wider transition duration-300 transform -skew-x-12"
+                  className="bg-f1-red hover:bg-red-700 text-f1-light px-5 py-2.5 rounded-sm text-[10px] font-black uppercase tracking-wider transition duration-300 transform -skew-x-12 btn-checkered"
                 >
-                  Clear Comparison
+                  <span className="block transform skew-x-12">Clear Comparison</span>
                 </motion.button>
               </div>
             </div>

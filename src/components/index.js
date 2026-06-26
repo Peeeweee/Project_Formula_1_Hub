@@ -15,3 +15,5 @@ export { default as CarVaultFilters } from './CarVaultFilters';
 export { default as PlotlyTooltip } from './PlotlyTooltip';
 export { default as RealisticTire } from './RealisticTire';
 export { default as GlossaryModal } from './GlossaryModal';
+export { default as StartingLights } from './StartingLights';
+export { default as RPMGauge } from './RPMGauge';
