@@ -25,6 +25,17 @@ import CarViewer2D from '../components/CarViewer2D';
 import CarVaultFilters from '../components/CarVaultFilters';
 import { PlotlyTooltip } from '../components';
 
+class LocalErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { hasError: false, error: null }; }
+  static getDerivedStateFromError(error) { return { hasError: true, error }; }
+  render() {
+    if (this.state.hasError) {
+      return <div style={{color: 'red', padding: '20px', zIndex: 9999, position: 'relative', background: 'black', width: '100%', height: '100%', fontSize: '20px'}}>{this.state.error.toString()}<br/><pre>{this.state.error.stack}</pre></div>;
+    }
+    return this.props.children;
+  }
+}
+
 const TeamLogo = ({ team, size = "small" }) => {
   const [imgError, setImgError] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
@@ -85,21 +96,29 @@ const TeamLogo = ({ team, size = "small" }) => {
   );
 };
 
-const CarCard = ({ car, onClick }) => {
+const CarCard = ({ car, onClick, imageCache = {}, setImageCache = () => {} }) => {
   const [imgUrl, setImgUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
+    if (imageCache[car.carId]) {
+      setImgUrl(imageCache[car.carId]);
+      setLoading(false);
+      return;
+    }
     let isMounted = true;
     getWikipediaImage(car.wikiSearchTerm).then(url => {
       if (!isMounted) return;
       setImgUrl(url);
       setLoading(false);
+      if (url) {
+        setImageCache(prev => ({ ...prev, [car.carId]: url }));
+      }
     }).catch(() => {
       if (isMounted) setLoading(false);
     });
     return () => { isMounted = false; };
-  }, [car.wikiSearchTerm]);
+  }, [car.wikiSearchTerm, car.carId, imageCache, setImageCache]);
 
   const driversText = Array.isArray(car.drivers) ? car.drivers : (car.driver ? car.driver.split(',').map(s=>s.trim()) : []);
   const displayDrivers = driversText.slice(0, 2).join(', ');
@@ -470,14 +489,17 @@ const getConstructorDetails = (id) => {
 };
 
 const ANATOMY_PARTS = [
+  // LEFT SIDE LABELS
   {
     id: 'front_wing',
     name: 'Front Wing',
     material: 'Carbon Fiber Composite',
     purpose: 'Generates front downforce and directs air flow around the front tyres.',
     funFact: 'It can flex under high aerodynamic loads to shed drag, but the FIA strictly tests this stiffness.',
-    linePoints: [[150, 70], [60, 70]],
-    align: 'right'
+    hotspot: { cx: 600, cy: 165, rx: 160, ry: 30 },
+    lineTarget: { x: 350, y: 120 },
+    labelPos: { left: '4%', top: '15%' },
+    align: 'left'
   },
   {
     id: 'monocoque',
@@ -485,17 +507,10 @@ const ANATOMY_PARTS = [
     material: 'Carbon-Kevlar & Honeycomb',
     purpose: 'The survival cell that houses the driver cockpit and protects them during impacts.',
     funFact: 'It is strong enough to withstand survival forces equivalent to falling from a multi-story building.',
-    linePoints: [[150, 140], [50, 140]],
-    align: 'right'
-  },
-  {
-    id: 'halo',
-    name: 'Halo',
-    material: 'Grade 5 Titanium',
-    purpose: 'A curved protective bar that shields the driver\'s head from flying debris.',
-    funFact: 'Though initially criticized for its looks, it can support the weight of a double-decker London bus (12 tonnes).',
-    linePoints: [[150, 190], [50, 190]],
-    align: 'right'
+    hotspot: { cx: 600, cy: 375, rx: 40, ry: 75 },
+    lineTarget: { x: 350, y: 256 },
+    labelPos: { left: '4%', top: '32%' },
+    align: 'left'
   },
   {
     id: 'fuel_tank',
@@ -503,17 +518,10 @@ const ANATOMY_PARTS = [
     material: 'Kevlar-Reinforced Rubber Bladder',
     purpose: 'Holds up to 110kg of fuel, situated directly behind the driver cockpit.',
     funFact: 'F1 fuel tanks are highly flexible, puncture-proof bladders designed to prevent fires during heavy crashes.',
-    linePoints: [[150, 260], [40, 260]],
-    align: 'right'
-  },
-  {
-    id: 'floor',
-    name: 'Floor',
-    material: 'Carbon Fiber & Titanium Skids',
-    purpose: 'Generates up to 60% of the car\'s downforce using ground-effect Venturi tunnels.',
-    funFact: 'If the floor gets damaged by kerbs, a car can instantly lose up to 10-15% of its overall cornering grip.',
-    linePoints: [[110, 310], [50, 310]],
-    align: 'right'
+    hotspot: { cx: 600, cy: 480, rx: 35, ry: 30 },
+    lineTarget: { x: 350, y: 392 },
+    labelPos: { left: '4%', top: '49%' },
+    align: 'left'
   },
   {
     id: 'sidepod',
@@ -521,8 +529,33 @@ const ANATOMY_PARTS = [
     material: 'Carbon Fiber',
     purpose: 'Houses radiators for engine cooling and shapes airflow toward the rear wing.',
     funFact: 'Teams constantly change sidepod shapes to balance engine cooling with minimal aerodynamic drag.',
-    linePoints: [[195, 290], [250, 290]],
+    hotspot: { cx: 520, cy: 500, rx: 40, ry: 100 },
+    lineTarget: { x: 350, y: 528 },
+    labelPos: { left: '4%', top: '66%' },
     align: 'left'
+  },
+  {
+    id: 'floor',
+    name: 'Floor',
+    material: 'Carbon Fiber & Titanium Skids',
+    purpose: 'Generates up to 60% of the car\'s downforce using ground-effect Venturi tunnels.',
+    funFact: 'If the floor gets damaged by kerbs, a car can instantly lose up to 10-15% of its overall cornering grip.',
+    hotspot: { cx: 480, cy: 600, rx: 60, ry: 150 },
+    lineTarget: { x: 350, y: 664 },
+    labelPos: { left: '4%', top: '83%' },
+    align: 'left'
+  },
+  // RIGHT SIDE LABELS
+  {
+    id: 'halo',
+    name: 'Halo',
+    material: 'Grade 5 Titanium',
+    purpose: 'A curved protective bar that shields the driver\'s head from flying debris.',
+    funFact: 'Though initially criticized for its looks, it can support the weight of a double-decker London bus (12 tonnes).',
+    hotspot: { cx: 600, cy: 390, rx: 45, ry: 35 },
+    lineTarget: { x: 850, y: 200 },
+    labelPos: { right: '4%', top: '25%' },
+    align: 'right'
   },
   {
     id: 'mgu_k',
@@ -530,26 +563,10 @@ const ANATOMY_PARTS = [
     material: 'High-Performance Copper & Steel',
     purpose: 'Recuperates kinetic energy under braking and delivers 120kW (160hp) of hybrid power.',
     funFact: 'MGU-K stands for Motor Generator Unit - Kinetic, and acts as both an electric generator and a motor.',
-    linePoints: [[150, 345], [250, 345]],
-    align: 'left'
-  },
-  {
-    id: 'diffuser',
-    name: 'Diffuser',
-    material: 'Carbon Fiber',
-    purpose: 'Accelerates under-car airflow to expand at the rear, creating a massive low-pressure suction.',
-    funFact: 'The diffuser works in synergy with the rear wing to pull the car onto the tarmac at high speeds.',
-    linePoints: [[150, 412], [250, 412]],
-    align: 'left'
-  },
-  {
-    id: 'rear_wing',
-    name: 'Rear Wing',
-    material: 'Carbon Fiber Composite',
-    purpose: 'Generates massive rear downforce and stability at high speeds.',
-    funFact: 'Rear wings create a huge aerodynamic wake (dirty air) that makes overtaking difficult for cars behind.',
-    linePoints: [[150, 445], [250, 445]],
-    align: 'left'
+    hotspot: { cx: 600, cy: 600, rx: 25, ry: 35 },
+    lineTarget: { x: 850, y: 320 },
+    labelPos: { right: '4%', top: '40%' },
+    align: 'right'
   },
   {
     id: 'drs_actuator',
@@ -557,7 +574,31 @@ const ANATOMY_PARTS = [
     material: 'Electro-Hydraulic Pistons',
     purpose: 'Opens the rear wing flap to reduce drag and increase top speed on straightaways.',
     funFact: 'DRS stands for Drag Reduction System and can increase top speeds by up to 10-12 km/h when activated.',
-    linePoints: [[150, 433], [60, 433]],
+    hotspot: { cx: 600, cy: 735, rx: 15, ry: 20 },
+    lineTarget: { x: 850, y: 440 },
+    labelPos: { right: '4%', top: '55%' },
+    align: 'right'
+  },
+  {
+    id: 'diffuser',
+    name: 'Diffuser',
+    material: 'Carbon Fiber',
+    purpose: 'Accelerates under-car airflow to expand at the rear, creating a massive low-pressure suction.',
+    funFact: 'The diffuser works in synergy with the rear wing to pull the car onto the tarmac at high speeds.',
+    hotspot: { cx: 600, cy: 755, rx: 90, ry: 25 },
+    lineTarget: { x: 850, y: 560 },
+    labelPos: { right: '4%', top: '70%' },
+    align: 'right'
+  },
+  {
+    id: 'rear_wing',
+    name: 'Rear Wing',
+    material: 'Carbon Fiber Composite',
+    purpose: 'Generates massive rear downforce and stability at high speeds.',
+    funFact: 'Rear wings create a huge aerodynamic wake (dirty air) that makes overtaking difficult for cars behind.',
+    hotspot: { cx: 600, cy: 755, rx: 130, ry: 20 },
+    lineTarget: { x: 850, y: 680 },
+    labelPos: { right: '4%', top: '85%' },
     align: 'right'
   }
 ];
@@ -570,11 +611,8 @@ function Cars() {
 
 
   // Comparator states
-  const [carAId, setCarAId] = useState(ICONIC_CARS_DATA[6].id); // Ferrari F2004 default
-  const [carBId, setCarBId] = useState(ICONIC_CARS_DATA[8].id); // Mercedes W11 default
-
-  const carA = ICONIC_CARS_DATA.find(c => c.id === carAId);
-  const carB = ICONIC_CARS_DATA.find(c => c.id === carBId);
+  const [carAId, setCarAId] = useState('ferrari-f2004'); // Ferrari F2004 default
+  const [carBId, setCarBId] = useState('mercedes-w11'); // Mercedes W11 default
 
   // Drag Scroll States & Refs
   const containerRef = useRef(null);
@@ -633,7 +671,23 @@ function Cars() {
     ? getConstructorDetails(selectedConstructor.id) 
     : null;
 
-  // Format Radar data for compared cars
+  // Format Radar data for compared cars (moved below allCars initialization)
+
+  const activePart = ANATOMY_PARTS.find(p => p.id === hoveredPart);
+
+  // --- CAR VAULT LOGIC ---
+  const allCars = React.useMemo(() => {
+    return carVault.flatMap(era => era.cars.map(car => ({ ...car, eraName: era.eraName, eraColor: era.eraColor })));
+  }, []);
+
+  const carA = allCars.find(c => c.carId === carAId) || allCars[0];
+  const carB = allCars.find(c => c.carId === carBId) || allCars[1];
+
+  const getHandlingScore = (car) => {
+    if (!car) return 0;
+    return Math.min(10, Math.max(1, Math.round(car.downforceLevel * 0.8 + (1000 - car.weightKg)/1000 * 2 + (car.year > 2000 ? 1 : 0))));
+  };
+
   const radarData = [
     {
       subject: 'Power',
@@ -657,17 +711,10 @@ function Cars() {
     },
     {
       subject: 'Handling',
-      A: carA ? carA.handling * 10 : 0,
-      B: carB ? carB.handling * 10 : 0,
+      A: carA ? getHandlingScore(carA) * 10 : 0,
+      B: carB ? getHandlingScore(carB) * 10 : 0,
     }
   ];
-
-  const activePart = ANATOMY_PARTS.find(p => p.id === hoveredPart);
-
-  // --- CAR VAULT LOGIC ---
-  const allCars = React.useMemo(() => {
-    return carVault.flatMap(era => era.cars.map(car => ({ ...car, eraName: era.eraName, eraColor: era.eraColor })));
-  }, []);
 
   const eraMap = React.useMemo(() => {
     return Object.fromEntries(carVault.map(e => [e.eraId, e]));
@@ -677,6 +724,7 @@ function Cars() {
   const [vaultSelectedCar, setVaultSelectedCar] = useState(null);
   const [selectedCarIndex, setSelectedCarIndex] = useState(0);
   const [isGroupedView, setIsGroupedView] = useState(false);
+  const [imageCache, setImageCache] = useState({});
 
   // Keyboard navigation for modal
   useEffect(() => {
@@ -898,6 +946,8 @@ function Cars() {
                     <CarCard 
                       key={car.carId}
                       car={car} 
+                      imageCache={imageCache}
+                      setImageCache={setImageCache}
                       onClick={() => {
                         setVaultSelectedCar(car);
                         setSelectedCarIndex(filteredCars.indexOf(car));
@@ -920,6 +970,7 @@ function Cars() {
               transition={{ duration: 0.2 }}
               className="fixed inset-0 bg-black/92 z-[100] flex items-center justify-center p-2 sm:p-4"
             >
+              <LocalErrorBoundary>
               <div className="w-full max-w-[1000px] max-h-[90vh] bg-[#0f0f18] border border-[#2a2a2a] rounded-xl flex flex-col relative overflow-hidden shadow-2xl">
                 
                 <button 
@@ -1072,6 +1123,7 @@ function Cars() {
                   </AnimatePresence>
                 </div>
               </div>
+              </LocalErrorBoundary>
             </motion.div>
           )}
         </AnimatePresence>
@@ -1097,8 +1149,8 @@ function Cars() {
               onChange={(e) => setCarAId(e.target.value)}
               className="w-full bg-[#0f0f18] border border-f1-border text-f1-light text-xs px-4 py-3 rounded outline-none focus:ring-1 focus:ring-f1-red transition cursor-pointer"
             >
-              {ICONIC_CARS_DATA.map(car => (
-                <option key={`optA-${car.id}`} value={car.id} className="bg-f1-panel">
+              {allCars.map(car => (
+                <option key={`optA-${car.carId}`} value={car.carId} className="bg-f1-panel">
                   {car.name} ({car.year})
                 </option>
               ))}
@@ -1112,8 +1164,8 @@ function Cars() {
               onChange={(e) => setCarBId(e.target.value)}
               className="w-full bg-[#0f0f18] border border-f1-border text-f1-light text-xs px-4 py-3 rounded outline-none focus:ring-1 focus:ring-f1-red transition cursor-pointer"
             >
-              {ICONIC_CARS_DATA.map(car => (
-                <option key={`optB-${car.id}`} value={car.id} className="bg-f1-panel">
+              {allCars.map(car => (
+                <option key={`optB-${car.carId}`} value={car.carId} className="bg-f1-panel">
                   {car.name} ({car.year})
                 </option>
               ))}
@@ -1225,263 +1277,300 @@ function Cars() {
           <p className="text-f1-muted text-xs mt-1">Hover over labels or parts to inspect the engineering anatomy of a formula race car.</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-center bg-f1-panel border border-f1-border p-8 rounded-lg shadow-xl relative overflow-hidden">
-          {/* Left Labels Column */}
-          <div className="lg:col-span-1 flex flex-col gap-3">
-            {ANATOMY_PARTS.filter(p => p.align === 'right').map(part => (
-              <div 
-                key={part.id}
-                onMouseEnter={() => setHoveredPart(part.id)}
-                onMouseLeave={() => setHoveredPart(null)}
-                className={`p-3 rounded border transition duration-200 cursor-pointer ${
-                  hoveredPart === part.id 
-                    ? 'bg-f1-red/10 border-f1-red text-f1-light' 
-                    : 'bg-[#09090f] border-f1-border/50 text-f1-muted hover:border-f1-border hover:text-f1-light'
-                }`}
-              >
-                <span className="font-extrabold text-xs uppercase block">{part.name}</span>
-                <span className="text-[9px] text-f1-muted block mt-0.5">{part.material}</span>
-              </div>
-            ))}
-          </div>
+        <div className="bg-[#07070a] border border-[#1a1a24] rounded-xl shadow-[0_30px_60px_-15px_rgba(225,6,0,0.15)] relative overflow-hidden group/anatomy aspect-square md:aspect-[3/2] w-full max-w-[1400px] mx-auto flex items-center justify-center min-h-[600px]">
+          
+          {/* Glowing Background Elements */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-f1-red/10 via-[#07070a]/20 to-transparent opacity-40 pointer-events-none mix-blend-screen transition-opacity duration-1000 group-hover/anatomy:opacity-70" />
+          
+          {/* Grid lines inside the box */}
+          <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
-          {/* Center SVG Column */}
-          <div className="lg:col-span-2 flex justify-center items-center">
-            <svg viewBox="0 0 300 500" className="w-[300px] h-[500px] select-none">
-              <defs>
-                <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                  <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1a1a24" strokeWidth="0.5" />
-                </pattern>
-              </defs>
-              <rect width="300" height="500" fill="url(#grid)" />
+          {/* Unified SVG Layout (1200x800 coordinate space) */}
+          <svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet" className="absolute inset-0 w-full h-full pointer-events-none z-20 select-none filter drop-shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+            <defs>
+              <linearGradient id="neonGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#e10600" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#800000" stopOpacity="0.2" />
+              </linearGradient>
+              <linearGradient id="carbon" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#1a1a24" />
+                <stop offset="100%" stopColor="#07070a" />
+              </linearGradient>
+              <linearGradient id="metallic" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#444" />
+                <stop offset="50%" stopColor="#888" />
+                <stop offset="100%" stopColor="#444" />
+              </linearGradient>
+              <filter id="glowEffect" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="6" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+              <pattern id="carbonPattern" width="4" height="4" patternUnits="userSpaceOnUse">
+                <rect width="4" height="4" fill="#111" />
+                <path d="M0,0 L4,4 M4,0 L0,4" stroke="#222" strokeWidth="1" />
+              </pattern>
+            </defs>
 
-              {/* Floor Underbody */}
-              <path 
-                d="M 110,240 L 190,240 L 195,380 L 180,410 L 120,410 L 105,380 Z" 
-                fill={hoveredPart === 'floor' ? '#e10600' : '#1e1e2c'} 
-                stroke={hoveredPart === 'floor' ? '#e10600' : '#444'} 
-                strokeWidth="1.5"
-                onMouseEnter={() => setHoveredPart('floor')}
-                onMouseLeave={() => setHoveredPart(null)}
-                className="transition duration-200 cursor-pointer"
-              />
+            {/* --- HYPER-REALISTIC CODED F1 CAR SVG DRAWING --- */}
+            <g className="transition-all duration-1000 ease-in-out origin-center">
+              {/* Background floor shadow (Organic shape) */}
+              <path d="M 590,120 C 650,120 720,150 750,200 C 780,300 780,400 760,500 C 750,600 700,750 600,770 C 500,750 450,600 440,500 C 420,400 420,300 450,200 C 480,150 550,120 590,120 Z" fill="url(#neonGlow)" filter="url(#glowEffect)" opacity="0.15" className="animate-pulse" />
 
-              {/* Front Wing */}
-              <rect 
-                x="70" y="70" width="160" height="15" rx="2" 
-                fill={hoveredPart === 'front_wing' ? '#e10600' : '#2d2d3a'} 
-                stroke={hoveredPart === 'front_wing' ? '#e10600' : '#666'} 
-                strokeWidth="1.5"
-                onMouseEnter={() => setHoveredPart('front_wing')}
-                onMouseLeave={() => setHoveredPart(null)}
-                className="transition duration-200 cursor-pointer"
-              />
+              {/* FLOOR */}
+              <g filter={hoveredPart === 'floor' ? 'url(#glowEffect)' : 'none'} className="transition-all duration-300">
+                <path d="M 480,330 C 450,400 440,500 450,620 C 455,660 480,720 510,740 L 690,740 C 720,720 745,660 750,620 C 760,500 750,400 720,330 C 700,300 650,250 600,250 C 550,250 500,300 480,330 Z" fill="url(#carbonPattern)" stroke={hoveredPart === 'floor' ? '#e10600' : '#222'} strokeWidth={hoveredPart === 'floor' ? 4 : 2} />
+              </g>
 
-              {/* Wheels - Front Left */}
-              <rect x="40" y="90" width="25" height="50" rx="3" fill="#0c0c14" stroke="#222" />
-              {/* Wheels - Front Right */}
-              <rect x="235" y="90" width="25" height="50" rx="3" fill="#0c0c14" stroke="#222" />
+              {/* FRONT WING */}
+              <g filter={hoveredPart === 'front_wing' ? 'url(#glowEffect)' : 'none'} className="transition-all duration-300">
+                <path d="M 460,180 C 500,140 550,130 600,125 C 650,130 700,140 740,180 C 740,190 730,195 720,190 C 680,160 620,150 600,150 C 580,150 520,160 480,190 C 470,195 460,190 460,180 Z" fill="#07070a" stroke={hoveredPart === 'front_wing' ? '#fff' : '#e10600'} strokeWidth={hoveredPart === 'front_wing' ? 3 : 2} />
+                <path d="M 470,170 C 520,130 570,110 600,110 C 630,110 680,130 730,170 C 735,160 740,140 740,140 C 680,100 620,80 600,80 C 580,80 520,100 460,140 C 460,140 465,160 470,170 Z" fill="url(#carbon)" stroke={hoveredPart === 'front_wing' ? '#e10600' : '#333'} strokeWidth="1" />
+                <path d="M 450,130 Q 440,160 460,190 L 465,185 Q 450,160 460,130 Z" fill={hoveredPart === 'front_wing' ? '#fff' : '#e10600'} />
+                <path d="M 750,130 Q 760,160 740,190 L 735,185 Q 750,160 740,130 Z" fill={hoveredPart === 'front_wing' ? '#fff' : '#e10600'} />
+              </g>
 
-              {/* Wheels - Rear Left */}
-              <rect x="35" y="360" width="30" height="60" rx="3" fill="#0c0c14" stroke="#222" />
-              {/* Wheels - Rear Right */}
-              <rect x="235" y="360" width="30" height="60" rx="3" fill="#0c0c14" stroke="#222" />
+              {/* FRONT SUSPENSION */}
+              <g className="transition-all duration-300">
+                <path d="M 420,240 L 580,260 M 420,250 L 575,280 M 420,280 L 565,310" stroke="#777" strokeWidth="3" fill="none" />
+                <path d="M 780,240 L 620,260 M 780,250 L 625,280 M 780,280 L 635,310" stroke="#777" strokeWidth="3" fill="none" />
+              </g>
 
-              {/* Suspension Arms */}
-              <line x1="65" y1="115" x2="135" y2="125" stroke="#444" strokeWidth="2" />
-              <line x1="65" y1="115" x2="135" y2="145" stroke="#444" strokeWidth="2" />
-              <line x1="235" y1="115" x2="165" y2="125" stroke="#444" strokeWidth="2" />
-              <line x1="235" y1="115" x2="165" y2="145" stroke="#444" strokeWidth="2" />
+              {/* FRONT WHEELS */}
+              <g>
+                <rect x="385" y="210" width="45" height="110" rx="10" fill="#050508" stroke="#222" strokeWidth="3" />
+                <rect x="770" y="210" width="45" height="110" rx="10" fill="#050508" stroke="#222" strokeWidth="3" />
+                <ellipse cx="407" cy="265" rx="18" ry="45" fill="#111" stroke="#333" strokeWidth="2" />
+                <ellipse cx="792" cy="265" rx="18" ry="45" fill="#111" stroke="#333" strokeWidth="2" />
+              </g>
 
-              <line x1="65" y1="390" x2="120" y2="390" stroke="#444" strokeWidth="2" />
-              <line x1="65" y1="390" x2="120" y2="405" stroke="#444" strokeWidth="2" />
-              <line x1="235" y1="390" x2="180" y2="390" stroke="#444" strokeWidth="2" />
-              <line x1="235" y1="390" x2="180" y2="405" stroke="#444" strokeWidth="2" />
+              {/* MONOCOQUE & COCKPIT */}
+              <g filter={hoveredPart === 'monocoque' ? 'url(#glowEffect)' : 'none'} className="transition-all duration-300">
+                <path d="M 590,110 C 600,105 610,110 610,140 C 615,200 625,280 635,320 L 565,320 C 575,280 585,200 590,140 Z" fill="url(#carbon)" stroke={hoveredPart === 'monocoque' ? '#e10600' : '#444'} strokeWidth={hoveredPart === 'monocoque' ? 3 : 2} />
+                <ellipse cx="600" cy="120" rx="6" ry="10" fill="#e10600" />
+                <path d="M 565,320 L 635,320 C 645,360 650,400 650,450 L 550,450 C 550,400 555,360 565,320 Z" fill="#111" stroke={hoveredPart === 'monocoque' ? '#e10600' : '#e10600'} strokeWidth={hoveredPart === 'monocoque' ? 4 : 2} />
+                <path d="M 580,360 C 580,340 620,340 620,360 C 625,380 625,410 600,410 C 575,410 575,380 580,360 Z" fill="#000" stroke={hoveredPart === 'monocoque' ? '#e10600' : '#444'} strokeWidth="3" />
+                <circle cx="600" cy="375" r="12" fill="#fff" stroke={hoveredPart === 'monocoque' ? '#ff0000' : '#ff0000'} strokeWidth="2" />
+              </g>
 
-              {/* Monocoque/Chassis center body */}
-              <path 
-                d="M 135,85 L 165,85 L 165,190 L 180,240 L 180,390 L 120,390 L 120,240 L 135,190 Z" 
-                fill={hoveredPart === 'monocoque' ? '#e10600' : '#3d3d4d'} 
-                stroke={hoveredPart === 'monocoque' ? '#e10600' : '#888'} 
-                strokeWidth="1.5"
-                onMouseEnter={() => setHoveredPart('monocoque')}
-                onMouseLeave={() => setHoveredPart(null)}
-                className="transition duration-200 cursor-pointer"
-              />
+              {/* FUEL TANK (INTERNAL SCHEMATIC) */}
+              <g filter={hoveredPart === 'fuel_tank' ? 'url(#glowEffect)' : 'none'} className="transition-all duration-300">
+                <path d="M 570,410 L 630,410 C 640,430 640,490 630,510 L 570,510 C 560,490 560,430 570,410 Z" fill={hoveredPart === 'fuel_tank' ? 'rgba(225,6,0,0.3)' : 'rgba(255,255,255,0.03)'} stroke={hoveredPart === 'fuel_tank' ? '#e10600' : '#666'} strokeWidth={hoveredPart === 'fuel_tank' ? 3 : 1.5} strokeDasharray={hoveredPart === 'fuel_tank' ? 'none' : '4 4'} />
+                <rect x="590" y="420" width="20" height="20" rx="4" fill="none" stroke={hoveredPart === 'fuel_tank' ? '#e10600' : '#666'} strokeWidth={hoveredPart === 'fuel_tank' ? 2 : 1} strokeDasharray={hoveredPart === 'fuel_tank' ? 'none' : '2 2'} />
+              </g>
 
-              {/* Halo cockpit protection */}
-              <path 
-                d="M 135,190 C 135,170 150,170 150,170 C 150,170 165,170 165,190 C 165,210 153,220 150,225 C 147,220 135,210 135,190 Z" 
-                fill="none" 
-                stroke={hoveredPart === 'halo' ? '#e10600' : '#777'} 
-                strokeWidth="3.5"
-                onMouseEnter={() => setHoveredPart('halo')}
-                onMouseLeave={() => setHoveredPart(null)}
-                className="transition duration-200 cursor-pointer"
-              />
+              {/* HALO */}
+              <g filter={hoveredPart === 'halo' ? 'url(#glowEffect)' : 'none'} className="transition-all duration-300">
+                <path d="M 598,360 L 602,360 L 604,390 L 596,390 Z" fill={hoveredPart === 'halo' ? '#fff' : 'url(#metallic)'} />
+                <path d="M 560,400 C 560,370 600,370 600,370 C 600,370 640,370 640,400 C 645,430 630,430 600,430 C 570,430 555,430 560,400 Z" fill="none" stroke={hoveredPart === 'halo' ? '#fff' : 'url(#metallic)'} strokeWidth={hoveredPart === 'halo' ? 8 : 6} opacity="0.9" />
+              </g>
 
-              {/* Cockpit opening */}
-              <ellipse cx="150" cy="210" rx="12" ry="20" fill="#08080f" />
+              {/* SIDEPODS */}
+              <g filter={hoveredPart === 'sidepod' ? 'url(#glowEffect)' : 'none'} className="transition-all duration-300">
+                <path d="M 530,370 C 480,380 470,450 480,520 C 490,590 530,650 560,680 L 580,680 C 570,600 550,550 560,450 C 565,420 540,380 530,370 Z" fill="url(#carbonPattern)" stroke={hoveredPart === 'sidepod' ? '#fff' : '#e10600'} strokeWidth={hoveredPart === 'sidepod' ? 4 : 2} />
+                <path d="M 670,370 C 720,380 730,450 720,520 C 710,590 670,650 640,680 L 620,680 C 630,600 650,550 640,450 C 635,420 660,380 670,370 Z" fill="url(#carbonPattern)" stroke={hoveredPart === 'sidepod' ? '#fff' : '#e10600'} strokeWidth={hoveredPart === 'sidepod' ? 4 : 2} />
+                <g stroke={hoveredPart === 'sidepod' ? '#e10600' : '#111'} strokeWidth="4" fill="none">
+                  <path d="M 490,440 Q 520,445 540,435 M 485,460 Q 520,465 545,455 M 485,480 Q 520,485 545,475 M 490,500 Q 520,505 540,495 M 495,520 Q 520,525 535,515" />
+                  <path d="M 710,440 Q 680,445 660,435 M 715,460 Q 680,465 655,455 M 715,480 Q 680,485 655,475 M 710,500 Q 680,505 660,495 M 705,520 Q 680,525 665,515" />
+                </g>
+              </g>
 
-              {/* Sidepods */}
-              {/* Left Sidepod */}
-              <path 
-                d="M 120,240 L 95,260 L 95,340 L 120,370 Z" 
-                fill={hoveredPart === 'sidepod' ? '#e10600' : '#2d2d3a'} 
-                stroke={hoveredPart === 'sidepod' ? '#e10600' : '#666'} 
-                strokeWidth="1"
-                onMouseEnter={() => setHoveredPart('sidepod')}
-                onMouseLeave={() => setHoveredPart(null)}
-                className="transition duration-200 cursor-pointer"
-              />
-              {/* Right Sidepod */}
-              <path 
-                d="M 180,240 L 205,260 L 205,340 L 180,370 Z" 
-                fill={hoveredPart === 'sidepod' ? '#e10600' : '#2d2d3a'} 
-                stroke={hoveredPart === 'sidepod' ? '#e10600' : '#666'} 
-                strokeWidth="1"
-                onMouseEnter={() => setHoveredPart('sidepod')}
-                onMouseLeave={() => setHoveredPart(null)}
-                className="transition duration-200 cursor-pointer"
-              />
+              {/* MGU-K & ENGINE BLOCK (INTERNAL SCHEMATIC) */}
+              <g filter={hoveredPart === 'mgu_k' ? 'url(#glowEffect)' : 'none'} className="transition-all duration-300">
+                <path d="M 575,520 L 625,520 L 620,650 L 580,650 Z" fill="none" stroke={hoveredPart === 'mgu_k' ? '#ffaa00' : '#444'} strokeWidth={hoveredPart === 'mgu_k' ? 2 : 1} strokeDasharray="2 2" />
+                <rect x="575" y="600" width="20" height="40" rx="4" fill={hoveredPart === 'mgu_k' ? 'rgba(255,170,0,0.3)' : 'none'} stroke={hoveredPart === 'mgu_k' ? '#fff' : '#ffaa00'} strokeWidth={hoveredPart === 'mgu_k' ? 3 : 1} opacity={hoveredPart === 'mgu_k' ? 1 : 0.6} />
+                <g stroke={hoveredPart === 'mgu_k' ? '#fff' : '#ffaa00'} strokeWidth={hoveredPart === 'mgu_k' ? 2 : 1} opacity={hoveredPart === 'mgu_k' ? 1 : 0.6}>
+                  <line x1="575" y1="610" x2="595" y2="610" />
+                  <line x1="575" y1="620" x2="595" y2="620" />
+                  <line x1="575" y1="630" x2="595" y2="630" />
+                </g>
+              </g>
 
-              {/* Fuel Tank */}
-              <rect 
-                x="135" y="245" width="30" height="30" rx="3"
-                fill={hoveredPart === 'fuel_tank' ? '#e10600' : '#1e1e2a'} 
-                stroke={hoveredPart === 'fuel_tank' ? '#e10600' : '#555'} 
-                strokeWidth="1.5"
-                onMouseEnter={() => setHoveredPart('fuel_tank')}
-                onMouseLeave={() => setHoveredPart(null)}
-                className="transition duration-200 cursor-pointer"
-              />
+              {/* ENGINE COVER & SHARK FIN */}
+              <g className="transition-all duration-300">
+                <path d="M 550,450 C 550,500 580,680 590,700 L 610,700 C 620,680 650,500 650,450 Z" fill="#111" stroke="#333" strokeWidth="2" opacity="0.8" />
+                <line x1="600" y1="450" x2="600" y2="700" stroke="#e10600" strokeWidth="3" filter="url(#glowEffect)" />
+              </g>
 
-              {/* MGU-K */}
-              <rect 
-                x="140" y="325" width="20" height="40" rx="2"
-                fill={hoveredPart === 'mgu_k' ? '#e10600' : '#252535'} 
-                stroke={hoveredPart === 'mgu_k' ? '#e10600' : '#666'} 
-                strokeWidth="1.5"
-                onMouseEnter={() => setHoveredPart('mgu_k')}
-                onMouseLeave={() => setHoveredPart(null)}
-                className="transition duration-200 cursor-pointer"
-              />
+              {/* REAR SUSPENSION */}
+              <g className="transition-all duration-300">
+                <path d="M 440,630 L 575,650 M 440,660 L 580,680 M 440,680 L 585,695" stroke="#777" strokeWidth="3" fill="none" />
+                <path d="M 760,630 L 625,650 M 760,660 L 620,680 M 760,680 L 615,695" stroke="#777" strokeWidth="3" fill="none" />
+              </g>
 
-              {/* Diffuser */}
-              <path 
-                d="M 120,405 L 180,405 L 185,420 L 115,420 Z" 
-                fill={hoveredPart === 'diffuser' ? '#e10600' : '#1a1a24'} 
-                stroke={hoveredPart === 'diffuser' ? '#e10600' : '#444'} 
-                strokeWidth="1"
-                onMouseEnter={() => setHoveredPart('diffuser')}
-                onMouseLeave={() => setHoveredPart(null)}
-                className="transition duration-200 cursor-pointer"
-              />
+              {/* REAR WHEELS */}
+              <g>
+                <rect x="380" y="600" width="55" height="120" rx="10" fill="#050508" stroke="#222" strokeWidth="3" />
+                <rect x="765" y="600" width="55" height="120" rx="10" fill="#050508" stroke="#222" strokeWidth="3" />
+                <ellipse cx="407" cy="660" rx="22" ry="50" fill="#111" stroke="#333" strokeWidth="2" />
+                <ellipse cx="792" cy="660" rx="22" ry="50" fill="#111" stroke="#333" strokeWidth="2" />
+              </g>
 
-              {/* Rear Wing */}
-              <rect 
-                x="85" y="440" width="130" height="12" rx="1"
-                fill={hoveredPart === 'rear_wing' ? '#e10600' : '#2d2d3a'} 
-                stroke={hoveredPart === 'rear_wing' ? '#e10600' : '#555'} 
-                strokeWidth="1.5"
-                onMouseEnter={() => setHoveredPart('rear_wing')}
-                onMouseLeave={() => setHoveredPart(null)}
-                className="transition duration-200 cursor-pointer"
-              />
+              {/* DIFFUSER */}
+              <g filter={hoveredPart === 'diffuser' ? 'url(#glowEffect)' : 'none'} className="transition-all duration-300">
+                <path d="M 500,740 L 700,740 L 670,780 L 530,780 Z" fill={hoveredPart === 'diffuser' ? 'rgba(225,6,0,0.3)' : 'none'} stroke={hoveredPart === 'diffuser' ? '#e10600' : 'none'} />
+                <path d="M 530,740 L 530,780 M 550,735 L 550,785 M 570,735 L 570,785 M 630,735 L 630,785 M 650,735 L 650,785 M 670,740 L 670,780" stroke={hoveredPart === 'diffuser' ? '#fff' : '#111'} strokeWidth={hoveredPart === 'diffuser' ? 5 : 3} />
+              </g>
 
-              {/* DRS Actuator */}
-              <rect 
-                x="145" y="433" width="10" height="8" rx="1"
-                fill={hoveredPart === 'drs_actuator' ? '#e10600' : '#0a0a0f'} 
-                stroke={hoveredPart === 'drs_actuator' ? '#e10600' : '#666'} 
-                strokeWidth="1.5"
-                onMouseEnter={() => setHoveredPart('drs_actuator')}
-                onMouseLeave={() => setHoveredPart(null)}
-                className="transition duration-200 cursor-pointer"
-              />
+              {/* REAR WING */}
+              <g filter={hoveredPart === 'rear_wing' ? 'url(#glowEffect)' : 'none'} className="transition-all duration-300">
+                <path d="M 480,720 Q 470,740 480,770 L 490,770 L 490,720 Z" fill={hoveredPart === 'rear_wing' ? '#fff' : '#e10600'} />
+                <path d="M 720,720 Q 730,740 720,770 L 710,770 L 710,720 Z" fill={hoveredPart === 'rear_wing' ? '#fff' : '#e10600'} />
+                <path d="M 485,735 C 550,725 650,725 715,735 L 715,750 C 650,740 550,740 485,750 Z" fill="url(#carbonPattern)" stroke={hoveredPart === 'rear_wing' ? '#e10600' : '#444'} strokeWidth={hoveredPart === 'rear_wing' ? 4 : 2} />
+                <path d="M 485,755 C 550,748 650,748 715,755 L 715,765 C 650,760 550,760 485,765 Z" fill="#07070a" stroke={hoveredPart === 'rear_wing' ? '#fff' : '#e10600'} strokeWidth={hoveredPart === 'rear_wing' ? 4 : 2} />
+              </g>
 
-              {/* Leader Lines */}
-              {ANATOMY_PARTS.map(part => {
-                const isHovered = hoveredPart === part.id;
-                return (
-                  <g key={`anatomy-line-${part.id}`} className="pointer-events-none">
-                    <line
-                      x1={part.linePoints[0][0]}
-                      y1={part.linePoints[0][1]}
-                      x2={part.linePoints[1][0]}
-                      y2={part.linePoints[1][1]}
-                      stroke={isHovered ? '#e10600' : '#44445c'}
-                      strokeWidth={isHovered ? 1.5 : 0.8}
-                      strokeDasharray={isHovered ? '0' : '2 2'}
-                      className="transition duration-200"
-                    />
+              {/* DRS ACTUATOR */}
+              <g filter={hoveredPart === 'drs_actuator' ? 'url(#glowEffect)' : 'none'} className="transition-all duration-300">
+                <rect x="592" y="730" width="16" height="25" rx="3" fill={hoveredPart === 'drs_actuator' ? '#e10600' : 'url(#metallic)'} stroke={hoveredPart === 'drs_actuator' ? '#fff' : '#222'} strokeWidth={hoveredPart === 'drs_actuator' ? 3 : 1} />
+              </g>
+
+              {/* EXHAUST */}
+              <g>
+                <ellipse cx="600" cy="710" rx="12" ry="15" fill="#000" stroke="#777" strokeWidth="3" />
+                <circle cx="600" cy="710" r="8" fill="#e10600" filter="url(#glowEffect)" opacity="0.9" className="animate-pulse" />
+                <circle cx="600" cy="710" r="4" fill="#fff" filter="url(#glowEffect)" opacity="0.9" className="animate-pulse" />
+              </g>
+            </g>
+
+            {/* --- INTERACTIVE INVISIBLE HOTSPOTS & LEADER LINES --- */}
+            {ANATOMY_PARTS.map(part => {
+              const isHovered = hoveredPart === part.id;
+              return (
+                <g key={`anatomy-line-${part.id}`}>
+                  {/* Invisible Hotspot for hover detection */}
+                  <ellipse
+                    cx={part.hotspot.cx}
+                    cy={part.hotspot.cy}
+                    rx={part.hotspot.rx}
+                    ry={part.hotspot.ry}
+                    fill="transparent"
+                    className="cursor-crosshair pointer-events-auto"
+                    onMouseEnter={() => setHoveredPart(part.id)}
+                    onMouseLeave={() => setHoveredPart(null)}
+                  />
+
+                  {/* Leader Line */}
+                  <line
+                    x1={part.hotspot.cx}
+                    y1={part.hotspot.cy}
+                    x2={part.lineTarget.x}
+                    y2={part.lineTarget.y}
+                    stroke={isHovered ? '#e10600' : '#ffffff'}
+                    strokeWidth={isHovered ? 2 : 0.5}
+                    strokeDasharray={isHovered ? 'none' : '2 4'}
+                    className={`transition-all duration-300 pointer-events-none ${isHovered ? 'opacity-100' : 'opacity-20'}`}
+                  />
+                  
+                  {/* Glowing Connection Dots */}
+                  <circle
+                    cx={part.hotspot.cx}
+                    cy={part.hotspot.cy}
+                    r={isHovered ? 5 : 3}
+                    fill={isHovered ? '#e10600' : '#ffffff'}
+                    className={`transition-all duration-300 pointer-events-none ${isHovered ? 'opacity-100 shadow-[0_0_8px_#e10600]' : 'opacity-30'}`}
+                  />
+                  {isHovered && (
                     <circle
-                      cx={part.linePoints[0][0]}
-                      cy={part.linePoints[0][1]}
-                      r={isHovered ? 4 : 2}
-                      fill={isHovered ? '#e10600' : '#888'}
-                      className="transition duration-200"
+                      cx={part.hotspot.cx}
+                      cy={part.hotspot.cy}
+                      r={15}
+                      fill="none"
+                      stroke="#e10600"
+                      strokeWidth="2"
+                      className="animate-ping opacity-60 pointer-events-none"
                     />
-                  </g>
-                );
-              })}
-            </svg>
-          </div>
+                  )}
+                  <circle
+                    cx={part.lineTarget.x}
+                    cy={part.lineTarget.y}
+                    r={3}
+                    fill={isHovered ? '#e10600' : '#ffffff'}
+                    className={`transition-all duration-300 opacity-50 pointer-events-none`}
+                  />
+                </g>
+              );
+            })}
+          </svg>
 
-          {/* Right Labels Column */}
-          <div className="lg:col-span-1 flex flex-col gap-3">
-            {ANATOMY_PARTS.filter(p => p.align === 'left').map(part => (
-              <div 
-                key={part.id}
-                onMouseEnter={() => setHoveredPart(part.id)}
-                onMouseLeave={() => setHoveredPart(null)}
-                className={`p-3 rounded border transition duration-200 cursor-pointer ${
-                  hoveredPart === part.id 
-                    ? 'bg-f1-red/10 border-f1-red text-f1-light' 
-                    : 'bg-[#09090f] border-f1-border/50 text-f1-muted hover:border-f1-border hover:text-f1-light'
-                }`}
-              >
-                <span className="font-extrabold text-xs uppercase block">{part.name}</span>
-                <span className="text-[9px] text-f1-muted block mt-0.5">{part.material}</span>
-              </div>
-            ))}
-          </div>
+          {/* Absolute Positioned UI Labels (HTML layer dynamically scaling with aspect-[3/2]) */}
+          {ANATOMY_PARTS.map((part, i) => (
+            <motion.div 
+              key={part.id}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.05, duration: 0.4 }}
+              onMouseEnter={() => setHoveredPart(part.id)}
+              onMouseLeave={() => setHoveredPart(null)}
+              style={{ ...part.labelPos, transform: 'translateY(-50%)', width: '22%' }}
+              className={`absolute p-2 sm:p-4 rounded-lg border backdrop-blur-md transition-all duration-300 cursor-crosshair overflow-hidden z-30 ${
+                hoveredPart === part.id 
+                  ? 'bg-f1-red/15 border-f1-red text-white shadow-[0_0_20px_rgba(225,6,0,0.3)] scale-[1.05]' 
+                  : 'bg-[#0a0a0f]/80 border-white/10 text-f1-muted hover:border-white/30 hover:bg-[#1a1a24]/90'
+              } ${part.align === 'left' ? 'text-left' : 'text-right'}`}
+            >
+              {hoveredPart === part.id && (
+                <motion.div layoutId={`active-label-${part.align}`} className={`absolute top-0 bottom-0 w-1 bg-f1-red shadow-[0_0_10px_#e10600] ${part.align === 'left' ? 'left-0' : 'right-0'}`} />
+              )}
+              <span className="font-extrabold text-[8px] sm:text-[10px] md:text-xs uppercase tracking-[0.2em] block leading-tight">{part.name}</span>
+              <span className={`text-[6px] sm:text-[8px] md:text-[9px] block mt-1 uppercase tracking-widest transition-colors ${hoveredPart === part.id ? 'text-f1-red' : 'text-f1-muted/50'}`}>{part.material}</span>
+            </motion.div>
+          ))}
         </div>
 
         {/* Info Box Card */}
-        <div className="mt-6">
+        <div className="mt-8">
           <AnimatePresence mode="wait">
             {activePart ? (
               <motion.div 
                 key={activePart.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="bg-f1-panel border border-f1-red p-6 rounded-lg shadow-xl"
+                initial={{ opacity: 0, y: 15, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                className="bg-gradient-to-r from-[#0f0f18] to-[#07070a] border border-f1-red/50 p-8 rounded-xl shadow-[0_10px_40px_rgba(225,6,0,0.15)] relative overflow-hidden group/infobox"
               >
-                <span className="text-[9px] text-f1-red uppercase font-black tracking-widest block mb-0.5">Component Breakdown</span>
-                <h4 className="text-xl font-extrabold text-f1-light tracking-tight">{activePart.name}</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-4 pt-4 border-t border-f1-border/40 text-xs">
+                {/* Techy background lines */}
+                <div className="absolute top-0 right-0 w-64 h-full bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(225,6,0,0.03)_10px,rgba(225,6,0,0.03)_20px)] pointer-events-none" />
+                
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="h-1 w-8 bg-f1-red animate-pulse" />
+                  <span className="text-[10px] text-f1-red uppercase font-black tracking-[0.3em]">Telemetry & Specs</span>
+                </div>
+                
+                <h4 className="text-3xl font-black text-white tracking-tight drop-shadow-md">{activePart.name}</h4>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mt-6 pt-6 border-t border-white/10 text-sm relative z-10">
                   <div>
-                    <span className="text-[9px] text-f1-muted uppercase font-black block mb-0.5">Primary Material</span>
-                    <span className="font-bold text-f1-light">{activePart.material}</span>
+                    <span className="text-[10px] text-f1-muted/60 uppercase font-black tracking-widest block mb-1">Primary Material</span>
+                    <span className="font-extrabold text-white bg-white/5 px-2 py-1 rounded inline-block">{activePart.material}</span>
                   </div>
                   <div>
-                    <span className="text-[9px] text-f1-muted uppercase font-black block mb-0.5">Engineering Purpose</span>
-                    <span className="text-f1-light leading-relaxed">{activePart.purpose}</span>
+                    <span className="text-[10px] text-f1-muted/60 uppercase font-black tracking-widest block mb-1">Engineering Purpose</span>
+                    <span className="text-f1-light leading-relaxed text-xs">{activePart.purpose}</span>
                   </div>
                   <div>
-                    <span className="text-[9px] text-f1-muted uppercase font-black block mb-0.5">Engineering Trivia</span>
-                    <span className="text-f1-light italic leading-relaxed">"{activePart.funFact}"</span>
+                    <span className="text-[10px] text-f1-muted/60 uppercase font-black tracking-widest block mb-1">Engineering Trivia</span>
+                    <span className="text-f1-red italic leading-relaxed text-xs font-medium">"{activePart.funFact}"</span>
                   </div>
                 </div>
               </motion.div>
             ) : (
-              <div className="bg-f1-panel border border-f1-border p-6 rounded-lg shadow-xl text-center">
-                <p className="text-xs text-f1-muted uppercase font-bold tracking-wider">
-                  💡 Hover over any component to examine detailed blueprints.
+              <motion.div 
+                key="empty"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="bg-[#07070a] border border-white/5 p-8 rounded-xl flex flex-col items-center justify-center text-center h-[200px]"
+              >
+                <div className="w-12 h-12 rounded-full border-2 border-dashed border-f1-muted/20 animate-[spin_10s_linear_infinite] flex items-center justify-center mb-4">
+                  <div className="w-2 h-2 bg-f1-red rounded-full animate-pulse" />
+                </div>
+                <p className="text-xs text-f1-muted uppercase font-black tracking-[0.2em]">
+                  Awaiting Telemetry Input...
                 </p>
-              </div>
+                <p className="text-[10px] text-f1-muted/40 uppercase tracking-widest mt-2">
+                  Initialize scan by selecting a chassis component
+                </p>
+              </motion.div>
             )}
           </AnimatePresence>
         </div>

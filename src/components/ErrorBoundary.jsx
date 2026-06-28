@@ -25,7 +25,10 @@ class ErrorBoundary extends React.Component {
         <div className="bg-f1-panel border-2 border-f1-red p-6 rounded-lg shadow-xl shadow-f1-red/10 text-center max-w-lg mx-auto mt-12 flex flex-col items-center">
           <span className="text-4xl mb-4">⚠️</span>
           <h2 className="text-xl font-bold text-f1-light mb-2">Something went wrong in this section.</h2>
-          <p className="text-xs text-f1-muted mb-6">The application encountered an unexpected rendering error.</p>
+          <div className="bg-black/50 p-4 rounded text-left w-full overflow-auto mb-4 border border-red-500/30">
+            <p className="text-sm text-red-400 font-mono mb-2 font-bold">{this.state.error?.toString()}</p>
+            <pre className="text-[10px] text-f1-muted font-mono whitespace-pre-wrap">{this.state.error?.stack}</pre>
+          </div>
           <motion.button
             whileTap={{ scale: 0.97 }}
             onClick={this.handleReload}
