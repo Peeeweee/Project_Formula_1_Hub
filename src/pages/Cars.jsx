@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, useMotionValue, animate, AnimatePresence } from 'framer-motion';
+import { motion, useMotionValue, animate, AnimatePresence, useTransform } from 'framer-motion';
 import { 
   ResponsiveContainer, 
   XAxis, 
@@ -25,28 +25,81 @@ import CarViewer2D from '../components/CarViewer2D';
 import CarVaultFilters from '../components/CarVaultFilters';
 import { PlotlyTooltip } from '../components';
 
-const CarCard = ({ car, onClick, imageCache, setImageCache }) => {
-  const [loading, setLoading] = useState(!imageCache[car.carId] && !imageCache[`${car.carId}_err`]);
+const TeamLogo = ({ team, size = "small" }) => {
+  const [imgError, setImgError] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  
+  const isSmall = size === "small";
+  const containerClass = isSmall 
+    ? "w-12 h-12 rounded-xl p-1 border border-white/5 shadow-md aspect-square" 
+    : "h-20 min-w-[5rem] max-w-[16rem] px-3 py-1.5 rounded-2xl border border-white/5 shadow-xl";
+
+  const fallbackText = team.name.substring(0, 2).toUpperCase();
+  const color = team.teamColor || '#e10600';
+
+  return (
+    <div 
+      className={`relative bg-gradient-to-br from-[#1a1a24] to-[#0a0a0f] flex items-center justify-center shrink-0 overflow-hidden transition-all duration-500 group/logo ${containerClass}`}
+      style={{ boxShadow: `0 4px 20px ${color}15` }}
+    >
+      {/* Elegant Hover Glow */}
+      <div 
+        className="absolute inset-0 opacity-0 group-hover/logo:opacity-20 transition-opacity duration-700 blur-xl"
+        style={{ backgroundColor: color }}
+      />
+      
+      {(!team.logoUrl || imgError) ? (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, type: 'spring' }}
+          className="relative z-10 flex flex-col items-center justify-center w-full h-full"
+        >
+          <span 
+            className="font-black uppercase italic text-white/30 tracking-tighter transition-transform duration-300 group-hover/logo:scale-110" 
+            style={{ fontSize: isSmall ? '16px' : '26px' }}
+          >
+            {fallbackText}
+          </span>
+          <div 
+            className="absolute bottom-1 w-1/2 h-[3px] rounded-full opacity-60 group-hover/logo:opacity-100 transition-opacity"
+            style={{ backgroundColor: color, boxShadow: `0 0 8px ${color}` }}
+          />
+        </motion.div>
+      ) : (
+        <div className="relative z-10 w-full h-full flex items-center justify-center rounded-lg overflow-hidden bg-black/40">
+          {!imgLoaded && (
+            <div className="absolute inset-0 animate-pulse bg-white/5" />
+          )}
+          <motion.img 
+            src={team.logoUrl} 
+            alt={team.name} 
+            className={`max-w-full h-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.15)] transition-all duration-700 ease-out group-hover/logo:scale-110 group-hover/logo:-rotate-3 ${imgLoaded ? 'opacity-100' : 'opacity-0 scale-95'}`}
+            referrerPolicy="no-referrer"
+            onLoad={() => setImgLoaded(true)}
+            onError={() => setImgError(true)}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+const CarCard = ({ car, onClick }) => {
+  const [imgUrl, setImgUrl] = useState(null);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    if (imageCache[car.carId] || imageCache[`${car.carId}_err`]) {
-      setLoading(false);
-      return;
-    }
     let isMounted = true;
     getWikipediaImage(car.wikiSearchTerm).then(url => {
       if (!isMounted) return;
-      if (url) setImageCache(prev => ({...prev, [car.carId]: url}));
-      else setImageCache(prev => ({...prev, [`${car.carId}_err`]: true}));
+      setImgUrl(url);
       setLoading(false);
     }).catch(() => {
-      if (isMounted) {
-        setImageCache(prev => ({...prev, [`${car.carId}_err`]: true}));
-        setLoading(false);
-      }
+      if (isMounted) setLoading(false);
     });
     return () => { isMounted = false; };
-  }, [car.carId, car.wikiSearchTerm, imageCache, setImageCache]);
+  }, [car.wikiSearchTerm]);
 
   const driversText = Array.isArray(car.drivers) ? car.drivers : (car.driver ? car.driver.split(',').map(s=>s.trim()) : []);
   const displayDrivers = driversText.slice(0, 2).join(', ');
@@ -67,8 +120,8 @@ const CarCard = ({ car, onClick, imageCache, setImageCache }) => {
       <div className="h-[120px] bg-black relative flex items-center justify-center overflow-hidden shrink-0">
         {loading ? (
           <div className="w-full h-full bg-[#1a1a24] animate-pulse" />
-        ) : imageCache[car.carId] ? (
-          <img src={imageCache[car.carId]} alt={car.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+        ) : imgUrl ? (
+          <img src={imgUrl} alt={car.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
         ) : (
           <span className="text-4xl font-black text-white/10 uppercase">{car.name.substring(0, 2)}</span>
         )}
@@ -99,6 +152,75 @@ const CarCard = ({ car, onClick, imageCache, setImageCache }) => {
   );
 };
 
+const EraCard = ({ era, onClick }) => {
+  const [imgUrl, setImgUrl] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    getWikipediaImage(era.wikiSearchTerm).then(url => {
+      if (!isMounted) return;
+      if (url) {
+        setImgUrl(url);
+      } else {
+        setImgUrl(ERA_IMAGES[era.id] || null);
+      }
+      setLoading(false);
+    }).catch(() => {
+      if (!isMounted) return;
+      setImgUrl(ERA_IMAGES[era.id] || null);
+      setLoading(false);
+    });
+    return () => { isMounted = false; };
+  }, [era.wikiSearchTerm, era.id]);
+
+  return (
+    <div
+      onClick={() => onClick(imgUrl)}
+      className="w-[300px] bg-f1-panel border border-f1-border rounded-lg overflow-hidden hover:border-f1-red/60 transition duration-300 flex flex-col group shrink-0 cursor-pointer"
+    >
+      <div className="h-40 relative bg-[#09090f] flex items-center justify-center overflow-hidden">
+        {loading ? (
+          <div className="w-full h-full bg-[#1a1a24] animate-pulse" />
+        ) : imgUrl ? (
+          <img 
+            src={imgUrl} 
+            alt={era.name} 
+            className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500 pointer-events-none"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = ERA_IMAGES[era.id];
+            }}
+          />
+        ) : (
+          <span className="text-lg font-black text-white/50 text-center px-4">{era.name}</span>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-f1-panel to-transparent" />
+        <span className="absolute bottom-3 left-4 text-xs bg-f1-red text-f1-light font-black px-2 py-0.5 rounded-sm uppercase tracking-wider">
+          {era.years}
+        </span>
+      </div>
+
+      <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+        <div>
+          <h3 className="font-extrabold text-lg text-f1-light group-hover:text-f1-red transition-colors leading-tight mb-2">
+            {era.name}
+          </h3>
+          <span className="inline-block text-[9px] bg-f1-dark text-f1-muted border border-f1-border font-bold uppercase px-2 py-1 rounded-sm mb-3">
+            ⚡ {era.engineType}
+          </span>
+          <p className="text-xs text-f1-muted leading-relaxed">
+            {era.description}
+          </p>
+        </div>
+
+        <span className="text-[9px] text-f1-red font-black uppercase tracking-wider block">
+          Click to examine blueprint →
+        </span>
+      </div>
+    </div>
+  );
+};
 
 const CARS_DATA = [
   { id: 'ferrari', name: 'Ferrari SF-26', powerUnit: 'Ferrari 069/3', chassis: 'Carbon-fibre composite honeycomb', weight: '798kg', aeroEfficiency: 'High-downforce wing profile', maxRpm: '15,000 RPM' },
@@ -451,48 +573,6 @@ function Cars() {
   const [carAId, setCarAId] = useState(ICONIC_CARS_DATA[6].id); // Ferrari F2004 default
   const [carBId, setCarBId] = useState(ICONIC_CARS_DATA[8].id); // Mercedes W11 default
 
-  const [eraImages, setEraImages] = useState({});
-  const [eraImagesLoading, setEraImagesLoading] = useState({});
-  const [eraImagesError, setEraImagesError] = useState({});
-
-  const [constructorImages, setConstructorImages] = useState({});
-  const [constructorImagesLoading, setConstructorImagesLoading] = useState({});
-  const [constructorImagesError, setConstructorImagesError] = useState({});
-
-  useEffect(() => {
-    erasData.forEach(async (era) => {
-      setEraImagesLoading(prev => ({ ...prev, [era.id]: true }));
-      try {
-        const url = await getWikipediaImage(era.wikiSearchTerm);
-        if (url) {
-          setEraImages(prev => ({ ...prev, [era.id]: url }));
-        } else {
-          setEraImagesError(prev => ({ ...prev, [era.id]: true }));
-        }
-      } catch (err) {
-        setEraImagesError(prev => ({ ...prev, [era.id]: true }));
-      } finally {
-        setEraImagesLoading(prev => ({ ...prev, [era.id]: false }));
-      }
-    });
-
-    constructorsData.forEach(async (constructor) => {
-      setConstructorImagesLoading(prev => ({ ...prev, [constructor.id]: true }));
-      try {
-        const url = await getWikipediaImage(constructor.wikiSearchTerm);
-        if (url) {
-          setConstructorImages(prev => ({ ...prev, [constructor.id]: url }));
-        } else {
-          setConstructorImagesError(prev => ({ ...prev, [constructor.id]: true }));
-        }
-      } catch (err) {
-        setConstructorImagesError(prev => ({ ...prev, [constructor.id]: true }));
-      } finally {
-        setConstructorImagesLoading(prev => ({ ...prev, [constructor.id]: false }));
-      }
-    });
-  }, []);
-
   const carA = ICONIC_CARS_DATA.find(c => c.id === carAId);
   const carB = ICONIC_CARS_DATA.find(c => c.id === carBId);
 
@@ -500,8 +580,13 @@ function Cars() {
   const containerRef = useRef(null);
   const innerRef = useRef(null);
   const x = useMotionValue(0);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const [constraints, setConstraints] = useState({ left: 0, right: 0 });
+
+  const progressWidth = useTransform(
+    x,
+    [0, constraints.left || -1],
+    ["0%", "100%"]
+  );
 
   const calculateConstraints = () => {
     if (containerRef.current && innerRef.current) {
@@ -514,27 +599,33 @@ function Cars() {
 
   useEffect(() => {
     calculateConstraints();
+    // Use a tiny timeout to ensure fonts/images have rendered before grabbing width
+    const timeout = setTimeout(calculateConstraints, 100);
     window.addEventListener('resize', calculateConstraints);
-    return () => window.removeEventListener('resize', calculateConstraints);
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener('resize', calculateConstraints);
+    };
   }, []);
-
-  useEffect(() => {
-    const unsubscribe = x.on("change", (latest) => {
-      const maxDrag = constraints.left;
-      if (maxDrag < 0) {
-        const progress = (latest / maxDrag) * 100;
-        setScrollProgress(Math.max(0, Math.min(100, progress)));
-      }
-    });
-    return () => unsubscribe();
-  }, [constraints]);
 
   const animateScroll = (direction) => {
     const step = 320;
+    
+    // Dynamically recalculate in case layout changed
+    let maxLeft = constraints.left;
+    if (containerRef.current && innerRef.current) {
+      const containerWidth = containerRef.current.offsetWidth;
+      const innerWidth = innerRef.current.scrollWidth;
+      maxLeft = Math.min(0, containerWidth - innerWidth);
+      if (maxLeft !== constraints.left) {
+        setConstraints({ left: maxLeft, right: 0 });
+      }
+    }
+
     const currentX = x.get();
     let targetX = direction === 'left' ? currentX + step : currentX - step;
     
-    targetX = Math.max(constraints.left, Math.min(constraints.right, targetX));
+    targetX = Math.max(maxLeft, Math.min(0, targetX));
     animate(x, targetX, { type: 'spring', stiffness: 120, damping: 20 });
   };
 
@@ -585,7 +676,6 @@ function Cars() {
   const [filteredCars, setFilteredCars] = useState(allCars);
   const [vaultSelectedCar, setVaultSelectedCar] = useState(null);
   const [selectedCarIndex, setSelectedCarIndex] = useState(0);
-  const [imageCache, setImageCache] = useState({});
   const [isGroupedView, setIsGroupedView] = useState(false);
 
   // Keyboard navigation for modal
@@ -656,57 +746,15 @@ function Cars() {
             className="flex gap-6 py-4 w-max"
           >
             {erasData.map((era) => (
-              <div
-                key={era.id}
-                onClick={() => setSelectedEra(era)}
-                className="w-[300px] bg-f1-panel border border-f1-border rounded-lg overflow-hidden hover:border-f1-red/60 transition duration-300 flex flex-col group"
-              >
-                <div className="h-40 relative bg-[#09090f] flex items-center justify-center">
-                  {eraImagesLoading[era.id] || eraImagesError[era.id] || !eraImages[era.id] ? (
-                    <span className="text-lg font-black text-white/50 text-center px-4">{era.name}</span>
-                  ) : (
-                    <img 
-                      src={eraImages[era.id]} 
-                      alt={era.name} 
-                      className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500 pointer-events-none"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        setEraImagesError(prev => ({ ...prev, [era.id]: true }));
-                      }}
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-f1-panel to-transparent" />
-                  <span className="absolute bottom-3 left-4 text-xs bg-f1-red text-f1-light font-black px-2 py-0.5 rounded-sm uppercase tracking-wider">
-                    {era.years}
-                  </span>
-                </div>
-
-                <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                  <div>
-                    <h3 className="font-extrabold text-lg text-f1-light group-hover:text-f1-red transition-colors leading-tight mb-2">
-                      {era.name}
-                    </h3>
-                    <span className="inline-block text-[9px] bg-f1-dark text-f1-muted border border-f1-border font-bold uppercase px-2 py-1 rounded-sm mb-3">
-                      ⚡ {era.engineType}
-                    </span>
-                    <p className="text-xs text-f1-muted leading-relaxed">
-                      {era.description}
-                    </p>
-                  </div>
-
-                  <span className="text-[9px] text-f1-red font-black uppercase tracking-wider block">
-                    Click to examine blueprint →
-                  </span>
-                </div>
-              </div>
+              <EraCard key={era.id} era={era} onClick={(imgUrl) => setSelectedEra({ ...era, displayImage: imgUrl })} />
             ))}
           </motion.div>
         </div>
 
         <div className="mt-6 w-full max-w-sm mx-auto h-1 bg-f1-border rounded-full overflow-hidden">
-          <div 
+          <motion.div 
             className="h-full bg-f1-red transition-all duration-150" 
-            style={{ width: `${scrollProgress}%` }}
+            style={{ width: progressWidth }}
           />
         </div>
       </FadeInSection>
@@ -735,19 +783,31 @@ function Cars() {
                 className="h-1.5 w-full" 
                 style={{ backgroundColor: team.teamColor }} 
               />
-              <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                <div>
+              <div className="p-5 flex-1 flex flex-col justify-between space-y-4 relative overflow-hidden">
+                {/* Background Watermark Logo */}
+                {team.logoUrl && (
+                  <div className="absolute -top-4 -right-4 w-32 h-32 opacity-10 pointer-events-none mix-blend-screen">
+                    <img src={team.logoUrl} alt="" className="w-full h-full object-contain scale-110" referrerPolicy="no-referrer" onError={(e) => e.target.style.display = 'none'} />
+                  </div>
+                )}
+                
+                <div className="relative z-10">
                   <div className="flex justify-between items-start gap-2">
-                    <h3 className="font-extrabold text-lg text-f1-light leading-tight">
-                      {team.name}
-                    </h3>
-                    <span className="text-[10px] bg-f1-dark text-f1-muted font-black px-2 py-0.5 border border-f1-border rounded-sm uppercase">
+                    <div className="flex items-center gap-3">
+                      <TeamLogo team={team} size="small" />
+                      <div>
+                        <h3 className="font-extrabold text-lg text-f1-light leading-tight">
+                          {team.name}
+                        </h3>
+                        <span className="text-[10px] text-f1-muted uppercase font-bold tracking-wider mt-0.5 block">
+                          {team.yearsActive}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] bg-f1-dark text-f1-muted font-black px-2 py-0.5 border border-f1-border rounded-sm uppercase shrink-0">
                       {team.nationality}
                     </span>
                   </div>
-                  <span className="text-[10px] text-f1-muted uppercase font-bold tracking-wider mt-1 block">
-                    {team.yearsActive}
-                  </span>
                   
                   <div className="mt-4 pt-3 border-t border-f1-border/40">
                     <span className="text-[9px] text-f1-muted font-black uppercase tracking-wider block mb-1">Famous Drivers</span>
@@ -757,7 +817,7 @@ function Cars() {
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center pt-3 border-t border-f1-border/40 text-xs">
+                <div className="flex justify-between items-center pt-3 border-t border-f1-border/40 text-xs relative z-10">
                   <span className="font-bold text-f1-muted uppercase text-[9px]">Championships:</span>
                   <span className="font-black text-f1-red text-sm">{team.championships} 🏆</span>
                 </div>
@@ -838,8 +898,6 @@ function Cars() {
                     <CarCard 
                       key={car.carId}
                       car={car} 
-                      imageCache={imageCache} 
-                      setImageCache={setImageCache} 
                       onClick={() => {
                         setVaultSelectedCar(car);
                         setSelectedCarIndex(filteredCars.indexOf(car));
@@ -1539,18 +1597,18 @@ function Cars() {
               </button>
 
               <div className="relative h-56 w-full bg-[#09090f] flex items-center justify-center">
-                {eraImagesLoading[selectedEra.id] || eraImagesError[selectedEra.id] || !eraImages[selectedEra.id] ? (
-                  <span className="text-2xl font-black text-white/50 text-center px-4">{selectedEra.name}</span>
-                ) : (
+                {(selectedEra.displayImage || ERA_IMAGES[selectedEra.id]) ? (
                   <img 
-                    src={eraImages[selectedEra.id]} 
+                    src={selectedEra.displayImage || ERA_IMAGES[selectedEra.id]} 
                     alt={selectedEra.name} 
                     className="w-full h-full object-cover object-center"
                     onError={(e) => {
-                      e.target.onerror = null;
-                      setEraImagesError(prev => ({ ...prev, [selectedEra.id]: true }));
+                      // If both Wikipedia and Unsplash fail, hide the image and let the fallback text show underneath
+                      e.target.style.display = 'none';
                     }}
                   />
+                ) : (
+                  <span className="text-2xl font-black text-white/50 text-center px-4">{selectedEra.name}</span>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f18] via-[#0f0f18]/40 to-transparent" />
                 <div className="absolute bottom-4 left-6 right-6">
@@ -1611,16 +1669,7 @@ function Cars() {
               </button>
 
               <div className="p-6 border-b border-f1-border/40 flex items-center gap-4 bg-[#09090f]">
-                {selectedConstructor.logoUrl && (
-                  <img 
-                    src={selectedConstructor.logoUrl} 
-                    alt={selectedConstructor.name} 
-                    className="w-16 h-16 object-contain"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                )}
+                <TeamLogo team={selectedConstructor} size="large" />
                 <div>
                   <h2 className="text-2xl font-black text-f1-light leading-tight">
                     {selectedConstructor.fullName}
@@ -1664,18 +1713,17 @@ function Cars() {
                     </p>
                   </div>
                   <div className="h-28 rounded overflow-hidden bg-[#09090f] flex items-center justify-center">
-                    {constructorImagesLoading[selectedConstructor.id] || constructorImagesError[selectedConstructor.id] || !constructorImages[selectedConstructor.id] ? (
-                      <span className="text-sm font-black text-white/50 text-center px-2">{selectedConstructor.name}</span>
-                    ) : (
+                    {activeConstructorDetails.iconicCarImage ? (
                       <img 
-                        src={constructorImages[selectedConstructor.id]} 
+                        src={activeConstructorDetails.iconicCarImage} 
                         alt={activeConstructorDetails.iconicCar} 
                         className="w-full h-full object-cover object-center"
                         onError={(e) => {
-                          e.target.onerror = null;
-                          setConstructorImagesError(prev => ({ ...prev, [selectedConstructor.id]: true }));
+                          e.target.style.display = 'none';
                         }}
                       />
+                    ) : (
+                      <span className="text-sm font-black text-white/50 text-center px-2">{selectedConstructor.name}</span>
                     )}
                   </div>
                 </div>
