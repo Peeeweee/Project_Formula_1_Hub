@@ -71,54 +71,7 @@ const IntroScreen = ({ onComplete }) => {
         ))}
       </div>
 
-      {/* Animated Cars */}
-      <div className="absolute inset-0 z-[5] pointer-events-none">
-        {/* CAR 1 - Red */}
-        <motion.div
-          className="absolute"
-          style={{ 
-            top: '58%', 
-            filter: 'blur(0.5px) drop-shadow(-8px 0px 4px rgba(225,6,0,0.4))'
-          }}
-          initial={{ x: -250 }}
-          animate={{ x: 'calc(100vw + 250px)' }}
-          transition={{ delay: 2.6, duration: 1.1, ease: 'easeIn' }}
-        >
-          <F1CarSVG color="#e10600" scale={isMobile ? 0.6 : 1.2} opacity={0.9} />
-        </motion.div>
 
-        {/* CAR 2 - Silver (Hidden on Mobile) */}
-        {!isMobile && (
-          <motion.div
-            className="absolute"
-            style={{ 
-              top: '67%', 
-              filter: 'blur(0.5px) drop-shadow(-8px 0px 4px rgba(39,244,210,0.4))'
-            }}
-            initial={{ x: -250 }}
-            animate={{ x: 'calc(100vw + 250px)' }}
-            transition={{ delay: 2.75, duration: 1.25, ease: 'easeIn' }}
-          >
-            <F1CarSVG color="#27f4d2" scale={1.0} opacity={0.75} />
-          </motion.div>
-        )}
-
-        {/* CAR 3 - Dark Blue (Hidden on Mobile) */}
-        {!isMobile && (
-          <motion.div
-            className="absolute"
-            style={{ 
-              top: '75%', 
-              filter: 'blur(0.5px) drop-shadow(-8px 0px 4px rgba(54,113,198,0.4))'
-            }}
-            initial={{ x: -250 }}
-            animate={{ x: 'calc(100vw + 250px)' }}
-            transition={{ delay: 2.9, duration: 1.4, ease: 'easeIn' }}
-          >
-            <F1CarSVG color="#3671c6" scale={0.85} opacity={0.6} />
-          </motion.div>
-        )}
-      </div>
 
       <div className="relative z-10 flex flex-col items-center">
         {/* Step 4 & 5: Start Lights */}

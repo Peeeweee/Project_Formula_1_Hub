@@ -38,9 +38,10 @@ function MainApp({ onResetIntro }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isOnline = useOnlineStatus();
 
-  // Close menu when route changes
+  // Close menu and scroll to top when route changes
   React.useEffect(() => {
     setIsMobileMenuOpen(false);
+    window.scrollTo(0, 0);
   }, [location.pathname]);
 
   return (
