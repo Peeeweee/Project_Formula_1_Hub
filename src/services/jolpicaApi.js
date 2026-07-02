@@ -149,3 +149,17 @@ export const getRaceResults = async (year, round) => {
     }
   }, 360);
 };
+
+export const getAllTimeChampions = async () => {
+  return cachedFetch('all_time_champions_v1', async () => {
+    try {
+      // Driver standing position 1 at the end of every season
+      const response = await api.get('/driverStandings/1.json?limit=200');
+      const standingsLists = response.data?.MRData?.StandingsTable?.StandingsLists || [];
+      return standingsLists;
+    } catch (error) {
+      console.error('Error fetching getAllTimeChampions:', error);
+      throw error;
+    }
+  }, 720); // cache for 12 hours
+};

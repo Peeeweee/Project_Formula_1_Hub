@@ -8,7 +8,7 @@ const api = axios.create({
 export const getLatestSession = async () => {
   return cachedFetch('latest_session', async () => {
     try {
-      const response = await api.get('/sessions?order_by=-date&limit=1');
+      const response = await api.get('/sessions?session_key=latest');
       return response.data || [];
     } catch (error) {
       console.error('Error fetching getLatestSession:', error);
