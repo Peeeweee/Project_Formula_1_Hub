@@ -57,33 +57,6 @@ const getFlagEmoji = (countryName) => {
   return COUNTRY_FLAGS[c] || '🏁';
 };
 
-const WINNERS_2024 = {
-  "1": "Max Verstappen",
-  "2": "Max Verstappen",
-  "3": "Carlos Sainz",
-  "4": "Max Verstappen",
-  "5": "Max Verstappen",
-  "6": "Lando Norris",
-  "7": "Max Verstappen",
-  "8": "Charles Leclerc",
-  "9": "Max Verstappen",
-  "10": "Max Verstappen",
-  "11": "George Russell",
-  "12": "Lewis Hamilton",
-  "13": "Oscar Piastri",
-  "14": "Lewis Hamilton",
-  "15": "Lando Norris",
-  "16": "Charles Leclerc",
-  "17": "Oscar Piastri",
-  "18": "Lando Norris",
-  "19": "Charles Leclerc",
-  "20": "Carlos Sainz",
-  "21": "Max Verstappen",
-  "22": "George Russell",
-  "23": "Max Verstappen",
-  "24": "Lando Norris"
-};
-
 const DRIVER_COLORS = {
   // Common 2024 drivers
   verstappen: '#3b82f6', // Red Bull Blue
@@ -165,6 +138,13 @@ function LiveSeason() {
   const [openF1Loading, setOpenF1Loading] = useState(true);
   const [openF1Refreshing, setOpenF1Refreshing] = useState(false);
 
+  // Pagination State
+  const [driverPage, setDriverPage] = useState(1);
+  const [constructorPage, setConstructorPage] = useState(1);
+  const [raceResultPage, setRaceResultPage] = useState(1);
+  const [openF1Page, setOpenF1Page] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
   const fetchOpenF1Data = async (isRefresh = false) => {
     if (isRefresh) setOpenF1Refreshing(true);
     else setOpenF1Loading(true);
@@ -194,6 +174,11 @@ function LiveSeason() {
       const rankedPositions = Object.values(latestPosMap).sort((a, b) => a.position - b.position);
 
       setOpenF1Data({ session, weather: latestWeather, positions: rankedPositions });
+      
+      // Give the animation time to be seen if it was a refresh
+      if (isRefresh) {
+        await new Promise(r => setTimeout(r, 1200));
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -211,42 +196,25 @@ function LiveSeason() {
         const [driversRes, constructorsRes, calendarRes, lastRaceRes] = await Promise.all([
           getCurrentDriverStandings(),
           getCurrentConstructorStandings(),
-          getSeasonRaces(2024),
+          getSeasonRaces('current'),
           getLastRaceResults()
         ]);
 
         setDriversData(driversRes);
         setConstructorsData(constructorsRes);
 
-        // Adjust calendar upcoming race for demonstration
-        let races = [...calendarRes];
         const now = new Date();
-        let nextRaceIndex = races.findIndex(r => new Date(r.date + 'T' + (r.time || '12:00:00Z')) > now);
+        const nextRaceIndex = calendarRes.findIndex(r => new Date(r.date + 'T' + (r.time || '12:00:00Z')) > now);
 
-        if (nextRaceIndex === -1 && races.length > 0) {
-          nextRaceIndex = 9; // Mark Spain GP (index 9) as the countdown GP
-          const mockDate = new Date();
-          mockDate.setDate(mockDate.getDate() + 4); // 4 days in future
-          races[nextRaceIndex] = {
-            ...races[nextRaceIndex],
-            date: mockDate.toISOString().split('T')[0],
-            time: '14:00:00Z',
-            isMockedFuture: true
-          };
-        }
-        
-        // Tag races as completed or upcoming
-        const processedRaces = races.map((r, idx) => {
+        let processedRaces = calendarRes.map((r, idx) => {
           const raceDate = new Date(r.date + 'T' + (r.time || '12:00:00Z'));
-          const isCompleted = raceDate < now && !r.isMockedFuture;
-          const isNext = idx === nextRaceIndex;
           return {
             ...r,
-            isCompleted,
-            isNext
+            isCompleted: raceDate < now,
+            isNext: idx === nextRaceIndex,
+            winner: "TBD"
           };
         });
-
         setCalendarRaces(processedRaces);
         setLastRace(lastRaceRes);
 
@@ -259,12 +227,21 @@ function LiveSeason() {
         top5Ids.forEach(id => { visibility[id] = true; });
         setVisibleDrivers(visibility);
 
-        const completedRounds = parseInt(driversRes?.round || 8);
+        const completedRounds = parseInt(driversRes?.round || 0);
         const roundsList = Array.from({ length: completedRounds }, (_, i) => i + 1);
 
         try {
-          const resultsPromises = roundsList.map(r => getRaceResults(2024, r));
+          const resultsPromises = roundsList.map(r => getRaceResults('current', r));
           const allRoundsResults = await Promise.all(resultsPromises);
+
+          processedRaces = processedRaces.map((r, idx) => {
+            if (r.isCompleted && allRoundsResults[idx] && allRoundsResults[idx].length > 0) {
+              const p1 = allRoundsResults[idx][0]?.Driver;
+              if (p1) r.winner = `${p1.givenName} ${p1.familyName}`;
+            }
+            return r;
+          });
+          setCalendarRaces(processedRaces);
 
           const cumulativePoints = {};
           top5Ids.forEach(id => { cumulativePoints[id] = 0; });
@@ -390,6 +367,13 @@ function LiveSeason() {
     };
 
     fetchData();
+
+    // Auto-refresh OpenF1 data every 15 seconds for reactive feel
+    const interval = setInterval(() => {
+      fetchOpenF1Data(true);
+    }, 15000);
+
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) {
@@ -442,7 +426,12 @@ function LiveSeason() {
             Live Feed Telemetry
           </h4>
         </div>
-        <h1 className="text-3xl font-extrabold text-f1-light tracking-tight">🏁 F1 Live Season Standings</h1>
+        <h1 className="text-3xl font-extrabold text-f1-light tracking-tight flex items-baseline">
+          🏁 Current Season Standings 
+          <span className="text-sm font-bold text-f1-red ml-4 tracking-normal uppercase bg-f1-red/10 px-2 py-1 rounded">
+            (Points Reset Yearly)
+          </span>
+        </h1>
         <p className="text-f1-muted text-xs mt-1">Real-time driver and constructor points standings queried directly from timing database.</p>
       </div>
 
@@ -457,21 +446,21 @@ function LiveSeason() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
           label="Championship Leader" 
-          value={leaderDriver ? leaderDriver.Driver.code : 'N/A'}
+          value={leaderDriver ? leaderDriver.Driver.familyName : 'N/A'}
           sub={`${leaderName}`} 
           delta={`${leaderPoints} PTS`} 
         />
         <StatCard 
           label="Races Completed" 
           value={`${completedRacesCount}`} 
-          sub="2024 Championship Calendar" 
-          delta="Out of 24" 
+          sub={`${driversData?.season || 'Current'} Championship Calendar`} 
+          delta={`Out of ${calendarRaces.length || 24}`} 
         />
         <StatCard 
-          label="Closest Gap (P1-P2)" 
+          label="Championship Lead" 
           value={`${closestGap.toFixed(0)} PTS`} 
-          sub={driversList[1] ? `Chase: ${driversList[1].Driver.familyName}` : 'N/A'} 
-          delta="Championship Chase" 
+          sub={driversList[1] ? `Ahead of ${driversList[1].Driver.familyName}` : 'N/A'} 
+          delta="Points Lead" 
         />
         <StatCard 
           label="Leading Constructor" 
@@ -498,11 +487,33 @@ function LiveSeason() {
             onClick={() => fetchOpenF1Data(true)}
             className="flex items-center gap-2 bg-[#1a1a24] hover:bg-[#2a2a35] text-f1-light text-[10px] font-black uppercase tracking-wider px-4 py-2 rounded-sm border border-f1-border transition duration-200"
           >
-            🔄 Refresh
+            {openF1Refreshing ? 'PIT STOP...' : '🔄 Refresh'}
           </motion.button>
         </div>
 
-        <div className={`bg-f1-panel border border-f1-border rounded-lg p-6 shadow-xl relative transition duration-300 ${openF1Refreshing ? 'ring-2 ring-f1-red ring-opacity-50 border-f1-red animate-pulse' : ''}`}>
+        <div className={`bg-f1-panel border border-f1-border rounded-lg p-6 shadow-xl relative overflow-hidden transition duration-300`}>
+          {/* F1 Starting Lights Refresh Effect */}
+          <AnimatePresence>
+            {openF1Refreshing && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute top-4 right-4 flex gap-2 z-50 bg-[#0a0a0f] p-2 rounded-md shadow-xl border border-f1-border"
+              >
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <motion.div
+                    key={`light-${i}`}
+                    initial={{ backgroundColor: '#2a2a35', boxShadow: 'none' }}
+                    animate={{ backgroundColor: '#e10600', boxShadow: '0 0 8px #e10600' }}
+                    transition={{ delay: i * 0.15, duration: 0.1, repeat: Infinity, repeatType: 'reverse', repeatDelay: 0.5 }}
+                    className="w-3 h-3 rounded-full"
+                  />
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {openF1Loading && !openF1Refreshing ? (
             <div className="py-8 text-center text-f1-muted text-sm font-bold uppercase tracking-widest flex justify-center items-center gap-3">
               <div className="w-4 h-4 border-2 border-f1-red border-t-transparent rounded-full animate-spin"></div>
@@ -515,66 +526,105 @@ function LiveSeason() {
           ) : (
             <div>
               <div className="mb-6">
-                <h3 className="text-lg font-bold text-f1-light">{openF1Data.session.session_name}</h3>
+                <h3 className="text-lg font-bold text-f1-light">
+                  {openF1Data.session.country_name || openF1Data.session.circuit_short_name} - {openF1Data.session.session_name}
+                </h3>
                 <p className="text-xs text-f1-muted">{new Date(openF1Data.session.date_start).toLocaleString()}</p>
               </div>
 
               {openF1Data.weather && (
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
-                  <div className="bg-[#0a0a0f] border border-f1-border p-3 rounded flex flex-col items-center justify-center">
-                    <span className="text-lg mb-1">🌡️</span>
-                    <span className="text-[10px] text-f1-muted uppercase font-bold text-center">Air Temp</span>
-                    <span className="text-sm font-black text-f1-light">{openF1Data.weather.air_temperature}°C</span>
+                  <div className="bg-[#0a0a0f] border border-f1-border p-4 rounded flex flex-col items-center justify-center">
+                    <span className="text-[10px] text-f1-muted uppercase font-bold text-center mb-1">Air Temp</span>
+                    <motion.span key={`air-${openF1Data.weather.air_temperature}`} initial={{ opacity: 0.5, scale: 1.2, color: '#e10600' }} animate={{ opacity: 1, scale: 1, color: '#ffffff' }} className="text-lg font-black text-f1-light">{openF1Data.weather.air_temperature}°C</motion.span>
                   </div>
-                  <div className="bg-[#0a0a0f] border border-f1-border p-3 rounded flex flex-col items-center justify-center">
-                    <span className="text-lg mb-1">🏎️</span>
-                    <span className="text-[10px] text-f1-muted uppercase font-bold text-center">Track Temp</span>
-                    <span className="text-sm font-black text-f1-light">{openF1Data.weather.track_temperature}°C</span>
+                  <div className="bg-[#0a0a0f] border border-f1-border p-4 rounded flex flex-col items-center justify-center">
+                    <span className="text-[10px] text-f1-muted uppercase font-bold text-center mb-1">Track Temp</span>
+                    <motion.span key={`track-${openF1Data.weather.track_temperature}`} initial={{ opacity: 0.5, scale: 1.2, color: '#e10600' }} animate={{ opacity: 1, scale: 1, color: '#ffffff' }} className="text-lg font-black text-f1-light">{openF1Data.weather.track_temperature}°C</motion.span>
                   </div>
-                  <div className="bg-[#0a0a0f] border border-f1-border p-3 rounded flex flex-col items-center justify-center">
-                    <span className="text-lg mb-1">💧</span>
-                    <span className="text-[10px] text-f1-muted uppercase font-bold text-center">Humidity</span>
-                    <span className="text-sm font-black text-f1-light">{openF1Data.weather.humidity}%</span>
+                  <div className="bg-[#0a0a0f] border border-f1-border p-4 rounded flex flex-col items-center justify-center">
+                    <span className="text-[10px] text-f1-muted uppercase font-bold text-center mb-1">Humidity</span>
+                    <motion.span key={`hum-${openF1Data.weather.humidity}`} initial={{ opacity: 0.5, scale: 1.2, color: '#e10600' }} animate={{ opacity: 1, scale: 1, color: '#ffffff' }} className="text-lg font-black text-f1-light">{openF1Data.weather.humidity}%</motion.span>
                   </div>
-                  <div className="bg-[#0a0a0f] border border-f1-border p-3 rounded flex flex-col items-center justify-center">
-                    <span className="text-lg mb-1">💨</span>
-                    <span className="text-[10px] text-f1-muted uppercase font-bold text-center">Wind</span>
-                    <span className="text-sm font-black text-f1-light">{openF1Data.weather.wind_speed} m/s</span>
+                  <div className="bg-[#0a0a0f] border border-f1-border p-4 rounded flex flex-col items-center justify-center">
+                    <span className="text-[10px] text-f1-muted uppercase font-bold text-center mb-1">Wind</span>
+                    <motion.span key={`wind-${openF1Data.weather.wind_speed}`} initial={{ opacity: 0.5, scale: 1.2, color: '#e10600' }} animate={{ opacity: 1, scale: 1, color: '#ffffff' }} className="text-lg font-black text-f1-light">{openF1Data.weather.wind_speed} m/s</motion.span>
                   </div>
-                  <div className="bg-[#0a0a0f] border border-f1-border p-3 rounded flex flex-col items-center justify-center">
-                    <span className="text-lg mb-1">🌧️</span>
-                    <span className="text-[10px] text-f1-muted uppercase font-bold text-center">Rainfall</span>
-                    <span className="text-sm font-black text-f1-light">{openF1Data.weather.rainfall ? 'Yes' : 'No'}</span>
+                  <div className="bg-[#0a0a0f] border border-f1-border p-4 rounded flex flex-col items-center justify-center">
+                    <span className="text-[10px] text-f1-muted uppercase font-bold text-center mb-1">Rainfall</span>
+                    <motion.span key={`rain-${openF1Data.weather.rainfall}`} initial={{ opacity: 0.5, scale: 1.2, color: '#e10600' }} animate={{ opacity: 1, scale: 1, color: '#ffffff' }} className="text-lg font-black text-f1-light">{openF1Data.weather.rainfall ? 'Yes' : 'No'}</motion.span>
                   </div>
                 </div>
               )}
 
               <div>
                 <h4 className="text-xs font-bold text-f1-muted uppercase tracking-wider mb-3">Live Positions</h4>
-                <motion.div 
-                  className="bg-[#0a0a0f] border border-f1-border rounded divide-y divide-f1-border/40 overflow-hidden max-h-64 overflow-y-auto"
-                  variants={{
-                    hidden: { opacity: 0 },
-                    show: { opacity: 1, transition: { staggerChildren: 0.05 } }
-                  }}
-                  initial="hidden"
-                  animate="show"
-                >
-                  {openF1Data.positions.map((p, i) => (
-                    <motion.div 
-                      key={p.driver_number}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left relative bg-[#0a0a0f] border border-f1-border rounded">
+                    <thead className="bg-[#111116] z-10 outline outline-1 outline-f1-border/40">
+                      <tr className="border-b border-f1-border text-f1-muted uppercase font-bold">
+                        <th className="py-2 px-4 w-20">Pos</th>
+                        <th className="py-2 px-4">Driver</th>
+                        <th className="py-2 px-4 text-right">Last Update</th>
+                      </tr>
+                    </thead>
+                    <motion.tbody 
                       variants={{
-                        hidden: { opacity: 0, x: -10 },
-                        show: { opacity: 1, x: 0 }
+                        hidden: { opacity: 0 },
+                        show: { opacity: 1, transition: { staggerChildren: 0.05 } }
                       }}
-                      className="px-4 py-2 flex items-center gap-4 hover:bg-[#1a1a24] transition"
+                      initial="hidden"
+                      animate="show"
+                      className="divide-y divide-f1-border/30 font-mono text-f1-light"
                     >
-                      <span className="text-xs font-bold text-f1-red w-6">P{p.position}</span>
-                      <span className="text-xs font-bold text-f1-light w-8">#{p.driver_number}</span>
-                      <span className="text-[10px] text-f1-muted ml-auto font-mono">{new Date(p.date).toLocaleTimeString()}</span>
-                    </motion.div>
-                  ))}
-                </motion.div>
+                      {openF1Data.positions.slice((openF1Page - 1) * ITEMS_PER_PAGE, openF1Page * ITEMS_PER_PAGE).map((p) => {
+                        const driverInfo = driversList.find(d => d.Driver.permanentNumber === p.driver_number.toString());
+                        const driverName = driverInfo ? `${driverInfo.Driver.givenName} ${driverInfo.Driver.familyName}` : `Driver #${p.driver_number}`;
+                        const constructorName = driverInfo ? driverInfo.Constructors[0]?.name : 'Unknown';
+                        
+                        return (
+                          <motion.tr 
+                            key={`openf1-pos-${p.driver_number}`}
+                            variants={{
+                              hidden: { opacity: 0, x: -10 },
+                              show: { opacity: 1, x: 0 }
+                            }}
+                            className="hover:bg-[#1a1a24] transition duration-150"
+                          >
+                            <td className="py-3 px-4 font-bold text-f1-red">
+                              {p.position === 1 || p.position === '1' ? '🥇 P1' : 
+                               p.position === 2 || p.position === '2' ? '🥈 P2' : 
+                               p.position === 3 || p.position === '3' ? '🥉 P3' : 
+                               `P${p.position}`}
+                            </td>
+                            <td className="py-3 px-4 font-bold text-f1-light">
+                              {driverName}
+                              <span className="text-[10px] text-f1-muted font-normal block">{constructorName}</span>
+                            </td>
+                            <td className="py-3 px-4 text-right text-[10px] text-f1-muted">{new Date(p.date).toLocaleTimeString()}</td>
+                          </motion.tr>
+                        );
+                      })}
+                    </motion.tbody>
+                  </table>
+                  <div className="flex items-center justify-between border-t border-f1-border/40 pt-4 mt-4 text-xs font-bold text-f1-muted uppercase tracking-wider">
+                    <span>Showing {(openF1Page - 1) * ITEMS_PER_PAGE + 1} to {Math.min(openF1Page * ITEMS_PER_PAGE, openF1Data.positions.length)} of {openF1Data.positions.length} Drivers</span>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => setOpenF1Page(Math.max(1, openF1Page - 1))}
+                        disabled={openF1Page === 1}
+                        className={`px-3 py-1 rounded transition ${openF1Page === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:text-f1-light hover:bg-f1-red/10'}`}>
+                        PREV
+                      </button>
+                      <button 
+                        onClick={() => setOpenF1Page(Math.min(Math.ceil(openF1Data.positions.length / ITEMS_PER_PAGE), openF1Page + 1))}
+                        disabled={openF1Page === Math.ceil(openF1Data.positions.length / ITEMS_PER_PAGE)}
+                        className={`px-3 py-1 rounded transition ${openF1Page === Math.ceil(openF1Data.positions.length / ITEMS_PER_PAGE) ? 'opacity-50 cursor-not-allowed bg-[#1a1a24] text-f1-muted' : 'bg-f1-light text-[#0a0a0f] hover:bg-f1-red hover:text-white'}`}>
+                        NEXT
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -590,14 +640,14 @@ function LiveSeason() {
             Driver Standings
           </h2>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
-              <thead>
+            <table className="w-full text-xs text-left relative">
+              <thead className="bg-f1-panel z-10 outline outline-1 outline-f1-border/40">
                 <tr className="border-b border-f1-border text-f1-muted uppercase font-bold">
                   <th className="py-2 text-center w-12">Pos</th>
                   <th className="py-2">Driver</th>
                   <th className="py-2">Constructor</th>
                   <th className="py-2 text-center w-16">Wins</th>
-                  <th className="py-2 text-center w-16">Gap</th>
+                  <th className="py-2 text-center w-16">Pts Behind</th>
                   <th className="py-2 text-right w-16">Points</th>
                 </tr>
               </thead>
@@ -607,8 +657,9 @@ function LiveSeason() {
                 animate="show"
                 className="divide-y divide-f1-border/30 font-mono text-f1-light"
               >
-                {driversList.map((driver, index) => {
-                  const currentGap = index === 0 ? '-' : `-${(firstPoints - parseFloat(driver.points)).toFixed(0)}`;
+                {driversList.slice((driverPage - 1) * ITEMS_PER_PAGE, driverPage * ITEMS_PER_PAGE).map((driver, index) => {
+                  const realIndex = (driverPage - 1) * ITEMS_PER_PAGE + index;
+                  const currentGap = realIndex === 0 ? '-' : `-${(firstPoints - parseFloat(driver.points)).toFixed(0)}`;
                   return (
                     <motion.tr 
                       key={`driver-row-${driver.Driver.driverId}`} 
@@ -631,6 +682,23 @@ function LiveSeason() {
                 })}
               </motion.tbody>
             </table>
+            <div className="flex items-center justify-between border-t border-f1-border/40 pt-4 mt-4 text-xs font-bold text-f1-muted uppercase tracking-wider">
+              <span>Showing {(driverPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(driverPage * ITEMS_PER_PAGE, driversList.length)} of {driversList.length} Drivers</span>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => setDriverPage(Math.max(1, driverPage - 1))}
+                  disabled={driverPage === 1}
+                  className={`px-3 py-1 rounded transition ${driverPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:text-f1-light hover:bg-f1-red/10'}`}>
+                  PREV
+                </button>
+                <button 
+                  onClick={() => setDriverPage(Math.min(Math.ceil(driversList.length / ITEMS_PER_PAGE), driverPage + 1))}
+                  disabled={driverPage === Math.ceil(driversList.length / ITEMS_PER_PAGE)}
+                  className={`px-3 py-1 rounded transition ${driverPage === Math.ceil(driversList.length / ITEMS_PER_PAGE) ? 'opacity-50 cursor-not-allowed bg-[#1a1a24] text-f1-muted' : 'bg-f1-light text-[#0a0a0f] hover:bg-f1-red hover:text-white'}`}>
+                  NEXT
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -640,8 +708,8 @@ function LiveSeason() {
             Constructor Standings
           </h2>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
-              <thead>
+            <table className="w-full text-xs text-left relative">
+              <thead className="bg-f1-panel z-10 outline outline-1 outline-f1-border/40">
                 <tr className="border-b border-f1-border text-f1-muted uppercase font-bold">
                   <th className="py-2 text-center w-12">Pos</th>
                   <th className="py-2">Constructor</th>
@@ -656,7 +724,7 @@ function LiveSeason() {
                 animate="show"
                 className="divide-y divide-f1-border/30 font-mono text-f1-light"
               >
-                {constructorsList.map((team) => (
+                {constructorsList.slice((constructorPage - 1) * ITEMS_PER_PAGE, constructorPage * ITEMS_PER_PAGE).map((team) => (
                   <motion.tr 
                     key={`constructor-row-${team.Constructor.constructorId || team.Constructor.name}`} 
                     variants={itemVariants}
@@ -673,6 +741,23 @@ function LiveSeason() {
                 ))}
               </motion.tbody>
             </table>
+            <div className="flex items-center justify-between border-t border-f1-border/40 pt-4 mt-4 text-xs font-bold text-f1-muted uppercase tracking-wider">
+              <span>Showing {(constructorPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(constructorPage * ITEMS_PER_PAGE, constructorsList.length)} of {constructorsList.length} Teams</span>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => setConstructorPage(Math.max(1, constructorPage - 1))}
+                  disabled={constructorPage === 1}
+                  className={`px-3 py-1 rounded transition ${constructorPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:text-f1-light hover:bg-f1-red/10'}`}>
+                  PREV
+                </button>
+                <button 
+                  onClick={() => setConstructorPage(Math.min(Math.ceil(constructorsList.length / ITEMS_PER_PAGE), constructorPage + 1))}
+                  disabled={constructorPage === Math.ceil(constructorsList.length / ITEMS_PER_PAGE)}
+                  className={`px-3 py-1 rounded transition ${constructorPage === Math.ceil(constructorsList.length / ITEMS_PER_PAGE) ? 'opacity-50 cursor-not-allowed bg-[#1a1a24] text-f1-muted' : 'bg-f1-light text-[#0a0a0f] hover:bg-f1-red hover:text-white'}`}>
+                  NEXT
+                </button>
+              </div>
+            </div>
           </div>
         </div>
         </div>
@@ -687,7 +772,7 @@ function LiveSeason() {
         </div>
         <div>
           <h2 className="text-2xl font-extrabold text-f1-light tracking-tight">📅 Season Calendar</h2>
-          <p className="text-f1-muted text-xs mt-1">Full 2024 calendar list. Highlights include completed status winners and live upcoming countdowns.</p>
+          <p className="text-f1-muted text-xs mt-1">Full {driversData?.season || 'Current'} calendar list. Highlights include completed status winners and live upcoming countdowns.</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -725,7 +810,7 @@ function LiveSeason() {
 
                 {race.isCompleted ? (
                   <div className="mt-2 flex items-center justify-between bg-f1-dark/40 border border-f1-border/50 px-2 py-1.5 rounded text-[11px] font-medium text-f1-light">
-                    <span>✔️ Winner: {WINNERS_2024[race.round] || "TBD"}</span>
+                    <span>✔️ Winner: {race.winner || "TBD"}</span>
                   </div>
                 ) : race.isNext ? (
                   <Countdown targetDate={`${race.date}T${race.time || '14:00:00Z'}`} />
@@ -772,7 +857,7 @@ function LiveSeason() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-f1-border/30 font-mono text-f1-light">
-                    {lastRace.Results.map((result) => {
+                    {lastRace.Results.slice((raceResultPage - 1) * ITEMS_PER_PAGE, raceResultPage * ITEMS_PER_PAGE).map((result) => {
                       const isP1 = result.position === '1';
                       const hasFastestLap = result.FastestLap?.rank === '1' || result.FastestLap?.rank === 1;
                       
@@ -802,6 +887,23 @@ function LiveSeason() {
                   </tbody>
                 </table>
               </div>
+              <div className="flex items-center justify-between border-t border-f1-border/40 pt-4 mt-4 text-xs font-bold text-f1-muted uppercase tracking-wider">
+                <span>Showing {(raceResultPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(raceResultPage * ITEMS_PER_PAGE, lastRace.Results.length)} of {lastRace.Results.length} Drivers</span>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => setRaceResultPage(Math.max(1, raceResultPage - 1))}
+                    disabled={raceResultPage === 1}
+                    className={`px-3 py-1 rounded transition ${raceResultPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:text-f1-light hover:bg-f1-red/10'}`}>
+                    PREV
+                  </button>
+                  <button 
+                    onClick={() => setRaceResultPage(Math.min(Math.ceil(lastRace.Results.length / ITEMS_PER_PAGE), raceResultPage + 1))}
+                    disabled={raceResultPage === Math.ceil(lastRace.Results.length / ITEMS_PER_PAGE)}
+                    className={`px-3 py-1 rounded transition ${raceResultPage === Math.ceil(lastRace.Results.length / ITEMS_PER_PAGE) ? 'opacity-50 cursor-not-allowed bg-[#1a1a24] text-f1-muted' : 'bg-f1-light text-[#0a0a0f] hover:bg-f1-red hover:text-white'}`}>
+                    NEXT
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Pit Stop Stats Column */}
@@ -820,8 +922,8 @@ function LiveSeason() {
                       margin={{ top: 0, right: 10, left: 10, bottom: 0 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke="#1a1a24" opacity={0.4} />
-                      <XAxis type="number" stroke="#666666" fontSize={9} domain={[0, 3.5]} tickLine={false} />
-                      <YAxis dataKey="team" type="category" stroke="#666666" fontSize={8} width={80} tickLine={false} />
+                      <XAxis type="number" stroke="#999999" fontSize={10} domain={[0, 3.5]} tickLine={false} />
+                      <YAxis dataKey="team" type="category" stroke="#cccccc" fontSize={12} width={110} tickLine={false} fontWeight="bold" />
                       <Tooltip content={<PlotlyTooltip xKey="team" yFormatter={(val) => `${val}s`} />} />
                       <Bar 
                         dataKey="avgTime" 
