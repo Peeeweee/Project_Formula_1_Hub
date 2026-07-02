@@ -16,8 +16,7 @@ import {
   Radar
 } from 'recharts';
 import { SearchBar, SkeletonDriverRow, SkeletonCard, PlotlyTooltip, StartingLights, RPMGauge } from '../components';
-import championsData from '../data/champions.json';
-import { getAllDrivers, getDriverInfo, getDriverStandings } from '../services/jolpicaApi';
+import { getAllDrivers, getDriverInfo, getDriverStandings, getAllTimeChampions } from '../services/jolpicaApi';
 import getWikipediaImage from '../utils/getWikipediaImage';
 import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
@@ -118,8 +117,7 @@ function Racers() {
   const [selectedHeatmapCountry, setSelectedHeatmapCountry] = useState(null);
   const heatmapContainerRef = useRef(null);
 
-  // Sort champions descending by championship count
-  const sortedChampions = [...championsData].sort((a, b) => b.championships - a.championships);
+  const [sortedChampions, setSortedChampions] = useState([]);
 
   // Fetch all drivers (limit 1000) for full search, comparison, and heatmap coverage
   const fetchDrivers = async (currentOffset) => {
@@ -129,6 +127,47 @@ function Racers() {
       const data = await getAllDrivers(1000, currentOffset);
       setDriversList(data);
       setHasMore(false); // Since 1000 returns the entire history, no more paging needed
+      
+      // Compute sorted champions
+      const lists = await getAllTimeChampions();
+      const counts = {};
+      lists.forEach(seasonList => {
+        const winner = seasonList.DriverStandings?.[0]?.Driver;
+        if (winner) {
+          if (!counts[winner.driverId]) {
+            counts[winner.driverId] = {
+              driverId: winner.driverId,
+              name: `${winner.givenName} ${winner.familyName}`,
+              nationality: winner.nationality,
+              url: winner.url,
+              years: [],
+              championships: 0
+            };
+          }
+          counts[winner.driverId].championships += 1;
+          counts[winner.driverId].years.push(seasonList.season);
+        }
+      });
+      const sorted = Object.values(counts).sort((a, b) => b.championships - a.championships);
+      setSortedChampions(sorted);
+
+      // Fetch Champion Images for top 8
+      sorted.slice(0, 8).forEach(async (champ) => {
+        setChampionImagesLoading(prev => ({ ...prev, [champ.driverId]: true }));
+        try {
+          const fetchId = champ.url || champ.name;
+          const url = await getWikipediaImage(fetchId);
+          if (url) {
+            setChampionImages(prev => ({ ...prev, [champ.driverId]: url }));
+          } else {
+            setChampionImagesError(prev => ({ ...prev, [champ.driverId]: true }));
+          }
+        } catch (err) {
+          setChampionImagesError(prev => ({ ...prev, [champ.driverId]: true }));
+        } finally {
+          setChampionImagesLoading(prev => ({ ...prev, [champ.driverId]: false }));
+        }
+      });
     } catch (err) {
       console.error('Error fetching driver database:', err);
       setErrorDrivers('Unable to connect to the F1 Driver Database.');
@@ -149,23 +188,6 @@ function Racers() {
         setWorldTopology(countries);
       })
       .catch(err => console.error('Error loading world map:', err));
-
-    // Fetch Champion Images
-    sortedChampions.slice(0, 8).forEach(async (champ) => {
-      setChampionImagesLoading(prev => ({ ...prev, [champ.driverId]: true }));
-      try {
-        const url = await getWikipediaImage(champ.name);
-        if (url) {
-          setChampionImages(prev => ({ ...prev, [champ.driverId]: url }));
-        } else {
-          setChampionImagesError(prev => ({ ...prev, [champ.driverId]: true }));
-        }
-      } catch (err) {
-        setChampionImagesError(prev => ({ ...prev, [champ.driverId]: true }));
-      } finally {
-        setChampionImagesLoading(prev => ({ ...prev, [champ.driverId]: false }));
-      }
-    });
   }, []);
 
   // Fetch driver career standings details
@@ -189,7 +211,8 @@ function Racers() {
       fetchDriverCareer(selectedDetailDriver.driverId);
       
       setDetailDriverImage(null);
-      getWikipediaImage(`${selectedDetailDriver.givenName} ${selectedDetailDriver.familyName}`).then(url => {
+      const fetchId = selectedDetailDriver.url || `${selectedDetailDriver.givenName} ${selectedDetailDriver.familyName}`;
+      getWikipediaImage(fetchId).then(url => {
         setDetailDriverImage(url);
       });
     }
@@ -248,14 +271,16 @@ function Racers() {
       setShowDropdownA(false);
       fetchCompareStats('A', driver);
       setDriverAImage(null);
-      getWikipediaImage(`${driver.givenName} ${driver.familyName}`).then(url => setDriverAImage(url));
+      const fetchId = driver.url || `${driver.givenName} ${driver.familyName}`;
+      getWikipediaImage(fetchId).then(url => setDriverAImage(url));
     } else {
       setDriverB(driver);
       setSearchB('');
       setShowDropdownB(false);
       fetchCompareStats('B', driver);
       setDriverBImage(null);
-      getWikipediaImage(`${driver.givenName} ${driver.familyName}`).then(url => setDriverBImage(url));
+      const fetchId = driver.url || `${driver.givenName} ${driver.familyName}`;
+      getWikipediaImage(fetchId).then(url => setDriverBImage(url));
     }
   };
 
@@ -468,7 +493,7 @@ function Racers() {
                   </span>
                 </div>
                 <div className="mt-4 pt-2.5 border-t border-f1-border/50 text-[10px] text-f1-muted">
-                  <span className="font-bold text-f1-light">Years:</span> {champ.years.join(', ')}
+                  <span className="font-bold text-f1-light">Years:</span> {champ.years ? champ.years.join(', ') : ''}
                 </div>
               </div>
             </motion.div>

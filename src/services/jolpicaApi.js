@@ -1,4 +1,5 @@
 import axios from 'axios';
+import championsData from '../data/champions.json';
 import { cachedFetch } from './cache';
 
 const api = axios.create({
@@ -151,12 +152,24 @@ export const getRaceResults = async (year, round) => {
 };
 
 export const getAllTimeChampions = async () => {
-  return cachedFetch('all_time_champions_v1', async () => {
+  return cachedFetch('all_time_champions_v3', async () => {
     try {
-      // Driver standing position 1 at the end of every season
-      const response = await api.get('/driverStandings/1.json?limit=200');
-      const standingsLists = response.data?.MRData?.StandingsTable?.StandingsLists || [];
-      return standingsLists;
+      let lists = [...championsData];
+      const currentYear = new Date().getFullYear();
+      
+      // Reactive and updatable: dynamically fetch new champions for 2024 onwards
+      for (let year = 2024; year <= currentYear; year++) {
+        try {
+          const response = await api.get(`/${year}/driverStandings/1.json`);
+          const newLists = response.data?.MRData?.StandingsTable?.StandingsLists || [];
+          if (newLists.length > 0) {
+            lists = lists.concat(newLists);
+          }
+        } catch (e) {
+          console.warn(`Could not fetch champion for ${year}`, e);
+        }
+      }
+      return lists;
     } catch (error) {
       console.error('Error fetching getAllTimeChampions:', error);
       throw error;

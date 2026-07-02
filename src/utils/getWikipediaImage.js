@@ -26,7 +26,11 @@ const processQueue = async () => {
   while (queue.length > 0) {
     const { driverFullName, resolve } = queue.shift();
     try {
-      const searchName = encodeURIComponent(driverFullName);
+      let searchName = driverFullName;
+      if (driverFullName.includes('wikipedia.org/wiki/')) {
+        searchName = decodeURIComponent(driverFullName.split('wikipedia.org/wiki/')[1]).replace(/_/g, ' ');
+      }
+      searchName = encodeURIComponent(searchName);
       const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${searchName}&prop=pageimages&format=json&pithumbsize=300&origin=*&redirects=1`;
       const res = await fetch(url);
       if (!res.ok) {
@@ -52,8 +56,8 @@ const processQueue = async () => {
       cache.set(driverFullName, null);
       resolve(null);
     }
-    // 100ms delay between Wikipedia requests to prevent rate-limiting
-    await new Promise(r => setTimeout(r, 100));
+    // 350ms delay between Wikipedia requests to prevent rate-limiting and ERR_CONNECTION_RESET
+    await new Promise(r => setTimeout(r, 350));
   }
   isProcessing = false;
 };
