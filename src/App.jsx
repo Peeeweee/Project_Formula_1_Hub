@@ -6,6 +6,7 @@ import Racers from './pages/Racers';
 import Cars from './pages/Cars';
 import LiveSeason from './pages/LiveSeason';
 import PitWallAI from './pages/PitWallAI';
+import AllTimeRecords from './pages/AllTimeRecords';
 import { ErrorBoundary, IntroScreen, AnimatedBackground } from './components';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 
@@ -14,6 +15,7 @@ const navLinks = [
   { path: '/racers', label: 'Racers' },
   { path: '/cars', label: 'Cars' },
   { path: '/live-season', label: 'Live Season' },
+  { path: '/all-time', label: 'All-Time Records' },
   { path: '/pit-wall-ai', label: 'Pit Wall AI' }
 ];
 
@@ -170,6 +172,7 @@ function MainApp({ onResetIntro }) {
             <Route path="/racers" element={<PageWrapper><Racers /></PageWrapper>} />
             <Route path="/cars" element={<PageWrapper><Cars /></PageWrapper>} />
             <Route path="/live-season" element={<PageWrapper><LiveSeason /></PageWrapper>} />
+            <Route path="/all-time" element={<PageWrapper><AllTimeRecords /></PageWrapper>} />
             <Route path="/pit-wall-ai" element={<PageWrapper><PitWallAI /></PageWrapper>} />
           </Routes>
         </AnimatePresence>
