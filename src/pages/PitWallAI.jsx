@@ -83,9 +83,9 @@ const DriverTooltip = ({ active, payload }) => {
           Driver={data.name}
         </div>
         <div className="space-y-1">
-          <div><span className="text-gray-400 font-semibold">archetype</span>={data.clusterLabel}</div>
-          <div><span className="text-gray-400 font-semibold">podium_rate</span>={(data.podium_rate * 100).toFixed(1)}%</div>
-          <div><span className="text-gray-400 font-semibold">avg_position_gain</span>={data.avg_position_gain > 0 ? '+' : ''}{data.avg_position_gain.toFixed(2)}</div>
+          <div><span className="text-gray-400 font-semibold">style</span>={data.clusterLabel}</div>
+          <div><span className="text-gray-400 font-semibold">podium_chances</span>={(data.podium_rate * 100).toFixed(1)}%</div>
+          <div><span className="text-gray-400 font-semibold">avg_places_gained</span>={data.avg_position_gain > 0 ? '+' : ''}{data.avg_position_gain.toFixed(2)}</div>
         </div>
       </div>
     );
@@ -411,7 +411,7 @@ function PitWallAI() {
       {/* Header */}
       <div>
         <h1 className="text-4xl font-black text-f1-light tracking-tight">🧠 Pit Wall AI</h1>
-        <p className="text-f1-muted text-sm mt-2 max-w-2xl">Advanced telemetry, driver archetypes, optimal race strategy simulations, and AI-driven predictive modeling.</p>
+        <p className="text-f1-muted text-sm mt-2 max-w-2xl">Smart tools that help you understand driver habits, predict who will finish on the podium, find unusual lap times, and pick the best race strategy.</p>
       </div>
 
       {loading ? (
@@ -423,7 +423,7 @@ function PitWallAI() {
           {/* SECTION 1: Driver Clustering */}
           <FadeInSection>
         <h2 className="text-xl md:text-2xl font-bold text-f1-light mb-6 flex items-center gap-2 border-b-2 border-f1-border pb-2 uppercase tracking-wide">
-          🏎️ Driver Archetypes
+          🏎️ Driving Styles
         </h2>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -556,7 +556,7 @@ function PitWallAI() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-3">
             <div className="bg-f1-panel border border-f1-border p-6 rounded-lg shadow-xl">
-              <h3 className="text-sm font-bold text-f1-muted mb-6 uppercase tracking-wider">Simulated Podium Probabilities</h3>
+              <h3 className="text-sm font-bold text-f1-muted mb-6 uppercase tracking-wider">Estimated Chances of Finishing Top 3</h3>
               <div className="flex flex-col gap-4">
                 {currentPredictions.map((pred, idx) => (
                   <div key={pred.driverId} className="flex items-center gap-4 group">
@@ -612,7 +612,7 @@ function PitWallAI() {
       <FadeInSection>
         <div className="flex flex-col md:flex-row justify-between md:items-end mb-6 border-b-2 border-f1-border pb-2 gap-4">
           <h2 className="text-xl md:text-2xl font-bold text-f1-light flex items-center gap-2 uppercase tracking-wide">
-            🚨 Lap Time Anomaly Detector
+            🚨 Unusual Lap Time Finder
           </h2>
           <div className="flex items-center gap-3">
             <label className="text-xs font-bold text-f1-muted uppercase tracking-wider">Select Driver</label>
@@ -630,10 +630,10 @@ function PitWallAI() {
 
         <div className="bg-f1-panel border border-f1-border p-6 rounded-lg shadow-xl mb-6">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-bold text-f1-light">Lap Time Telemetry</h3>
+            <h3 className="text-lg font-bold text-f1-light">Lap Times Chart</h3>
             {currentAnomalyDriverData && (
               <span className="text-xs bg-f1-red/10 text-f1-red border border-f1-red/30 px-3 py-1 rounded font-bold uppercase tracking-wider">
-                {currentAnomalyDriverData.anomalyCount} anomalies detected out of {currentAnomalyDriverData.totalLaps} laps
+                {currentAnomalyDriverData.anomalyCount} unusual laps found out of {currentAnomalyDriverData.totalLaps} laps
               </span>
             )}
           </div>
@@ -675,7 +675,7 @@ function PitWallAI() {
                   <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Lap Number</th>
                   <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Time (s)</th>
                   <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Reason</th>
-                  <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Deviation</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Time Difference</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-f1-border">
@@ -705,7 +705,7 @@ function PitWallAI() {
       <FadeInSection>
         <div className="flex flex-col md:flex-row justify-between md:items-end mb-6 border-b-2 border-f1-border pb-2 gap-4">
           <h2 className="text-xl md:text-2xl font-bold text-f1-light flex items-center gap-2 uppercase tracking-wide">
-            🕸️ Constructor Network (SNA)
+            🕸️ Team Connections (Driver Trades)
           </h2>
           <div className="flex items-center gap-2">
             {["2010-2013", "2014-2016", "2017-2020"].map(era => (
@@ -725,8 +725,8 @@ function PitWallAI() {
         </div>
 
         <div className="bg-f1-panel border border-f1-border p-6 rounded-lg shadow-xl mb-6 relative">
-          <h3 className="text-lg font-bold text-f1-light mb-2">Driver Mobility Network</h3>
-          <p className="text-xs text-f1-muted mb-6">Nodes represent constructors (sized by total wins). Edges represent drivers shared between teams over the selected era.</p>
+          <h3 className="text-lg font-bold text-f1-light mb-2">How Teams Share Drivers</h3>
+          <p className="text-xs text-f1-muted mb-6">The circles are teams (bigger circles mean more wins). The lines show teams that have hired the same drivers during this time period.</p>
           
           <div className="h-[400px] w-full bg-[#0a0a0f] border border-[#1a1a24] rounded-lg overflow-hidden relative">
             <ConstructorNetworkGraph data={currentNetworkData} onTooltip={setSnaTooltip} />
@@ -757,15 +757,15 @@ function PitWallAI() {
         {/* Centrality Rankings Table */}
         <div className="bg-f1-panel border border-f1-border rounded-lg shadow-xl overflow-hidden">
           <div className="px-6 py-4 border-b border-f1-border">
-            <h3 className="text-lg font-bold text-f1-light">Centrality Rankings</h3>
+            <h3 className="text-lg font-bold text-f1-light">Team Influence Rankings</h3>
           </div>
           <table className="w-full text-left text-sm">
             <thead className="bg-[#1a1a24] text-f1-muted">
               <tr>
-                <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Constructor</th>
-                <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Degree Centrality</th>
-                <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Betweenness Centrality</th>
-                <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Most Connected</th>
+                <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Team</th>
+                <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Direct Connections</th>
+                <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Influence Score</th>
+                <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Most Connected To</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-f1-border">
@@ -825,7 +825,7 @@ function PitWallAI() {
               <div className="absolute top-0 right-0 w-32 h-32 bg-f1-red/5 rounded-full blur-2xl pointer-events-none"></div>
               <h3 className="text-lg font-bold text-f1-light mb-2">⚡ Strategy Recommendation</h3>
               <p className="text-xs text-f1-muted leading-relaxed">
-                Based on ambient temperature (22°C) and track abrasion index, the <span className="text-f1-red font-bold">{STRATEGIES.oneStopMediumHard.name}</span> is predicted to be the fastest overall strategy by 11.9s.
+                Based on the weather and how rough the track is, we think the <span className="text-f1-red font-bold">{STRATEGIES.oneStopMediumHard.name}</span> will be the fastest way to finish the race by 11.9 seconds.
               </p>
             </div>
           </div>
@@ -833,7 +833,7 @@ function PitWallAI() {
           <div className="lg:col-span-2">
             <div className="bg-f1-panel border border-f1-border p-6 rounded-lg shadow-xl">
               <h3 className="text-lg font-bold text-f1-light mb-6 flex items-center gap-2">
-                📉 Projected Tyre Grip Deg (%) over 70 Laps
+                📉 Estimated Tire Grip Remaining over 70 Laps
               </h3>
               <div className="h-[400px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
