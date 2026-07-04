@@ -152,23 +152,39 @@ export const getRaceResults = async (year, round) => {
 };
 
 export const getAllTimeChampions = async () => {
-  return cachedFetch('all_time_champions_v3', async () => {
+  return cachedFetch('all_time_champions_v5', async () => {
     try {
       let lists = [...championsData];
       const currentYear = new Date().getFullYear();
       
-      // Reactive and updatable: dynamically fetch new champions for 2024 onwards
-      for (let year = 2024; year <= currentYear; year++) {
-        try {
-          const response = await api.get(`/${year}/driverStandings/1.json`);
-          const newLists = response.data?.MRData?.StandingsTable?.StandingsLists || [];
-          if (newLists.length > 0) {
-            lists = lists.concat(newLists);
-          }
-        } catch (e) {
-          console.warn(`Could not fetch champion for ${year}`, e);
-        }
+      // Determine the last year present in the json data
+      const lastRecordedYear = lists.length > 0 
+        ? Math.max(...lists.map(list => parseInt(list.season))) 
+        : 1949; // Before F1 started
+        
+      // Reactive and updatable: dynamically fetch new champions for missing years
+      const missingYears = [];
+      for (let year = lastRecordedYear + 1; year <= currentYear; year++) {
+        missingYears.push(year);
       }
+
+      if (missingYears.length > 0) {
+        const fetchChampionForYear = async (year) => {
+          try {
+            const response = await api.get(`/${year}/driverStandings/1.json`);
+            const fetchedLists = response.data?.MRData?.StandingsTable?.StandingsLists || [];
+            return fetchedLists.length > 0 ? fetchedLists[0] : null;
+          } catch (e) {
+            console.warn(`Could not fetch champion for ${year}`, e);
+            return null;
+          }
+        };
+
+        const newChampions = await Promise.all(missingYears.map(fetchChampionForYear));
+        const validNewChampions = newChampions.filter(champ => champ !== null);
+        lists = lists.concat(validNewChampions);
+      }
+      
       return lists;
     } catch (error) {
       console.error('Error fetching getAllTimeChampions:', error);
