@@ -3,8 +3,105 @@ import { motion } from 'framer-motion';
 import { getAllTimeChampions } from '../services/jolpicaApi';
 import FadeInSection from '../components/FadeInSection';
 import getWikipediaImage from '../utils/getWikipediaImage';
+import { AnimatePresence } from 'framer-motion';
 
-const ChampionCard = ({ champ, rank }) => {
+const ChampionModal = ({ champ, onClose }) => {
+  const [imgUrl, setImgUrl] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchId = champ.driver.url || `${champ.driver.givenName} ${champ.driver.familyName}`;
+    getWikipediaImage(fetchId).then(url => {
+      if (isMounted && url) {
+        setImgUrl(url);
+      }
+    });
+    return () => { isMounted = false; };
+  }, [champ]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-[#000000cc] backdrop-blur-sm" onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-f1-panel border border-f1-border rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl relative flex flex-col md:flex-row"
+      >
+        <button 
+          onClick={onClose}
+          className="absolute top-4 right-4 z-20 w-8 h-8 flex items-center justify-center bg-[#111116] text-white rounded-full hover:bg-f1-red transition shadow"
+        >
+          ✕
+        </button>
+        
+        <div className="w-full md:w-2/5 h-64 md:h-auto bg-[#111116] relative">
+          {imgUrl ? (
+            <img 
+              src={imgUrl} 
+              alt={`${champ.driver.givenName} ${champ.driver.familyName}`} 
+              className="w-full h-full object-cover object-top" 
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center text-f1-muted/30">
+              <span className="text-6xl mb-2">👤</span>
+              <span className="text-xs tracking-widest uppercase">No Photo</span>
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-f1-panel via-transparent to-transparent md:bg-gradient-to-r md:from-transparent md:via-transparent md:to-f1-panel" />
+        </div>
+        
+        <div className="p-8 md:p-10 w-full md:w-3/5 flex flex-col justify-center">
+          <div className="mb-6">
+            <h2 className="text-3xl font-black text-f1-light uppercase tracking-tight leading-none mb-2">
+              {champ.driver.givenName} <br className="hidden md:block"/>
+              <span className="text-f1-red">{champ.driver.familyName}</span>
+            </h2>
+            <div className="text-xs text-f1-muted uppercase tracking-widest font-bold">
+              {champ.driver.nationality}
+            </div>
+          </div>
+          
+          <div className="flex gap-4 mb-6">
+            <div className="bg-[#111116] border border-f1-border rounded-md p-4 text-center flex-1">
+              <div className="text-3xl font-black text-white">{champ.count}</div>
+              <div className="text-[10px] text-f1-muted uppercase font-bold tracking-wider">Titles</div>
+            </div>
+          </div>
+          
+          <div>
+            <h4 className="text-[11px] text-f1-muted uppercase font-black tracking-widest border-b border-f1-border/40 pb-2 mb-3">
+              Championship Years
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {[...champ.years].sort((a, b) => b - a).map(year => (
+                <span key={year} className="bg-f1-red/10 border border-f1-red/20 text-f1-light text-xs font-mono font-bold px-2 py-1 rounded">
+                  {year}
+                </span>
+              ))}
+            </div>
+          </div>
+          
+          {champ.driver.url && (
+            <div className="mt-8 pt-4 border-t border-f1-border/40">
+               <a 
+                  href={champ.driver.url} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="text-[11px] font-bold text-f1-red uppercase hover:text-white transition tracking-widest flex items-center gap-2"
+               >
+                  Read Wikipedia Article <span>→</span>
+               </a>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+const ChampionCard = ({ champ, rank, onClick }) => {
   const [imgUrl, setImgUrl] = useState(null);
 
   useEffect(() => {
@@ -25,7 +122,8 @@ const ChampionCard = ({ champ, rank }) => {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: (rank % 10) * 0.05, duration: 0.4 }}
-      className="bg-[#1a1a24] rounded border border-f1-border flex flex-col hover:border-f1-red/50 transition duration-300 overflow-hidden relative group shadow-lg"
+      onClick={() => onClick(champ)}
+      className="bg-[#1a1a24] rounded border border-f1-border flex flex-col hover:border-f1-red/50 transition duration-300 overflow-hidden relative group shadow-lg cursor-pointer"
     >
       <div className="h-48 w-full bg-[#111116] relative overflow-hidden">
          {imgUrl ? (
@@ -68,6 +166,7 @@ const ChampionCard = ({ champ, rank }) => {
 function AllTimeRecords() {
   const [champions, setChampions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedChampion, setSelectedChampion] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -128,12 +227,18 @@ function AllTimeRecords() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
               {champions.map((champ, i) => (
-                <ChampionCard key={champ.driver.driverId} champ={champ} rank={i + 1} />
+                <ChampionCard key={champ.driver.driverId} champ={champ} rank={i + 1} onClick={setSelectedChampion} />
               ))}
             </div>
           </div>
         </FadeInSection>
       )}
+
+      <AnimatePresence>
+        {selectedChampion && (
+          <ChampionModal champ={selectedChampion} onClose={() => setSelectedChampion(null)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
