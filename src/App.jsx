@@ -9,6 +9,7 @@ import PitWallAI from './pages/PitWallAI';
 import AllTimeRecords from './pages/AllTimeRecords';
 import { ErrorBoundary, IntroScreen, AnimatedBackground } from './components';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
+import f1LogoSrc from './assets/f1_logo.svg';
 
 const navLinks = [
   { path: '/', label: 'Start Here' },
@@ -55,18 +56,38 @@ function MainApp({ onResetIntro }) {
         {/* Logo */}
         <NavLink 
           to="/" 
-          className="flex items-center gap-2 relative z-50"
+          className="flex items-center gap-3 relative z-50 group"
           onClick={() => {
             if (onResetIntro) onResetIntro();
           }}
         >
-          <span className="font-extrabold tracking-wider text-f1-light text-md md:text-lg">
-            FORMULA
-          </span>
-          <span className="font-extrabold tracking-wider text-[#e10600] text-md md:text-lg">
-            DC-1
-          </span>
+          {/* Official F1 Logo */}
+          <motion.div
+            className="flex items-center"
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.2 }}
+          >
+            <img
+              src={f1LogoSrc}
+              alt="Formula 1"
+              style={{ height: '22px', width: 'auto' }}
+            />
+          </motion.div>
+
+          {/* Divider */}
+          <span className="w-px h-5 bg-white/20 shrink-0" />
+
+          {/* Custom Brand */}
+          <div className="flex items-center gap-1">
+            <span className="font-extrabold tracking-wider text-f1-light text-md md:text-lg leading-none">
+              FORMULA
+            </span>
+            <span className="font-extrabold tracking-wider text-[#e10600] text-md md:text-lg leading-none">
+              DC-1
+            </span>
+          </div>
         </NavLink>
+
 
         {/* Desktop Navigation Links */}
         <div className="hidden md:flex h-full items-center">
