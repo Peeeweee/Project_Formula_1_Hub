@@ -83,14 +83,7 @@ const IntroScreen = ({ onComplete }) => {
         ))}
       </div>
 
-      {/* ── Flash shockwave when F1 logo hits ── */}
-      <motion.div
-        className="absolute inset-0 z-[2] pointer-events-none"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0, 0, 0.55, 0] }}
-        transition={{ duration: 0.35, delay: 0.55, times: [0, 0.01, 0.35, 1] }}
-        style={{ background: 'radial-gradient(ellipse at center, rgba(225,6,0,0.45) 0%, transparent 70%)' }}
-      />
+
 
       {/* ── Red scan line sweeping down ── */}
       <motion.div
@@ -232,14 +225,7 @@ const IntroScreen = ({ onComplete }) => {
         </div>
       </div>
 
-      {/* ── Final flash on lights out ── */}
-      <motion.div
-        className="absolute inset-0 z-[15] pointer-events-none"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0, 0, 0.7, 0] }}
-        transition={{ duration: 0.4, delay: 4.2, times: [0, 0.01, 0.3, 1] }}
-        style={{ background: 'white' }}
-      />
+
     </motion.div>
   );
 };
