@@ -123,6 +123,267 @@ function Countdown({ targetDate }) {
   );
 }
 
+const LeaderSpotlight = ({ leaderDriver }) => {
+  const [headshotUrl, setHeadshotUrl] = useState(null);
+  const [teamColor, setTeamColor] = useState('#e10600');
+
+  useEffect(() => {
+    if (!leaderDriver) return;
+    const fetchHeadshot = async () => {
+      try {
+        const number = leaderDriver.Driver.permanentNumber;
+        const res = await fetch(`https://api.openf1.org/v1/drivers?session_key=latest&driver_number=${number}`);
+        const data = await res.json();
+        if (data && data.length > 0) {
+          if (data[0].headshot_url) {
+            let url = data[0].headshot_url.replace('d_driver_fallback_image.png/', '');
+            url = url.split('.transform')[0];
+            setHeadshotUrl(url);
+          }
+          if (data[0].team_colour) {
+            setTeamColor(`#${data[0].team_colour}`);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch headshot', err);
+      }
+    };
+    fetchHeadshot();
+  }, [leaderDriver]);
+
+  if (!leaderDriver) return null;
+  const driver = leaderDriver.Driver;
+  const constructor = leaderDriver.Constructors[0];
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, height: 0, scale: 0.95 }}
+        animate={{ opacity: 1, height: 'auto', scale: 1 }}
+        exit={{ opacity: 0, height: 0, scale: 0.95 }}
+        transition={{ type: "spring", stiffness: 200, damping: 20 }}
+        className="mt-8 mb-8 relative overflow-hidden rounded-2xl shadow-2xl border bg-[#0f0f15]"
+        style={{ borderColor: teamColor }}
+      >
+        <div className="absolute inset-0 z-0 opacity-20" style={{ background: `linear-gradient(to bottom right, ${teamColor}, transparent)` }}></div>
+        
+        {/* Animated background lines */}
+        <motion.div 
+          animate={{ x: [-1000, 1000] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          className="absolute top-0 bottom-0 left-0 w-[200%] opacity-5 z-0 pointer-events-none" 
+          style={{ backgroundImage: `radial-gradient(${teamColor} 1px, transparent 1px)`, backgroundSize: '20px 20px' }}
+        />
+
+        <div className="relative z-10 p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8 backdrop-blur-sm">
+          <div className="flex-1">
+            <motion.div 
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              className="inline-flex items-center gap-2 text-white text-[10px] font-black px-3 py-1 uppercase tracking-widest rounded-sm mb-4"
+              style={{ backgroundColor: teamColor, boxShadow: `0 0 10px ${teamColor}80` }}
+            >
+              <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+              Current Championship Leader
+            </motion.div>
+            <motion.h2 
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-6 drop-shadow-lg"
+            >
+              {driver.givenName} <span style={{ color: teamColor }}>{driver.familyName}</span>
+            </motion.h2>
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="flex flex-wrap items-center gap-4"
+            >
+              <div className="bg-white/5 px-6 py-3 rounded-xl border border-white/10 shadow-inner">
+                <span className="text-f1-muted text-[10px] uppercase tracking-widest font-bold block mb-1">Constructor</span>
+                <span className="text-white font-black text-xl">{constructor?.name || 'N/A'}</span>
+              </div>
+              <div className="px-6 py-3 rounded-xl border" style={{ backgroundColor: `${teamColor}33`, borderColor: `${teamColor}4d`, boxShadow: `0 0 15px ${teamColor}33` }}>
+                <span className="text-[10px] uppercase tracking-widest font-bold block mb-1" style={{ color: teamColor }}>Total Points</span>
+                <span className="text-white font-black text-xl">{leaderDriver.points} PTS</span>
+              </div>
+              <div className="bg-white/5 px-6 py-3 rounded-xl border border-white/10 shadow-inner">
+                <span className="text-f1-muted text-[10px] uppercase tracking-widest font-bold block mb-1">Wins</span>
+                <span className="text-white font-black text-xl">{leaderDriver.wins}</span>
+              </div>
+            </motion.div>
+          </div>
+          
+          <motion.div 
+            initial={{ scale: 0.5, opacity: 0, rotate: -20 }}
+            animate={{ scale: 1, opacity: 1, rotate: 0 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
+            className="hidden md:flex relative items-center justify-center w-56 h-56 rounded-full border-4 bg-[#0a0a0f] z-10 overflow-hidden"
+            style={{ borderColor: teamColor, boxShadow: `0 0 80px ${teamColor}4d` }}
+          >
+            <div className="absolute inset-2 rounded-full border border-dashed animate-[spin_10s_linear_infinite] z-0" style={{ borderColor: `${teamColor}4d` }}></div>
+            
+            <span className="text-[140px] leading-none font-black text-transparent bg-clip-text bg-gradient-to-br from-white/40 to-f1-muted/5 tracking-tighter absolute z-10 top-2">
+              {driver.permanentNumber || '1'}
+            </span>
+
+            {headshotUrl ? (
+              <motion.img 
+                initial={{ opacity: 0, y: 80, scale: 0.8, filter: "blur(15px)" }}
+                animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                transition={{ duration: 0.8, type: "spring", bounce: 0.4, delay: 0.1 }}
+                src={headshotUrl} 
+                alt={`${driver.givenName} ${driver.familyName}`}
+                className="absolute bottom-[-15px] w-full h-[95%] object-cover z-20 drop-shadow-[0_0_15px_rgba(0,0,0,0.5)]"
+                style={{ objectPosition: 'top' }}
+              />
+            ) : null}
+          </motion.div>
+        </div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
+const DriverSpotlightModal = ({ spotlightDriver, onClose }) => {
+  const [headshotUrl, setHeadshotUrl] = useState(null);
+  const [teamColor, setTeamColor] = useState('#e10600');
+
+  useEffect(() => {
+    if (!spotlightDriver) return;
+    const fetchHeadshot = async () => {
+      try {
+        const number = spotlightDriver.Driver.permanentNumber;
+        const res = await fetch(`https://api.openf1.org/v1/drivers?session_key=latest&driver_number=${number}`);
+        const data = await res.json();
+        if (data && data.length > 0) {
+          if (data[0].headshot_url) {
+            let url = data[0].headshot_url.replace('d_driver_fallback_image.png/', '');
+            url = url.split('.transform')[0];
+            setHeadshotUrl(url);
+          }
+          if (data[0].team_colour) {
+            setTeamColor(`#${data[0].team_colour}`);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch headshot', err);
+      }
+    };
+    fetchHeadshot();
+  }, [spotlightDriver]);
+
+  if (!spotlightDriver) return null;
+  const driver = spotlightDriver.Driver;
+  const constructor = spotlightDriver.Constructors[0];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8, y: 50 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.8, y: 50 }}
+        transition={{ type: "spring", stiffness: 200, damping: 25 }}
+        className="relative overflow-hidden rounded-2xl shadow-2xl border bg-[#0f0f15] w-full max-w-4xl"
+        style={{ borderColor: teamColor }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button 
+          onClick={onClose}
+          className="absolute top-4 right-4 z-50 text-white/50 hover:text-white bg-black/20 hover:bg-black/50 p-2 rounded-full backdrop-blur-sm transition-all"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+
+        <div className="absolute inset-0 z-0 opacity-20" style={{ background: `linear-gradient(to bottom right, ${teamColor}, transparent)` }}></div>
+        
+        <motion.div 
+          animate={{ x: [-1000, 1000] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          className="absolute top-0 bottom-0 left-0 w-[200%] opacity-5 z-0 pointer-events-none" 
+          style={{ backgroundImage: `radial-gradient(${teamColor} 1px, transparent 1px)`, backgroundSize: '20px 20px' }}
+        />
+
+        <div className="relative z-10 p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8 backdrop-blur-sm">
+          <div className="flex-1">
+            <motion.div 
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              className="inline-flex items-center gap-2 text-white text-[10px] font-black px-3 py-1 uppercase tracking-widest rounded-sm mb-4"
+              style={{ backgroundColor: teamColor, boxShadow: `0 0 10px ${teamColor}80` }}
+            >
+              <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+              Driver Profile
+            </motion.div>
+            <motion.h2 
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-6 drop-shadow-lg"
+            >
+              {driver.givenName} <span style={{ color: teamColor }}>{driver.familyName}</span>
+            </motion.h2>
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="flex flex-wrap items-center gap-4"
+            >
+              <div className="bg-white/5 px-6 py-3 rounded-xl border border-white/10 shadow-inner">
+                <span className="text-f1-muted text-[10px] uppercase tracking-widest font-bold block mb-1">Constructor</span>
+                <span className="text-white font-black text-xl">{constructor?.name || 'N/A'}</span>
+              </div>
+              <div className="px-6 py-3 rounded-xl border" style={{ backgroundColor: `${teamColor}33`, borderColor: `${teamColor}4d`, boxShadow: `0 0 15px ${teamColor}33` }}>
+                <span className="text-[10px] uppercase tracking-widest font-bold block mb-1" style={{ color: teamColor }}>Total Points</span>
+                <span className="text-white font-black text-xl">{spotlightDriver.points} PTS</span>
+              </div>
+              <div className="bg-white/5 px-6 py-3 rounded-xl border border-white/10 shadow-inner">
+                <span className="text-f1-muted text-[10px] uppercase tracking-widest font-bold block mb-1">Wins</span>
+                <span className="text-white font-black text-xl">{spotlightDriver.wins}</span>
+              </div>
+            </motion.div>
+          </div>
+          
+          <motion.div 
+            initial={{ scale: 0.5, opacity: 0, rotate: -20 }}
+            animate={{ scale: 1, opacity: 1, rotate: 0 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
+            className="hidden md:flex relative items-center justify-center w-56 h-56 rounded-full border-4 bg-[#0a0a0f] z-10 overflow-hidden"
+            style={{ borderColor: teamColor, boxShadow: `0 0 80px ${teamColor}4d` }}
+          >
+            <div className="absolute inset-2 rounded-full border border-dashed animate-[spin_10s_linear_infinite] z-0" style={{ borderColor: `${teamColor}4d` }}></div>
+            
+            <span className="text-[140px] leading-none font-black text-transparent bg-clip-text bg-gradient-to-br from-white/40 to-f1-muted/5 tracking-tighter absolute z-10 top-2">
+              {driver.permanentNumber || '1'}
+            </span>
+
+            {headshotUrl ? (
+              <motion.img 
+                initial={{ opacity: 0, y: 80, scale: 0.8, filter: "blur(15px)" }}
+                animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                transition={{ duration: 0.8, type: "spring", bounce: 0.4, delay: 0.1 }}
+                src={headshotUrl} 
+                alt={`${driver.givenName} ${driver.familyName}`}
+                className="absolute bottom-[-15px] w-full h-[95%] object-cover z-20 drop-shadow-[0_0_15px_rgba(0,0,0,0.5)]"
+                style={{ objectPosition: 'top' }}
+              />
+            ) : null}
+          </motion.div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
 function LiveSeason() {
   const [driversData, setDriversData] = useState(null);
   const [constructorsData, setConstructorsData] = useState(null);
@@ -137,6 +398,8 @@ function LiveSeason() {
   const [openF1Data, setOpenF1Data] = useState({ session: null, weather: null, positions: [] });
   const [openF1Loading, setOpenF1Loading] = useState(true);
   const [openF1Refreshing, setOpenF1Refreshing] = useState(false);
+  const [showLeaderSpotlight, setShowLeaderSpotlight] = useState(false);
+  const [selectedTableDriver, setSelectedTableDriver] = useState(null);
 
   // Pagination State
   const [driverPage, setDriverPage] = useState(1);
@@ -451,32 +714,44 @@ function LiveSeason() {
 
       {/* SECTION 1: Stat Cards */}
       <FadeInSection>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
         <StatCard 
           label="Championship Leader" 
           value={leaderDriver ? leaderDriver.Driver.familyName : 'N/A'}
           sub={`${leaderName}`} 
           delta={`${leaderPoints} PTS`} 
+          onClick={() => setShowLeaderSpotlight(!showLeaderSpotlight)}
         />
         <StatCard 
           label="Races Completed" 
           value={`${completedRacesCount}`} 
           sub={`${driversData?.season || 'Current'} Championship Calendar`} 
           delta={`Out of ${calendarRaces.length || 24}`} 
+          onClick={() => setShowLeaderSpotlight(!showLeaderSpotlight)}
         />
         <StatCard 
           label="Championship Lead" 
           value={`${closestGap.toFixed(0)} PTS`} 
           sub={driversList[1] ? `Ahead of ${driversList[1].Driver.familyName}` : 'N/A'} 
           delta="Points Lead" 
+          onClick={() => setShowLeaderSpotlight(!showLeaderSpotlight)}
         />
         <StatCard 
           label="Leading Constructor" 
           value={constructorName} 
           sub="World Constructors Title" 
           delta={`${constructorPoints} PTS`} 
+          onClick={() => setShowLeaderSpotlight(!showLeaderSpotlight)}
+        />
+        <StatCard 
+          label="Leader's Total Points" 
+          value={`${leaderPoints}`} 
+          sub={leaderName} 
+          delta="PTS" 
+          onClick={() => setShowLeaderSpotlight(!showLeaderSpotlight)}
         />
       </div>
+      {showLeaderSpotlight && <LeaderSpotlight leaderDriver={leaderDriver} />}
         </FadeInSection>
 
       {/* SECTION: Latest Session Snapshot */}
@@ -672,19 +947,20 @@ function LiveSeason() {
                     <motion.tr 
                       key={`driver-row-${driver.Driver.driverId}`} 
                       variants={itemVariants}
-                      className="hover:bg-f1-dark/40 transition duration-150"
+                      onClick={() => setSelectedTableDriver(driver)}
+                      className="hover:bg-f1-red/10 transition duration-150 cursor-pointer group"
                     >
-                      <td className="py-3 text-center font-bold text-f1-muted">
+                      <td className="py-3 text-center font-bold text-f1-muted group-hover:text-f1-red transition">
                         {driver.position === '1' ? '🥇' : driver.position === '2' ? '🥈' : driver.position === '3' ? '🥉' : driver.position}
                       </td>
-                      <td className="py-3 font-sans font-bold">
+                      <td className="py-3 font-sans font-bold group-hover:text-f1-light transition">
                         {driver.Driver.givenName} {driver.Driver.familyName}
                         <span className="text-[10px] text-f1-muted font-normal block">{driver.Driver.nationality}</span>
                       </td>
-                      <td className="py-3 font-sans text-f1-muted">{driver.Constructors[0]?.name || 'N/A'}</td>
-                      <td className="py-3 text-center">{driver.wins}</td>
-                      <td className="py-3 text-center text-f1-muted">{currentGap}</td>
-                      <td className="py-3 text-right font-bold text-f1-light">{driver.points}</td>
+                      <td className="py-3 font-sans text-f1-muted group-hover:text-f1-light transition">{driver.Constructors[0]?.name || 'N/A'}</td>
+                      <td className="py-3 text-center group-hover:text-f1-light transition">{driver.wins}</td>
+                      <td className="py-3 text-center text-f1-muted group-hover:text-f1-light transition">{currentGap}</td>
+                      <td className="py-3 text-right font-bold text-f1-light group-hover:text-f1-red transition">{driver.points}</td>
                     </motion.tr>
                   );
                 })}
@@ -1033,6 +1309,15 @@ function LiveSeason() {
           </div>
         </FadeInSection>
       )}
+
+      <AnimatePresence>
+        {selectedTableDriver && (
+          <DriverSpotlightModal 
+            spotlightDriver={selectedTableDriver} 
+            onClose={() => setSelectedTableDriver(null)} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
