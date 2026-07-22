@@ -17,3 +17,6 @@ export { default as RealisticTire } from './RealisticTire';
 export { default as GlossaryModal } from './GlossaryModal';
 export { default as StartingLights } from './StartingLights';
 export { default as RPMGauge } from './RPMGauge';
+export { default as NewsTicker } from './NewsTicker';
+export { default as PodiumPredictor } from './PodiumPredictor';
+
