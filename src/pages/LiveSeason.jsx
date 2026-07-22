@@ -8,7 +8,7 @@ import {
   getLastRaceResults 
 } from '../services/jolpicaApi';
 import { getLatestSession, getRaceWeather, getDriverPositions } from '../services/openf1Api';
-import { StatCard, SkeletonTable, PlotlyTooltip } from '../components';
+import { StatCard, SkeletonTable, PlotlyTooltip, PodiumPredictor } from '../components';
 import FadeInSection from '../components/FadeInSection';
 import { 
   ResponsiveContainer, 
@@ -57,19 +57,22 @@ const getFlagEmoji = (countryName) => {
   return COUNTRY_FLAGS[c] || '🏁';
 };
 
-const DRIVER_COLORS = {
-  // Common 2024 drivers
-  verstappen: '#3b82f6', // Red Bull Blue
-  perez: '#fbbf24',      // Red Bull Gold
-  leclerc: '#e10600',    // Ferrari Red
-  sainz: '#f87171',      // Ferrari Coral
-  norris: '#ff8700',     // McLaren Orange
-  piastri: '#fb923c',    // McLaren Peach
-  hamilton: '#00a19c',   // Mercedes Teal
-  russell: '#2dd4bf',     // Mercedes Mint
-  // Common 2026/mock drivers
-  antonelli: '#00a19c',
-  bearman: '#ef4444'
+const TEAM_COLORS = {
+  'Red Bull Racing': '#3b82f6',
+  'Ferrari': '#e10600',
+  'McLaren': '#ff8700',
+  'Mercedes': '#00a19c',
+  'Aston Martin': '#229977',
+  'Alpine': '#ff87bc',
+  'Williams': '#005aff',
+  'RB': '#6692ff',
+  'Sauber': '#00e701',
+  'Haas': '#ffffff'
+};
+
+const getDriverColor = (driver) => {
+  const teamName = driver?.Constructors?.[0]?.name;
+  return TEAM_COLORS[teamName] || '#888888';
 };
 
 const PIT_STOP_DATA = [
@@ -393,6 +396,7 @@ function LiveSeason() {
   const [visibleDrivers, setVisibleDrivers] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [calendarRefreshing, setCalendarRefreshing] = useState(false);
 
   // OpenF1 State
   const [openF1Data, setOpenF1Data] = useState({ session: null, weather: null, positions: [] });
@@ -450,12 +454,11 @@ function LiveSeason() {
     }
   };
 
-  useEffect(() => {
-    fetchOpenF1Data();
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
+  const fetchSeasonData = async (isRefresh = false) => {
+    if (isRefresh) setCalendarRefreshing(true);
+    else setLoading(true);
+    setError(null);
+    try {
         const [driversRes, constructorsRes, calendarRes, lastRaceRes] = await Promise.all([
           getCurrentDriverStandings(),
           getCurrentConstructorStandings(),
@@ -634,10 +637,13 @@ function LiveSeason() {
         ]);
       } finally {
         setLoading(false);
+        if (isRefresh) setCalendarRefreshing(false);
       }
     };
 
-    fetchData();
+  useEffect(() => {
+    fetchOpenF1Data();
+    fetchSeasonData();
 
     // Auto-refresh OpenF1 data every 15 seconds for reactive feel
     const interval = setInterval(() => {
@@ -1054,10 +1060,22 @@ function LiveSeason() {
             Race Schedule
           </h4>
         </div>
-        <div>
-          <h2 className="text-2xl font-extrabold text-f1-light tracking-tight">📅 Season Calendar</h2>
-          <p className="text-f1-muted text-xs mt-1">Full {driversData?.season || 'Current'} calendar list. Highlights include completed status winners and live upcoming countdowns.</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-extrabold text-f1-light tracking-tight">📅 Season Calendar</h2>
+            <p className="text-f1-muted text-xs mt-1">Full {driversData?.season || 'Current'} calendar list. Highlights include completed status winners and live upcoming countdowns.</p>
+          </div>
+          <motion.button 
+            whileTap={{ scale: 0.97 }}
+            onClick={() => fetchSeasonData(true)}
+            className="flex items-center gap-2 bg-[#1a1a24] hover:bg-[#2a2a35] text-f1-light text-[10px] font-black uppercase tracking-wider px-4 py-2 rounded-sm border border-f1-border transition duration-200"
+          >
+            {calendarRefreshing ? 'UPDATING...' : '🔄 Refresh'}
+          </motion.button>
         </div>
+
+        {/* Podium Predictor Widget */}
+        <PodiumPredictor nextRaceName={calendarRaces.find(r => r.isNext)?.raceName || 'Hungarian Grand Prix'} />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {calendarRaces.map((race) => (
@@ -1271,7 +1289,7 @@ function LiveSeason() {
                         type="monotone"
                         dataKey={id}
                         name={`${d.Driver.givenName} ${d.Driver.familyName}`}
-                        stroke={DRIVER_COLORS[id] || '#ffffff'}
+                        stroke={getDriverColor(d)}
                         strokeWidth={2.5}
                         dot={{ r: 3, strokeWidth: 1 }}
                         activeDot={{ r: 6 }}
@@ -1287,7 +1305,7 @@ function LiveSeason() {
               {top5Drivers.map(d => {
                 const id = d.Driver.driverId;
                 const isVisible = visibleDrivers[id] !== false;
-                const color = DRIVER_COLORS[id] || '#ffffff';
+                const color = getDriverColor(d);
                 return (
                   <motion.button
                     whileTap={{ scale: 0.97 }}
