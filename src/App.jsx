@@ -10,6 +10,7 @@ import AllTimeRecords from './pages/AllTimeRecords';
 import Circuits from './pages/Circuits';
 import Strategy from './pages/Strategy';
 import News from './pages/News';
+import Garage3D from './pages/Garage3D';
 import { ErrorBoundary, IntroScreen, AnimatedBackground } from './components';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import f1LogoSrc from './assets/f1_logo.svg';
@@ -23,7 +24,8 @@ const navLinks = [
   { path: '/strategy', label: 'Strategy' },
   { path: '/live-season', label: 'Live Season' },
   { path: '/all-time', label: 'All-Time Records' },
-  { path: '/pit-wall-ai', label: 'Pit Wall AI' }
+  { path: '/pit-wall-ai', label: 'Pit Wall AI' },
+  { path: '/garage', label: '3D Garage' },
 ];
 
 const PageWrapper = ({ children }) => {
@@ -204,6 +206,7 @@ function MainApp({ onResetIntro }) {
             <Route path="/live-season" element={<PageWrapper><LiveSeason /></PageWrapper>} />
             <Route path="/all-time" element={<PageWrapper><AllTimeRecords /></PageWrapper>} />
             <Route path="/pit-wall-ai" element={<PageWrapper><PitWallAI /></PageWrapper>} />
+            <Route path="/garage" element={<PageWrapper><Garage3D /></PageWrapper>} />
           </Routes>
         </AnimatePresence>
       </div>
