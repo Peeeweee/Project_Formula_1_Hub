@@ -1,232 +1,308 @@
-import React, { useMemo, useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import * as THREE from 'three';
+import { Canvas } from '@react-three/fiber';
+import { useProgress } from '@react-three/drei';
+import { createTimeline } from 'animejs';
+import { F1CarModel } from './animations/F1CarModel';
+import { IntroCamera } from './animations/IntroCamera';
 import f1LogoSrc from '../assets/f1_logo.svg';
 
-const IntroScreen = ({ onComplete }) => {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Speed streaks flying across on load
-  const streaks = useMemo(() => {
-    return Array.from({ length: 24 }).map((_, i) => {
-      const isRed = i % 3 === 0;
-      const isWhite = i % 3 === 1;
-      const height = Math.random() * 1.5 + 0.5;
-      const width = Math.random() * 280 + 60;
-      const top = Math.random() * 100;
-      const duration = Math.random() * 0.25 + 0.2;
-      const delay = Math.random() * 0.5 + 0.05;
-      return {
-        id: i,
-        color: isRed ? '#e10600' : isWhite ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.15)',
-        height,
-        width,
-        top: `${top}vh`,
-        duration,
-        delay,
-      };
-    });
-  }, []);
-
-  const logoFontSize = isMobile ? '34px' : '60px';
-  const lightSize = isMobile ? '18px' : '26px';
-  const f1LogoHeight = isMobile ? '64px' : '110px';
-
+// ── Thin red loading bar shown while GLB downloads ───────────────────────────
+function LoadingBar({ progress }) {
   return (
-    <motion.div
-      className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center overflow-hidden"
-      initial={{ opacity: 1 }}
-      animate={{ y: '-100vh', opacity: 0 }}
-      transition={{ delay: 4.6, duration: 0.5, ease: 'easeIn' }}
-      onAnimationComplete={() => {
-        sessionStorage.setItem('fdc1_intro_seen', 'true');
-        onComplete();
+    <div
+      style={{
+        position: 'absolute',
+        bottom: '72px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '220px',
+        textAlign: 'center',
+        zIndex: 20,
+        pointerEvents: 'none',
       }}
     >
-      {/* ── Background grid ── */}
       <div
-        className="absolute inset-0 z-0 pointer-events-none"
+        style={{
+          color: 'rgba(255,255,255,0.35)',
+          fontSize: '9px',
+          letterSpacing: '3px',
+          fontFamily: 'Rajdhani, sans-serif',
+          textTransform: 'uppercase',
+          marginBottom: '6px',
+        }}
+      >
+        Loading model… {Math.round(progress)}%
+      </div>
+      <div
+        style={{
+          height: '2px',
+          background: 'rgba(255,255,255,0.07)',
+          borderRadius: '2px',
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            height: '100%',
+            width: `${progress}%`,
+            background: 'linear-gradient(90deg,#e10600,#ff5500)',
+            borderRadius: '2px',
+            transition: 'width 0.25s ease',
+            boxShadow: '0 0 8px rgba(225,6,0,0.7)',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ── useProgress must be inside React tree; this reads drei's global store ─────
+function ProgressHUD() {
+  const { progress, active } = useProgress();
+  if (!active && progress === 0) return null;
+  if (progress >= 100) return null;
+  return <LoadingBar progress={progress} />;
+}
+
+// ── Main intro component ─────────────────────────────────────────────────────
+const IntroScreen = ({ onComplete }) => {
+  const containerRef = useRef(null);
+  const [phase, setPhase] = useState('reveal');
+  // modelReady = true once the GLB is parsed and onReady fires
+  const [modelReady, setModelReady] = useState(false);
+  const timersRef = useRef([]);
+
+  // ── Finish: mark session done and hand off to main app ─────────────────────
+  const handleFinish = useCallback(() => {
+    sessionStorage.setItem('fdc1_intro_seen', 'true');
+    onComplete();
+  }, [onComplete]);
+
+  // ── Skip button / ESC ───────────────────────────────────────────────────────
+  const handleSkip = useCallback(() => {
+    timersRef.current.forEach(clearTimeout);
+    setPhase('done');
+    // Instant fade to black then redirect
+    if (containerRef.current) {
+      createTimeline({ onComplete: handleFinish }).add(containerRef.current, {
+        opacity: [1, 0],
+        duration: 250,
+        ease: 'inQuad',
+      });
+    } else {
+      handleFinish();
+    }
+  }, [handleFinish]);
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') handleSkip(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [handleSkip]);
+
+  // ── Sequence — starts only once the real GLB is ready ──────────────────────
+  useEffect(() => {
+    if (!modelReady) return;
+    timersRef.current.forEach(clearTimeout);
+
+    // Phase 1 → revving (1.4s): fade in logo + sequential start lights
+    const t1 = setTimeout(() => {
+      setPhase('revving');
+
+      const logoEl = containerRef.current?.querySelector('#intro-logo');
+      const taglineEl = containerRef.current?.querySelector('#intro-tagline');
+      if (logoEl) {
+        createTimeline()
+          .add(logoEl, { opacity: [0, 1], translateY: [-8, 0], duration: 500, ease: 'outExpo' })
+          .add(taglineEl, { opacity: [0, 1], translateY: [8, 0], duration: 400, ease: 'outExpo' }, '-=200');
+      }
+
+      const lights = containerRef.current?.querySelectorAll('.start-light') ?? [];
+      lights.forEach((light, i) => {
+        setTimeout(() => {
+          light.style.backgroundColor = '#e10600';
+          light.style.boxShadow = '0 0 14px #e10600, 0 0 32px #e10600cc';
+        }, i * 340);
+      });
+    }, 1400);
+
+    // Phase 2 → launch (3.2s): lights out + wordmark slam
+    const t2 = setTimeout(() => {
+      setPhase('launch');
+
+      const lights = containerRef.current?.querySelectorAll('.start-light') ?? [];
+      lights.forEach((light) => {
+        light.style.backgroundColor = '#150000';
+        light.style.boxShadow = 'none';
+        light.style.transition = 'all 0.08s linear';
+      });
+
+      const wm = containerRef.current?.querySelector('#intro-wordmark');
+      if (wm) {
+        createTimeline().add(wm, { opacity: [0, 1], scale: [1.25, 1], duration: 380, ease: 'outBounce' });
+      }
+    }, 3200);
+
+    // Phase 3 → redirect (4.4s): car has been "launched" — cut to menu NOW
+    // Fast fade-out then call onComplete; no lingering scene.
+    const t3 = setTimeout(() => {
+      setPhase('done');
+      if (containerRef.current) {
+        createTimeline({ onComplete: handleFinish }).add(containerRef.current, {
+          opacity: [1, 0],
+          duration: 350,
+          ease: 'inQuad',
+        });
+      } else {
+        handleFinish();
+      }
+    }, 4400);
+
+    timersRef.current = [t1, t2, t3];
+    return () => timersRef.current.forEach(clearTimeout);
+  }, [modelReady, handleFinish]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="fixed inset-0 z-[9999] bg-[#07070b] flex flex-col justify-between p-6 md:p-10 overflow-hidden select-none"
+      style={{ opacity: 1 }}
+    >
+      {/* ── 3D Canvas ── */}
+      <div className="absolute inset-0 z-0">
+        <Canvas
+          camera={{ position: [-4.2, 2.2, -4.6], fov: 45 }}
+          gl={{
+            antialias: true,
+            toneMapping: 4, // ACESFilmicToneMapping
+            toneMappingExposure: 1.2,
+            physicallyCorrectLights: true,
+          }}
+          shadows={{ type: 'PCFShadowMap' }}
+          onCreated={({ gl }) => {
+            gl.outputColorSpace = THREE.SRGBColorSpace;
+          }}
+        >
+          <color attach="background" args={['#07070b']} />
+
+          <ambientLight intensity={1.2} color="#ffffff" />
+
+          <directionalLight
+            position={[-6, 10, -6]}
+            intensity={4.0}
+            color="#ffffff"
+            castShadow
+            shadow-mapSize={[1024, 1024]}
+          />
+          <directionalLight position={[6, 8, 6]} intensity={2.2} color="#ffffff" />
+          <directionalLight position={[0, 12, 0]} intensity={2.5} color="#ffffff" />
+
+          {/* Petronas turquoise rim light */}
+          <pointLight position={[-3, 1.5, -2]} intensity={2.5} color="#00e5c0" />
+          {/* F1 red accent */}
+          <pointLight position={[0, 0.8, 3]} intensity={3.0} color="#e10600" />
+
+          <IntroCamera phase={phase} />
+          <F1CarModel phase={phase} onReady={() => setModelReady(true)} />
+        </Canvas>
+      </div>
+
+      {/* Loading bar (shown while model is downloading; hidden once ready) */}
+      {!modelReady && <ProgressHUD />}
+
+      {/* Subtle grid overlay */}
+      <div
+        className="absolute inset-0 z-[1] pointer-events-none"
         style={{
           backgroundImage:
-            'linear-gradient(rgba(225,6,0,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(225,6,0,0.04) 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
+            'linear-gradient(rgba(225,6,0,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(225,6,0,0.03) 1px,transparent 1px)',
+          backgroundSize: '48px 48px',
         }}
       />
 
-      {/* ── Speed streaks ── */}
-      <div className="absolute inset-0 z-[1] pointer-events-none">
-        {streaks.map((s) => (
-          <motion.div
-            key={s.id}
-            className="absolute"
-            style={{
-              top: s.top,
-              width: s.width,
-              height: s.height,
-              backgroundColor: s.color,
-            }}
-            initial={{ x: -320, opacity: 1 }}
-            animate={{ x: '110vw', opacity: [1, 1, 0] }}
-            transition={{
-              duration: s.duration,
-              delay: s.delay,
-              ease: 'linear',
-              opacity: { delay: s.delay + s.duration * 0.75, duration: s.duration * 0.25 },
-            }}
-          />
-        ))}
-      </div>
-
-
-
-      {/* ── Red scan line sweeping down ── */}
-      <motion.div
-        className="absolute left-0 right-0 z-[2] pointer-events-none"
-        style={{ height: '2px', background: 'linear-gradient(90deg, transparent 0%, #e10600 40%, #ff4444 50%, #e10600 60%, transparent 100%)' }}
-        initial={{ top: '-4px', opacity: 0 }}
-        animate={{ top: '100vh', opacity: [0, 1, 1, 0] }}
-        transition={{ duration: 0.7, delay: 0.3, ease: 'easeIn', opacity: { times: [0, 0.05, 0.9, 1] } }}
-      />
-
-      {/* ── Main content ── */}
-      <div className="relative z-10 flex flex-col items-center gap-6">
-
-        {/* ═══ OFFICIAL F1 LOGO ═══ */}
-        <div className="relative flex items-center justify-center">
-          {/* Glow ring behind logo */}
-          <motion.div
-            className="absolute rounded-full"
-            style={{ width: isMobile ? 180 : 310, height: isMobile ? 80 : 130, background: 'radial-gradient(ellipse, rgba(225,6,0,0.35) 0%, transparent 70%)' }}
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: [0, 1.8, 1], opacity: [0, 1, 0.6] }}
-            transition={{ delay: 0.45, duration: 0.6, ease: 'easeOut' }}
-          />
-
-          {/* The F1 logo slamming in */}
-          <motion.img
+      {/* ── Top bar ── */}
+      <div className="relative z-10 w-full flex items-center justify-between pointer-events-none">
+        {/* Logo (fades in during revving phase) */}
+        <div id="intro-logo" className="flex items-center gap-3 opacity-0">
+          <img
             src={f1LogoSrc}
             alt="Formula 1"
-            style={{ height: f1LogoHeight, width: 'auto', position: 'relative', zIndex: 1, filter: 'drop-shadow(0 0 24px rgba(225,6,0,0.9)) drop-shadow(0 0 48px rgba(225,6,0,0.5))' }}
-            initial={{ x: -220, opacity: 0, scale: 1.3 }}
-            animate={{ x: 0, opacity: 1, scale: 1 }}
-            transition={{ delay: 0.45, duration: 0.38, ease: [0.2, 0, 0.1, 1] }}
+            style={{ height: '32px', width: 'auto', filter: 'drop-shadow(0 0 16px rgba(225,6,0,0.8))' }}
           />
-
-          {/* Impact particle burst */}
-          {[...Array(8)].map((_, i) => {
-            const angle = (i / 8) * 360;
-            const rad = (angle * Math.PI) / 180;
-            const dist = isMobile ? 55 : 90;
-            return (
-              <motion.div
-                key={i}
-                className="absolute rounded-full"
-                style={{
-                  width: i % 2 === 0 ? 3 : 2,
-                  height: i % 2 === 0 ? 3 : 2,
-                  backgroundColor: i % 3 === 0 ? '#e10600' : 'white',
-                }}
-                initial={{ x: 0, y: 0, opacity: 0, scale: 0 }}
-                animate={{
-                  x: Math.cos(rad) * dist,
-                  y: Math.sin(rad) * dist,
-                  opacity: [0, 1, 0],
-                  scale: [0, 1.5, 0],
-                }}
-                transition={{ delay: 0.55, duration: 0.55, ease: 'easeOut' }}
-              />
-            );
-          })}
-        </div>
-
-        {/* ═══ FORMULA DC-1 WORDMARK ═══ */}
-        <div>
-          <div className="flex items-center justify-center" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-            {/* FORMULA letter by letter */}
-            <div className="flex" style={{ fontWeight: 700, fontSize: logoFontSize, color: 'white', letterSpacing: '8px' }}>
-              {'FORMULA'.split('').map((letter, i) => (
-                <motion.span
-                  key={i}
-                  initial={{ y: -35, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 1.1 + i * 0.055, duration: 0.3, ease: 'easeOut' }}
-                  className="inline-block"
-                >
-                  {letter}
-                </motion.span>
-              ))}
-            </div>
-
-            {/* DC-1 sliding in */}
-            <motion.div
-              initial={{ x: 50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 1.55, duration: 0.4, ease: 'easeOut' }}
-              style={{ fontWeight: 700, fontSize: logoFontSize, color: '#e10600', letterSpacing: '8px', marginLeft: '16px', filter: 'drop-shadow(0 0 10px rgba(225,6,0,0.6))' }}
-            >
-              DC-1
-            </motion.div>
+          <div className="hidden sm:flex flex-col">
+            <span className="text-[10px] text-white/40 uppercase tracking-[3px] font-rajdhani">
+              Official 3D View
+            </span>
+            <span className="text-xs font-bold text-white tracking-widest font-rajdhani">
+              MERCEDES W13
+            </span>
           </div>
-
-          {/* Red underline sweep */}
-          <motion.div
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ delay: 1.75, duration: 0.5, ease: 'easeOut' }}
-            style={{ height: '2px', background: 'linear-gradient(90deg, #e10600, #ff6644)', width: '100%', transformOrigin: 'left', boxShadow: '0 0 8px #e10600' }}
-          />
-
-          {/* Tagline fading in */}
-          <motion.p
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 2.0, duration: 0.45 }}
-            style={{ textAlign: 'center', color: 'rgba(255,255,255,0.35)', fontSize: isMobile ? '10px' : '12px', letterSpacing: '3px', marginTop: '8px', fontFamily: 'Rajdhani, sans-serif', textTransform: 'uppercase' }}
-          >
-            The Fastest Sport on Earth
-          </motion.p>
         </div>
 
-        {/* ═══ START LIGHTS ═══ */}
-        <div className="flex justify-center" style={{ gap: '12px', marginTop: '8px' }}>
+        {/* Start lights */}
+        <div className="flex gap-2.5 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-2xl">
           {[0, 1, 2, 3, 4].map((i) => (
-            <motion.div
+            <div
               key={i}
-              style={{
-                width: lightSize,
-                height: lightSize,
-                borderRadius: '50%',
-                border: '1.5px solid #3a0000',
-              }}
-              initial={{ backgroundColor: '#1a0000', boxShadow: 'none' }}
-              animate={{
-                backgroundColor: ['#1a0000', '#e10600', '#e10600', '#000000'],
-                boxShadow: [
-                  'none',
-                  '0 0 12px #e10600, 0 0 28px #e10600',
-                  '0 0 12px #e10600, 0 0 28px #e10600',
-                  'none',
-                ],
-              }}
-              transition={{
-                delay: 2.4 + i * 0.28,
-                duration: 0.5,
-                backgroundColor: { times: [0, 0.1, 0.9, 1] },
-                boxShadow: { times: [0, 0.1, 0.9, 1] },
-              }}
+              className="start-light w-4 h-4 md:w-5 md:h-5 rounded-full border-[1.5px] border-[#3a0000] bg-[#150000]"
+              style={{ transition: 'background-color 0.1s, box-shadow 0.1s' }}
             />
           ))}
         </div>
+
+        {/* Skip */}
+        <button
+          onClick={handleSkip}
+          className="pointer-events-auto text-[11px] font-bold text-white/50 hover:text-white border border-white/15 hover:border-f1-red bg-black/50 hover:bg-f1-red/10 px-3 py-1.5 rounded uppercase tracking-wider transition-all cursor-pointer font-rajdhani"
+        >
+          Skip <span className="text-[9px] text-white/30 ml-1">[ESC]</span>
+        </button>
       </div>
 
+      {/* Middle spacer */}
+      <div className="relative z-10 pointer-events-none my-auto" />
 
-    </motion.div>
+      {/* ── Bottom bar ── */}
+      <div className="relative z-10 flex flex-col items-center gap-2 pointer-events-none pb-2">
+        <p
+          id="intro-tagline"
+          style={{
+            opacity: 0,
+            color: 'rgba(255,255,255,0.4)',
+            fontSize: '12px',
+            letterSpacing: '5px',
+            fontFamily: 'Rajdhani, sans-serif',
+            textTransform: 'uppercase',
+            fontWeight: 600,
+          }}
+        >
+          The Fastest Sport on Earth
+        </p>
+
+        <div
+          id="intro-wordmark"
+          style={{
+            opacity: 0,
+            fontFamily: 'Rajdhani, sans-serif',
+            fontWeight: 800,
+            fontSize: '44px',
+            letterSpacing: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+            lineHeight: 1,
+          }}
+        >
+          <span style={{ color: 'white', textShadow: '0 2px 20px rgba(0,0,0,0.8)' }}>
+            FORMULA
+          </span>
+          <span style={{ color: '#e10600', filter: 'drop-shadow(0 0 18px rgba(225,6,0,0.8))' }}>
+            DC-1
+          </span>
+        </div>
+      </div>
+    </div>
   );
 };
 
