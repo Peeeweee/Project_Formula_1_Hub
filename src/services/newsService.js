@@ -95,7 +95,15 @@ export async function fetchLiveF1News() {
             img = match ? match[1] : FALLBACK_NEWS[idx % FALLBACK_NEWS.length].imageUrl;
           }
 
-          const categories = ['BREAKING', 'PADDOCK', 'TECHNICAL', 'TELEMETRY', 'DEVELOPMENT', 'POWER UNIT'];
+          const text = `${item.title || ''} ${item.description || ''}`.toLowerCase();
+          const classifyCategory = (t) => {
+            if (/crash|penalty|disqualif|protest|breach|investigation|incident|steward|dsq|dnf|retire|accident/.test(t)) return 'BREAKING';
+            if (/aero|floor|diffuser|wing|tunnel|downforce|update|upgrade|spec|package|sidepod|drag|cfm|cfd/.test(t)) return 'TECHNICAL';
+            if (/power unit|engine|mgu|hybrid|turbo|combustion|fuel|ers|battery|deploy|kers/.test(t)) return 'POWER UNIT';
+            if (/telemetry|sector|lap time|fastest lap|onboard|timing|data|delta|gap|split/.test(t)) return 'TELEMETRY';
+            if (/contract|sign|transfer|salary|paddock|boss|principal|toto|horner|vasseur|wolff|deal|leave|join|hire|fire|sack/.test(t)) return 'PADDOCK';
+            return 'DEVELOPMENT';
+          };
 
           combinedItems.push({
             id: item.guid || item.link || `rss-${idx}-${Date.now()}`,
@@ -104,7 +112,7 @@ export async function fetchLiveF1News() {
             content: item.content?.replace(/<[^>]*>?/gm, '') || item.description?.replace(/<[^>]*>?/gm, ''),
             source: res.feedName || res.data.feed?.title || 'F1 Paddock Wire',
             date: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
-            category: categories[idx % categories.length],
+            category: classifyCategory(text),
             author: item.author || 'Paddock Wire',
             imageUrl: img,
             readTime: `${Math.floor(Math.random() * 4) + 3} min read`,
