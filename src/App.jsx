@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { HashRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import StartHere from './pages/StartHere';
@@ -12,6 +12,7 @@ import Strategy from './pages/Strategy';
 import News from './pages/News';
 import Garage3D from './pages/Garage3D';
 import { ErrorBoundary, IntroScreen, AnimatedBackground } from './components';
+import GlobalSearch from './components/GlobalSearch';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import f1LogoSrc from './assets/f1_logo.svg';
 
@@ -47,16 +48,31 @@ const PageWrapper = ({ children }) => {
 function MainApp({ onResetIntro }) {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const isOnline = useOnlineStatus();
 
   // Close menu and scroll to top when route changes
-  React.useEffect(() => {
+  useEffect(() => {
     setIsMobileMenuOpen(false);
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
+  // Ctrl+K / Cmd+K global shortcut for search
+  const handleGlobalKey = useCallback((e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      setIsSearchOpen(prev => !prev);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleGlobalKey);
+    return () => document.removeEventListener('keydown', handleGlobalKey);
+  }, [handleGlobalKey]);
+
   return (
     <div className="min-h-screen bg-f1-dark text-f1-light overflow-x-hidden flex flex-col">
+      <GlobalSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       <AnimatedBackground isStartHere={location.pathname === '/'} />
       <div className="relative z-10 flex-1 flex flex-col w-full">
       {/* Fixed Navigation Bar */}
@@ -124,11 +140,33 @@ function MainApp({ onResetIntro }) {
               </NavLink>
             );
           })}
+
+          {/* Search Button */}
+          <button
+            onClick={() => setIsSearchOpen(true)}
+            className="ml-2 h-8 flex items-center gap-2 px-3 rounded bg-[#0e0e15] border border-f1-red/30 text-f1-red hover:bg-f1-red hover:text-white hover:border-f1-red transition-all text-xs font-bold font-mono uppercase tracking-widest shadow-[0_0_15px_rgba(225,6,0,0.15)] hover:shadow-[0_0_20px_rgba(225,6,0,0.4)]"
+            title="Search (Ctrl+K)"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+            </svg>
+            <span className="hidden lg:inline">CTRL+K</span>
+          </button>
         </div>
 
-        {/* Mobile Hamburger Icon */}
+        {/* Mobile: Search + Hamburger */}
+        <div className="md:hidden flex items-center gap-2">
+          <button
+            onClick={() => setIsSearchOpen(true)}
+            className="text-f1-light relative z-50 p-2 focus:outline-none"
+            aria-label="Search"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+            </svg>
+          </button>
         <button 
-          className="md:hidden text-f1-light relative z-50 p-2 focus:outline-none"
+          className="text-f1-light relative z-50 p-2 focus:outline-none"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           aria-label="Toggle Menu"
         >
@@ -147,6 +185,7 @@ function MainApp({ onResetIntro }) {
             />
           </div>
         </button>
+        </div>
       </nav>
 
       {/* Mobile Menu Drawer Overlay */}
