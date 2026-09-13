@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchLiveF1News } from '../services/newsService';
-import NewsTicker from '../components/NewsTicker';
+import { NewsTicker } from '../components';
 import FadeInSection from '../components/FadeInSection';
+import { useFavorites } from '../hooks/useFavorites';
 
-const CATEGORIES = ['ALL', 'BREAKING', 'TECHNICAL', 'DEVELOPMENT', 'TELEMETRY', 'POWER UNIT', 'PADDOCK'];
+const CATEGORIES = ['ALL', 'BREAKING', 'TECHNICAL', 'DEVELOPMENT', 'TELEMETRY', 'POWER UNIT', 'PADDOCK', 'BOOKMARKED'];
 
 const QUICK_TAGS = [
   { 
@@ -82,6 +83,7 @@ export default function News() {
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedArticle, setSelectedArticle] = useState(null);
+  const { toggleFavorite, isFavorite, getFavoritesByType } = useFavorites();
 
   // Live Auto-Update State
   const [autoUpdate, setAutoUpdate] = useState(true);
@@ -133,7 +135,8 @@ export default function News() {
   }, [autoUpdate]);
 
   const filteredArticles = articles.filter(item => {
-    const matchesCategory = selectedCategory === 'ALL' || item.category === selectedCategory;
+    const matchesCategory = selectedCategory === 'ALL'
+      || (selectedCategory === 'BOOKMARKED' ? isFavorite(item.id) : item.category === selectedCategory);
     const queryLower = searchQuery.toLowerCase();
     const matchesSearch = !searchQuery || 
                           item.title.toLowerCase().includes(queryLower) || 
@@ -298,7 +301,7 @@ export default function News() {
 
         {/* Category Pill Filters */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-f1-border/40">
-          {CATEGORIES.map(cat => (
+          {['ALL', ...CATEGORIES.filter(c => c !== 'ALL'), 'BOOKMARKED'].map(cat => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
@@ -308,7 +311,7 @@ export default function News() {
                   : 'bg-[#12121a] text-f1-muted hover:text-white hover:bg-[#1c1c28]'
               }`}
             >
-              {cat}
+              {cat === 'BOOKMARKED' ? '★ Bookmarked' : cat}
             </button>
           ))}
         </div>
@@ -429,7 +432,20 @@ export default function News() {
 
                         <div className="p-5 pt-0 text-[11px] font-mono text-f1-muted flex justify-between items-center border-t border-f1-border/30 mt-4">
                           <span>{article.source}</span>
-                          <span className="text-f1-red font-bold">Read →</span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={e => { e.stopPropagation(); toggleFavorite('article', article.id, article.title); }}
+                              className={`transition-all ${
+                                isFavorite(article.id)
+                                  ? 'text-f1-red'
+                                  : 'text-white/20 hover:text-white/60'
+                              }`}
+                              title={isFavorite(article.id) ? 'Remove bookmark' : 'Bookmark article'}
+                            >
+                              {isFavorite(article.id) ? '★' : '☆'}
+                            </button>
+                            <span className="text-f1-red font-bold">Read →</span>
+                          </div>
                         </div>
                       </motion.div>
                     ))}
