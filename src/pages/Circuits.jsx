@@ -1,23 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getSeasonRaces } from '../services/jolpicaApi';
+import { getSeasonRaces, getRaceResults } from '../services/jolpicaApi';
 import { TRACK_SPECS, getTrackSpecs } from '../data/trackSVGs';
+import { COUNTRY_FLAGS } from '../utils/countryFlags';
+import { useFavorites } from '../hooks/useFavorites';
 import FadeInSection from '../components/FadeInSection';
 
-const COUNTRY_FLAGS = {
-  'Australia': '🇦🇺', 'Bahrain': '🇧🇭', 'Saudi Arabia': '🇸🇦', 'Japan': '🇯🇵',
-  'China': '🇨🇳', 'Monaco': '🇲🇨', 'Canada': '🇨🇦', 'Spain': '🇪🇸',
-  'Austria': '🇦🇹', 'UK': '🇬🇧', 'Great Britain': '🇬🇧', 'Hungary': '🇭🇺',
-  'Belgium': '🇧🇪', 'Netherlands': '🇳🇱', 'Italy': '🇮🇹', 'Azerbaijan': '🇦🇿',
-  'Singapore': '🇸🇬', 'USA': '🇺🇸', 'United States': '🇺🇸', 'Mexico': '🇲🇽',
-  'Brazil': '🇧🇷', 'Qatar': '🇶🇦', 'Abu Dhabi': '🇦🇪', 'UAE': '🇦🇪'
-};
 
 export default function Circuits() {
   const [races, setRaces] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCircuit, setSelectedCircuit] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [circuitHistory, setCircuitHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const { toggleFavorite, isFavorite } = useFavorites();
 
   useEffect(() => {
     async function loadCircuits() {
@@ -33,6 +30,27 @@ export default function Circuits() {
     }
     loadCircuits();
   }, []);
+
+  // Fetch last 5 race results for selected circuit when modal opens
+  useEffect(() => {
+    if (!selectedCircuit) return;
+    setCircuitHistory([]);
+    setHistoryLoading(true);
+    const circuitRound = selectedCircuit.race.round;
+    const currentYear = new Date().getFullYear();
+    const yearsToFetch = [currentYear - 1, currentYear - 2, currentYear - 3, currentYear - 4, currentYear - 5];
+
+    Promise.all(
+      yearsToFetch.map(yr =>
+        getRaceResults(yr, circuitRound)
+          .then(results => (results && results.length > 0 ? { year: yr, winner: results[0] } : null))
+          .catch(() => null)
+      )
+    ).then(results => {
+      setCircuitHistory(results.filter(Boolean));
+      setHistoryLoading(false);
+    });
+  }, [selectedCircuit]);
 
   const filteredRaces = races.filter(r => 
     r.raceName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -96,8 +114,20 @@ export default function Circuits() {
                 <motion.div
                   whileHover={{ y: -4 }}
                   onClick={() => setSelectedCircuit({ race, spec, flag })}
-                  className="bg-[#0e0e15] border border-f1-border hover:border-f1-red/60 rounded-xl overflow-hidden shadow-xl cursor-pointer transition duration-300 flex flex-col justify-between group"
+                  className="bg-[#0e0e15] border border-f1-border hover:border-f1-red/60 rounded-xl overflow-hidden shadow-xl cursor-pointer transition duration-300 flex flex-col justify-between group relative"
                 >
+                  {/* Bookmark button */}
+                  <button
+                    onClick={e => { e.stopPropagation(); toggleFavorite('circuit', race.Circuit?.circuitId, race.Circuit?.circuitName); }}
+                    className={`absolute top-3 right-3 z-10 w-7 h-7 flex items-center justify-center rounded-full transition-all ${
+                      isFavorite(race.Circuit?.circuitId)
+                        ? 'bg-f1-red text-white shadow-[0_0_8px_rgba(225,6,0,0.5)]'
+                        : 'bg-black/60 text-white/30 hover:text-white hover:bg-white/10 border border-white/10'
+                    }`}
+                    title={isFavorite(race.Circuit?.circuitId) ? 'Remove bookmark' : 'Bookmark circuit'}
+                  >
+                    {isFavorite(race.Circuit?.circuitId) ? '★' : '☆'}
+                  </button>
                   {/* Official Dark F1 Telemetry Card Header (NO random road car photos!) */}
                   <div className="bg-gradient-to-r from-[#180a0a] via-[#12121c] to-[#0e0e15] border-b border-f1-border/60 p-5 relative overflow-hidden">
                     <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-f1-red/10 to-transparent pointer-events-none" />
@@ -227,6 +257,33 @@ export default function Circuits() {
                   <span>Location: {selectedCircuit.race.Circuit?.Location?.locality}, {selectedCircuit.race.Circuit?.Location?.country}</span>
                   <span>Scheduled Date: {selectedCircuit.race.date}</span>
                 </div>
+              </div>
+
+              {/* Historical Winners */}
+              <div>
+                <div className="text-[11px] font-black uppercase tracking-widest text-f1-muted mb-3 flex items-center gap-2">
+                  <span className="text-f1-red">🏆</span> Recent Winners at This Circuit
+                </div>
+                {historyLoading ? (
+                  <div className="flex gap-2">
+                    {[1,2,3,4,5].map(i => <div key={i} className="flex-1 h-14 bg-white/5 rounded-lg animate-pulse" />)}
+                  </div>
+                ) : circuitHistory.length > 0 ? (
+                  <div className="flex flex-col gap-2">
+                    {circuitHistory.map(({ year, winner }) => (
+                      <div key={year} className="flex items-center justify-between bg-[#12121c] border border-f1-border/50 rounded-lg px-4 py-2.5 font-mono text-xs">
+                        <span className="text-f1-red font-bold w-12">{year}</span>
+                        <span className="text-white font-semibold flex-1">
+                          {winner.Driver?.givenName} {winner.Driver?.familyName}
+                        </span>
+                        <span className="text-f1-muted text-[10px]">{winner.Constructor?.name}</span>
+                        <span className="ml-3 text-f1-muted text-[10px]">{winner.Time?.time || winner.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-f1-muted text-xs font-mono text-center py-4">No historical data available</div>
+                )}
               </div>
             </motion.div>
           </motion.div>
