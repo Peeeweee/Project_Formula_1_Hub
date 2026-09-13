@@ -7,9 +7,10 @@ import {
   getRaceResults,
   getLastRaceResults 
 } from '../services/jolpicaApi';
-import { getLatestSession, getRaceWeather, getDriverPositions } from '../services/openf1Api';
+import { getLatestSession, getRaceWeather, getDriverPositions, getLapTimes } from '../services/openf1Api';
 import { StatCard, SkeletonTable, PlotlyTooltip, PodiumPredictor } from '../components';
 import FadeInSection from '../components/FadeInSection';
+import { COUNTRY_FLAGS, getFlagEmoji } from '../utils/countryFlags';
 import { 
   ResponsiveContainer, 
   BarChart, 
@@ -24,38 +25,7 @@ import {
   ReferenceLine
 } from 'recharts';
 
-const COUNTRY_FLAGS = {
-  'Australia': '🇦🇺',
-  'Bahrain': '🇧🇭',
-  'Saudi Arabia': '🇸🇦',
-  'Japan': '🇯🇵',
-  'China': '🇨🇳',
-  'Monaco': '🇲🇨',
-  'Canada': '🇨🇦',
-  'Spain': '🇪🇸',
-  'Austria': '🇦🇹',
-  'UK': '🇬🇧',
-  'Great Britain': '🇬🇧',
-  'Hungary': '🇭🇺',
-  'Belgium': '🇧🇪',
-  'Netherlands': '🇳🇱',
-  'Italy': '🇮🇹',
-  'Azerbaijan': '🇦🇿',
-  'Singapore': '🇸🇬',
-  'USA': '🇺🇸',
-  'United States': '🇺🇸',
-  'Mexico': '🇲🇽',
-  'Brazil': '🇧🇷',
-  'Qatar': '🇶🇦',
-  'Abu Dhabi': '🇦🇪',
-  'UAE': '🇦🇪'
-};
 
-const getFlagEmoji = (countryName) => {
-  if (!countryName) return '🏁';
-  const c = countryName.trim();
-  return COUNTRY_FLAGS[c] || '🏁';
-};
 
 const TEAM_COLORS = {
   'Red Bull Racing': '#3b82f6',
@@ -387,7 +357,186 @@ const DriverSpotlightModal = ({ spotlightDriver, onClose }) => {
   );
 };
 
+// ── Live Telemetry Tab ──────────────────────────────────────────────────────
+function LiveTelemetryTab() {
+  const [session, setSession] = useState(null);
+  const [weather, setWeather] = useState(null);
+  const [positions, setPositions] = useState([]);
+  const [lapData, setLapData] = useState([]);
+  const [selectedDriver, setSelectedDriver] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  const fetchTelemetry = async () => {
+    try {
+      const sessions = await getLatestSession();
+      if (!sessions || sessions.length === 0) { setLoading(false); return; }
+      const s = sessions[0];
+      setSession(s);
+      const sk = s.session_key;
+
+      const [weatherData, posData] = await Promise.all([
+        getRaceWeather(sk),
+        getDriverPositions(sk),
+      ]);
+
+      if (weatherData.length > 0) setWeather(weatherData[weatherData.length - 1]);
+
+      const latestPosMap = {};
+      posData.forEach(p => {
+        if (!latestPosMap[p.driver_number] || new Date(p.date) > new Date(latestPosMap[p.driver_number].date)) {
+          latestPosMap[p.driver_number] = p;
+        }
+      });
+      const ranked = Object.values(latestPosMap).sort((a, b) => a.position - b.position);
+      setPositions(ranked);
+      if (ranked.length > 0 && !selectedDriver) setSelectedDriver(ranked[0].driver_number);
+
+      setLastUpdated(new Date());
+    } catch (err) {
+      console.error('Telemetry fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch lap times for selected driver
+  useEffect(() => {
+    if (!session || !selectedDriver) return;
+    getLapTimes(session.session_key, selectedDriver)
+      .then(laps => {
+        const chartData = laps.slice(-30).map(l => ({
+          lap: l.lap_number,
+          duration: l.lap_duration ? parseFloat(l.lap_duration.toFixed(3)) : null,
+        })).filter(l => l.duration && l.duration < 300);
+        setLapData(chartData);
+      })
+      .catch(() => {});
+  }, [session, selectedDriver]);
+
+  // Initial + poll every 15s
+  useEffect(() => {
+    fetchTelemetry();
+    const iv = setInterval(fetchTelemetry, 15000);
+    return () => clearInterval(iv);
+  }, []);
+
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center py-24 text-f1-muted">
+      <div className="w-8 h-8 border-2 border-f1-red border-t-transparent rounded-full animate-spin mb-4" />
+      <p className="text-xs font-mono uppercase tracking-widest">Connecting to OpenF1 telemetry...</p>
+    </div>
+  );
+
+  if (!session) return (
+    <div className="text-center py-20 text-f1-muted">
+      <div className="text-5xl mb-4">📡</div>
+      <p className="font-mono text-sm">No active session found.</p>
+      <p className="text-xs mt-2 opacity-60">OpenF1 only provides data during live or recent sessions.</p>
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Session Banner */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0e0e16] border border-f1-red/30 rounded-xl px-5 py-3">
+        <div className="flex items-center gap-3">
+          <span className="w-2 h-2 rounded-full bg-f1-red animate-pulse" />
+          <div>
+            <div className="text-[10px] text-f1-muted uppercase tracking-widest font-mono">Live Session</div>
+            <div className="text-white font-black text-sm">{session.session_name} — {session.location}, {session.country_name}</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-[10px] text-f1-muted font-mono">
+          {lastUpdated && <span>Updated {lastUpdated.toLocaleTimeString()}</span>}
+          <span className="px-2 py-0.5 rounded bg-f1-red/20 text-f1-red border border-f1-red/30 uppercase">{session.session_type}</span>
+        </div>
+      </div>
+
+      {/* Weather Cards */}
+      {weather && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { label: 'Air Temp', value: `${weather.air_temperature?.toFixed(1)}°C`, icon: '🌡' },
+            { label: 'Track Temp', value: `${weather.track_temperature?.toFixed(1)}°C`, icon: '🏎' },
+            { label: 'Humidity', value: `${weather.humidity?.toFixed(0)}%`, icon: '💧' },
+            { label: 'Wind Speed', value: `${weather.wind_speed?.toFixed(1)} m/s`, icon: '💨' },
+          ].map(({ label, value, icon }) => (
+            <div key={label} className="bg-[#0e0e16] border border-f1-border rounded-xl px-4 py-3 text-center">
+              <div className="text-2xl mb-1">{icon}</div>
+              <div className="text-[9px] text-f1-muted uppercase tracking-widest">{label}</div>
+              <div className="text-white font-black text-base">{value || '—'}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Live Position Board */}
+        <div className="bg-[#0e0e16] border border-f1-border rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-f1-border flex items-center justify-between">
+            <span className="text-[11px] font-black uppercase tracking-widest text-f1-light">Live Positions</span>
+            <span className="text-[10px] text-f1-muted font-mono">{positions.length} drivers</span>
+          </div>
+          <div className="max-h-80 overflow-y-auto">
+            {positions.length === 0 ? (
+              <div className="text-f1-muted text-xs font-mono text-center py-8">No position data available</div>
+            ) : positions.map(p => (
+              <button
+                key={p.driver_number}
+                onClick={() => setSelectedDriver(p.driver_number)}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 border-b border-f1-border/40 transition text-left ${
+                  selectedDriver === p.driver_number ? 'bg-f1-red/10' : 'hover:bg-white/5'
+                }`}
+              >
+                <span className="w-6 h-6 rounded bg-f1-red/20 text-f1-red text-[10px] font-black flex items-center justify-center">
+                  {p.position}
+                </span>
+                <span className="text-[11px] font-mono font-bold text-white flex-1">#{p.driver_number}</span>
+                {selectedDriver === p.driver_number && (
+                  <span className="text-[9px] text-f1-red font-mono">SELECTED ▶</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Lap Time Chart */}
+        <div className="bg-[#0e0e16] border border-f1-border rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-f1-border">
+            <span className="text-[11px] font-black uppercase tracking-widest text-f1-light">
+              Lap Times — Driver #{selectedDriver}
+            </span>
+          </div>
+          <div className="p-4 h-72">
+            {lapData.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-f1-muted text-xs font-mono">
+                No lap data available for this driver
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={lapData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1a1d2e" />
+                  <XAxis dataKey="lap" tick={{ fill: '#888', fontSize: 10 }} label={{ value: 'Lap', position: 'insideBottom', fill: '#888', fontSize: 10 }} />
+                  <YAxis tick={{ fill: '#888', fontSize: 10 }} domain={['auto', 'auto']} tickFormatter={v => `${v}s`} />
+                  <Tooltip
+                    contentStyle={{ background: '#0e0e16', border: '1px solid #e1060044', borderRadius: 8 }}
+                    labelStyle={{ color: '#fff', fontWeight: 'bold', fontSize: 11 }}
+                    formatter={v => [`${v}s`, 'Lap Time']}
+                  />
+                  <Line type="monotone" dataKey="duration" stroke="#e10600" strokeWidth={2} dot={{ fill: '#e10600', r: 3 }} activeDot={{ r: 5 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function LiveSeason() {
+
   const [driversData, setDriversData] = useState(null);
   const [constructorsData, setConstructorsData] = useState(null);
   const [calendarRaces, setCalendarRaces] = useState([]);
@@ -410,6 +559,7 @@ function LiveSeason() {
   const [constructorPage, setConstructorPage] = useState(1);
   const [raceResultPage, setRaceResultPage] = useState(1);
   const [openF1Page, setOpenF1Page] = useState(1);
+  const [liveTab, setLiveTab] = useState('season');
   const ITEMS_PER_PAGE = 10;
 
   const fetchOpenF1Data = async (isRefresh = false) => {
@@ -711,6 +861,30 @@ function LiveSeason() {
         </h1>
         <p className="text-f1-muted text-xs mt-1">Real-time driver and constructor points standings queried directly from timing database.</p>
       </div>
+
+      {/* Tab Switcher */}
+      <div className="flex gap-2 border-b border-f1-border/40 pb-0 mb-4">
+        {[
+          { id: 'season', label: '📊 Season Overview' },
+          { id: 'telemetry', label: '🔴 Live Telemetry' },
+        ].map(t => (
+          <button
+            key={t.id}
+            onClick={() => setLiveTab(t.id)}
+            className={`px-5 py-2.5 text-xs font-black uppercase tracking-widest border-b-2 transition-all ${
+              liveTab === t.id
+                ? 'border-f1-red text-white'
+                : 'border-transparent text-f1-muted hover:text-f1-light'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {liveTab === 'telemetry' && <LiveTelemetryTab />}
+
+      {liveTab === 'season' && <>
 
       {error && (
         <div className="bg-f1-red/10 border border-f1-red text-f1-light text-xs px-4 py-3 rounded">
@@ -1336,6 +1510,7 @@ function LiveSeason() {
           />
         )}
       </AnimatePresence>
+      </>}
     </div>
   );
 }
