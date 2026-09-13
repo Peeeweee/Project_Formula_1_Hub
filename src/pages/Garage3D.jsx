@@ -1,7 +1,47 @@
 import React, { Suspense, useRef, useState, useCallback, useMemo, useEffect } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
-import { OrbitControls, useGLTF, useProgress, Html } from '@react-three/drei';
+import { OrbitControls, useGLTF, useProgress } from '@react-three/drei';
 import * as THREE from 'three';
+
+// ── Livery presets ─────────────────────────────────────────────────────────
+const LIVERY_PRESETS = [
+  { id: 'mercedes', label: 'Mercedes', color: '#00d2be', accent: '#00a19c' },
+  { id: 'ferrari',  label: 'Ferrari',  color: '#e10600', accent: '#9b0000' },
+  { id: 'redbull',  label: 'Red Bull', color: '#1e3a8a', accent: '#3b82f6' },
+  { id: 'mclaren',  label: 'McLaren',  color: '#ff8700', accent: '#cc6b00' },
+  { id: 'alpine',   label: 'Alpine',   color: '#ff87bc', accent: '#e05ca0' },
+];
+
+// ── Environment lighting presets ──────────────────────────────────────────
+const ENV_PRESETS = {
+  garage: {
+    label: 'Garage',
+    icon: '🔧',
+    ambient: { color: '#ffffff', intensity: 0.9 },
+    key:    { color: '#ffffff', intensity: 4.5 },
+    fill:   { color: '#ffffff', intensity: 2.8 },
+    rim:    { color: '#00e5c0', intensity: 3.0 },
+    bounce: { color: '#e10600', intensity: 2.0 },
+  },
+  pitlane: {
+    label: 'Pit Lane',
+    icon: '🏎',
+    ambient: { color: '#fffef5', intensity: 1.4 },
+    key:    { color: '#fff8e8', intensity: 6.0 },
+    fill:   { color: '#fffef5', intensity: 4.0 },
+    rim:    { color: '#ffffff',  intensity: 1.5 },
+    bounce: { color: '#ffd080', intensity: 1.0 },
+  },
+  night: {
+    label: 'Night Race',
+    icon: '🌙',
+    ambient: { color: '#0a1a40', intensity: 0.4 },
+    key:    { color: '#7090ff', intensity: 3.5 },
+    fill:   { color: '#2040a0', intensity: 1.5 },
+    rim:    { color: '#ff4400', intensity: 4.0 },
+    bounce: { color: '#e10600', intensity: 3.5 },
+  },
+};
 
 const MODEL_URL = `${import.meta.env.BASE_URL}f1_mercedes_w13_concept.glb`;
 
@@ -16,7 +56,7 @@ const PRESETS = [
 ];
 
 // ── Scene setup inside Canvas ──────────────────────────────────────────────
-function GarageScene({ autoRotate, targetPreset, onPresetDone }) {
+function GarageScene({ autoRotate, targetPreset, onPresetDone, env, brightness }) {
   const { gl } = useThree();
   const orbitRef = useRef();
   const transitioning = useRef(false);
@@ -58,6 +98,8 @@ function GarageScene({ autoRotate, targetPreset, onPresetDone }) {
     }
   });
 
+  const b = brightness ?? 1;
+
   return (
     <>
       {/* Studio floor */}
@@ -69,24 +111,24 @@ function GarageScene({ autoRotate, targetPreset, onPresetDone }) {
       {/* Red F1 grid */}
       <gridHelper args={[40, 40, '#e10600', '#1a1d2e']} position={[0, 0.003, 0]} />
 
-      {/* ── Studio Lighting ── */}
-      <ambientLight intensity={0.9} color="#ffffff" />
+      {/* ── Dynamic Lighting ── */}
+      <ambientLight intensity={env.ambient.intensity * b} color={env.ambient.color} />
       {/* Key light */}
-      <directionalLight position={[-7, 12, -7]} intensity={4.5} color="#ffffff" castShadow shadow-mapSize={[2048, 2048]} />
+      <directionalLight position={[-7, 12, -7]} intensity={env.key.intensity * b} color={env.key.color} castShadow shadow-mapSize={[2048, 2048]} />
       {/* Fill */}
-      <directionalLight position={[7, 9, 7]} intensity={2.8} color="#ffffff" />
+      <directionalLight position={[7, 9, 7]} intensity={env.fill.intensity * b} color={env.fill.color} />
       {/* Overhead */}
-      <directionalLight position={[0, 15, 0]} intensity={3.0} color="#f0f4ff" />
-      {/* Petronas turquoise rim */}
-      <pointLight position={[-4, 2, -3]} intensity={3.0} color="#00e5c0" distance={12} />
-      {/* F1 red bounce */}
-      <pointLight position={[4, 0.5, 3]} intensity={2.0} color="#e10600" distance={10} />
+      <directionalLight position={[0, 15, 0]} intensity={3.0 * b} color="#f0f4ff" />
+      {/* Rim */}
+      <pointLight position={[-4, 2, -3]} intensity={env.rim.intensity * b} color={env.rim.color} distance={12} />
+      {/* Bounce */}
+      <pointLight position={[4, 0.5, 3]} intensity={env.bounce.intensity * b} color={env.bounce.color} distance={10} />
       {/* Under-car glow */}
-      <pointLight position={[0, -0.1, 0]} intensity={1.0} color="#00c8aa" distance={5} />
+      <pointLight position={[0, -0.1, 0]} intensity={1.0 * b} color={env.rim.color} distance={5} />
 
       {/* The car */}
       <Suspense fallback={null}>
-        <GarageCarModel />
+        <GarageCarModel liveryColor={env._liveryColor} />
       </Suspense>
 
       <OrbitControls
@@ -105,8 +147,9 @@ function GarageScene({ autoRotate, targetPreset, onPresetDone }) {
 }
 
 // ── The car mesh ──────────────────────────────────────────────────────────
-function GarageCarModel() {
+function GarageCarModel({ liveryColor }) {
   const { scene } = useGLTF(MODEL_URL);
+  const clonedRef = useRef(null);
 
   const cloned = useMemo(() => {
     const clone = scene.clone(true);
@@ -123,8 +166,27 @@ function GarageCarModel() {
         mat.needsUpdate = true;
       });
     });
+    clonedRef.current = clone;
     return clone;
   }, [scene]);
+
+  // Apply livery color tint to opaque body panels
+  useEffect(() => {
+    if (!clonedRef.current || !liveryColor) return;
+    const tint = new THREE.Color(liveryColor);
+    clonedRef.current.traverse((child) => {
+      if (!child.isMesh) return;
+      const mats = Array.isArray(child.material) ? child.material : [child.material];
+      mats.forEach((mat) => {
+        if (!mat || mat.transparent || mat.transmission > 0) return;
+        // Only tint large body panels (skip tiny mechanical parts)
+        if (mat.roughness <= 0.45 && mat.metalness <= 0.5) {
+          mat.color.lerp(tint, 0.55);
+          mat.needsUpdate = true;
+        }
+      });
+    });
+  }, [liveryColor, cloned]);
 
   return <primitive object={cloned} scale={0.0085} position={[0, 0, 0]} />;
 }
@@ -164,12 +226,21 @@ const CAR_SPECS = [
   { label: 'Team',       value: 'Mercedes-AMG Petronas F1' },
 ];
 
-// ── Main Page ─────────────────────────────────────────────────────────────
+// ── Main Page ─────────────────────────────────────────────────────
 const Garage3D = () => {
   const [autoRotate, setAutoRotate] = useState(false);
   const [activePreset, setActivePreset] = useState(null);
   const [showSpecs, setShowSpecs] = useState(true);
   const [modelLoaded, setModelLoaded] = useState(false);
+  const [liveryIdx, setLiveryIdx] = useState(0);
+  const [brightness, setBrightness] = useState(1);
+  const [envKey, setEnvKey] = useState('garage');
+
+  // Build the active environment config (inject livery color for car tinting)
+  const activeEnv = useMemo(() => ({
+    ...ENV_PRESETS[envKey],
+    _liveryColor: LIVERY_PRESETS[liveryIdx].color,
+  }), [envKey, liveryIdx]);
 
   const handlePreset = useCallback((preset) => {
     setAutoRotate(false);
@@ -185,7 +256,7 @@ const Garage3D = () => {
   }, [active, progress]);
 
   return (
-    <div className="relative w-full flex flex-col" style={{ height: 'calc(100vh - 64px)', background: '#07070b' }}>
+    <div className="absolute inset-0 w-full flex flex-col overflow-hidden" style={{ background: '#07070b' }}>
 
       {/* ── Header strip ── */}
       <div className="relative z-10 flex items-center justify-between px-6 py-3 border-b border-white/5 bg-black/40 backdrop-blur-sm flex-shrink-0">
@@ -251,6 +322,8 @@ const Garage3D = () => {
               autoRotate={autoRotate}
               targetPreset={activePreset}
               onPresetDone={() => setActivePreset(null)}
+              env={activeEnv}
+              brightness={brightness}
             />
           </Canvas>
         </div>
@@ -275,6 +348,71 @@ const Garage3D = () => {
             </button>
           ))}
           <div className="mt-1 text-[9px] text-white/20 text-center tracking-widest font-rajdhani uppercase">View</div>
+        </div>
+
+        {/* ── Livery + Lighting Controls panel ── */}
+        <div
+          className="absolute bottom-16 left-4 z-10 w-56 rounded-xl border border-white/8 overflow-hidden"
+          style={{ background: 'rgba(7,7,11,0.88)', backdropFilter: 'blur(16px)' }}
+        >
+          {/* Livery */}
+          <div className="px-3 pt-3 pb-2">
+            <div className="text-[9px] text-white/30 uppercase tracking-[2px] font-rajdhani mb-2">Livery Color</div>
+            <div className="flex gap-1.5 flex-wrap">
+              {LIVERY_PRESETS.map((lp, i) => (
+                <button
+                  key={lp.id}
+                  title={lp.label}
+                  onClick={() => setLiveryIdx(i)}
+                  className={`w-7 h-7 rounded-full border-2 transition-all ${
+                    liveryIdx === i ? 'border-white scale-110 shadow-lg' : 'border-transparent hover:border-white/40'
+                  }`}
+                  style={{ background: lp.color, boxShadow: liveryIdx === i ? `0 0 10px ${lp.color}88` : undefined }}
+                />
+              ))}
+            </div>
+            <div className="text-[9px] text-white/40 font-rajdhani mt-1">{LIVERY_PRESETS[liveryIdx].label}</div>
+          </div>
+
+          <div className="border-t border-white/6" />
+
+          {/* Brightness */}
+          <div className="px-3 py-2">
+            <div className="text-[9px] text-white/30 uppercase tracking-[2px] font-rajdhani mb-2">Brightness</div>
+            <input
+              type="range"
+              min="0.3"
+              max="2"
+              step="0.05"
+              value={brightness}
+              onChange={e => setBrightness(parseFloat(e.target.value))}
+              className="w-full h-1 accent-[#e10600] cursor-pointer"
+            />
+            <div className="text-[9px] text-white/30 font-rajdhani mt-1">{Math.round(brightness * 100)}%</div>
+          </div>
+
+          <div className="border-t border-white/6" />
+
+          {/* Environment */}
+          <div className="px-3 py-2">
+            <div className="text-[9px] text-white/30 uppercase tracking-[2px] font-rajdhani mb-2">Environment</div>
+            <div className="flex flex-col gap-1">
+              {Object.entries(ENV_PRESETS).map(([key, ep]) => (
+                <button
+                  key={key}
+                  onClick={() => setEnvKey(key)}
+                  className={`flex items-center gap-2 px-2 py-1.5 rounded text-left transition-all text-[11px] font-rajdhani ${
+                    envKey === key
+                      ? 'bg-f1-red/20 text-white border border-f1-red/40'
+                      : 'text-white/40 hover:text-white/70 border border-transparent hover:bg-white/5'
+                  }`}
+                >
+                  <span>{ep.icon}</span>
+                  <span>{ep.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* ── Controls hint ── */}
