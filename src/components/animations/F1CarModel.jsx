@@ -1,6 +1,6 @@
 import React, { useRef, Suspense, useMemo, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 // ── Model path ───────────────────────────────────────────────────────────────
@@ -12,19 +12,13 @@ function EmptyFallback() { return null; }
 // ── Real GLB loader ──────────────────────────────────────────────────────────
 function RealF1Car({ phase, onReady }) {
   const { scene } = useGLTF(MODEL_URL);
-  const { gl } = useThree();
   const groupRef = useRef();
 
   // Persistent motion state — never reset between renders
   const motion = useRef({ launchSpeed: 0, zPos: 0 });
 
   // ── Renderer settings for clearcoat / transmission materials ─────────────
-  useEffect(() => {
-    gl.physicallyCorrectLights = true;
-    gl.toneMapping = THREE.ACESFilmicToneMapping;
-    gl.toneMappingExposure = 1.2;
-    gl.outputColorSpace = THREE.SRGBColorSpace;
-  }, [gl]);
+
 
   // ── Clone & calibrate materials ───────────────────────────────────────────
   const clonedScene = useMemo(() => {
@@ -137,4 +131,4 @@ export function F1CarModel({ phase, onReady }) {
   );
 }
 
-useGLTF.preload(MODEL_URL);
+// The intro requests this model only when mounted.
