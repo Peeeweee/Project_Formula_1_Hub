@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import useDialogAccessibility from '../hooks/useDialogAccessibility';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ResponsiveContainer, 
@@ -15,11 +16,12 @@ import {
   PolarRadiusAxis,
   Radar
 } from 'recharts';
-import { SearchBar, SkeletonDriverRow, SkeletonCard, PlotlyTooltip, StartingLights, RPMGauge } from '../components';
-import { getAllDrivers, getDriverInfo, getDriverStandings, getAllTimeChampions } from '../services/jolpicaApi';
+import { SearchBar, SkeletonCard, PlotlyTooltip, StartingLights, RPMGauge } from '../components';
+import { getAllDrivers, getDriverCareerStats, getDriverStandings, getAllTimeChampions } from '../services/jolpicaApi';
 import getWikipediaImage from '../utils/getWikipediaImage';
 import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
+import DataNote from '../components/DataNote';
 import FadeInSection from '../components/FadeInSection';
 
 const cardVariants = {
@@ -71,21 +73,24 @@ const NATIONALITY_TO_COUNTRY = {
 function Racers() {
   // Champions Hall of Fame states
   const [selectedChampion, setSelectedChampion] = useState(null);
+  const championDialogRef = useDialogAccessibility(Boolean(selectedChampion), () => setSelectedChampion(null));
   const [championImages, setChampionImages] = useState({});
   const [championImagesLoading, setChampionImagesLoading] = useState({});
   const [championImagesError, setChampionImagesError] = useState({});
 
   // Full Driver Database states
   const [driversList, setDriversList] = useState([]);
-  const [offset, setOffset] = useState(0);
   const [loadingDrivers, setLoadingDrivers] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [errorDrivers, setErrorDrivers] = useState(null);
 
   // Driver detail side panel states
   const [selectedDetailDriver, setSelectedDetailDriver] = useState(null);
   const [careerStandings, setCareerStandings] = useState([]);
+  const [careerStats, setCareerStats] = useState(null);
+  const detailRequest = useRef(0);
+  const comparisonRequests = useRef({ A: 0, B: 0 });
+  const [comparisonError, setComparisonError] = useState(null);
   const [loadingCareer, setLoadingCareer] = useState(false);
   const [errorCareer, setErrorCareer] = useState(null);
   const [detailDriverImage, setDetailDriverImage] = useState(null);
@@ -115,6 +120,7 @@ function Racers() {
   const [worldTopology, setWorldTopology] = useState(null);
   const [heatmapTooltip, setHeatmapTooltip] = useState(null);
   const [selectedHeatmapCountry, setSelectedHeatmapCountry] = useState(null);
+  const countryDialogRef = useDialogAccessibility(Boolean(selectedHeatmapCountry), () => setSelectedHeatmapCountry(null));
   const heatmapContainerRef = useRef(null);
 
   const [sortedChampions, setSortedChampions] = useState([]);
@@ -126,7 +132,6 @@ function Racers() {
     try {
       const data = await getAllDrivers(1000, currentOffset);
       setDriversList(data);
-      setHasMore(false); // Since 1000 returns the entire history, no more paging needed
       
       // Compute sorted champions
       const lists = await getAllTimeChampions();
@@ -162,7 +167,7 @@ function Racers() {
           } else {
             setChampionImagesError(prev => ({ ...prev, [champ.driverId]: true }));
           }
-        } catch (err) {
+        } catch {
           setChampionImagesError(prev => ({ ...prev, [champ.driverId]: true }));
         } finally {
           setChampionImagesLoading(prev => ({ ...prev, [champ.driverId]: false }));
@@ -178,7 +183,7 @@ function Racers() {
 
   // Initial load
   useEffect(() => {
-    fetchDrivers(0);
+    void Promise.resolve().then(() => fetchDrivers(0));
 
     // Fetch World Map TopoJSON
     fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
@@ -192,25 +197,29 @@ function Racers() {
 
   // Fetch driver career standings details
   const fetchDriverCareer = async (driverId) => {
+    const request = ++detailRequest.current;
+    setCareerStats(null);
     setLoadingCareer(true);
     setErrorCareer(null);
     try {
-      const standings = await getDriverStandings(driverId);
+      const [standings, stats] = await Promise.all([getDriverStandings(driverId), getDriverCareerStats(driverId)]);
+      if (request !== detailRequest.current) return;
       setCareerStandings(standings);
+      setCareerStats(stats);
     } catch (err) {
       console.error('Error fetching driver standings:', err);
-      setErrorCareer('Failed to retrieve career standings telemetry.');
+      if (request === detailRequest.current) setErrorCareer('Career data is unavailable. Please try this driver again.');
     } finally {
-      setLoadingCareer(false);
+      if (request === detailRequest.current) setLoadingCareer(false);
     }
   };
 
   // Trigger career fetch when detail driver is changed
   useEffect(() => {
     if (selectedDetailDriver) {
-      fetchDriverCareer(selectedDetailDriver.driverId);
+      void Promise.resolve().then(() => fetchDriverCareer(selectedDetailDriver.driverId));
       
-      setDetailDriverImage(null);
+      Promise.resolve().then(() => setDetailDriverImage(null));
       const fetchId = selectedDetailDriver.url || `${selectedDetailDriver.givenName} ${selectedDetailDriver.familyName}`;
       getWikipediaImage(fetchId).then(url => {
         setDetailDriverImage(url);
@@ -220,38 +229,13 @@ function Racers() {
 
   // Fetch comparison driver stats
   const fetchCompareStats = async (slot, driver) => {
+    const request = ++comparisonRequests.current[slot];
+    setComparisonError(null);
+    if (slot === 'A') setStatsA(null); else setStatsB(null);
     setLoadingCompare(prev => ({ ...prev, [slot.toLowerCase()]: true }));
     try {
-      const standings = await getDriverStandings(driver.driverId);
-      const totalSeasons = standings.length;
-      const wins = standings.reduce((sum, item) => sum + parseInt(item.DriverStandings[0]?.wins || 0, 10), 0);
-      const points = standings.reduce((sum, item) => sum + parseFloat(item.DriverStandings[0]?.points || 0), 0);
-      const races = standings.reduce((sum, item) => sum + parseInt(item.round || 0, 10), 0);
-      const championships = standings.filter(item => item.DriverStandings[0]?.position === '1').length;
-      
-      const poles = Math.round(wins * 1.1) || (points > 100 ? Math.round(points / 60) : 0);
-      const podiums = wins > 0 
-        ? Math.round(wins * 2.2) + (points > 200 ? Math.round(points / 35) : 0)
-        : points > 50 ? Math.round(points / 18) : 0;
-        
-      const winRate = races > 0 ? ((wins / races) * 100).toFixed(1) : '0.0';
-      const fastestLaps = Math.round(wins * 0.7) + Math.round(races * 0.04);
-      
-      const seed = (wins + points) % 15;
-      const reliability = Math.round(82 + seed);
-
-      const parsedStats = {
-        wins,
-        poles,
-        podiums,
-        championships,
-        races,
-        winRate,
-        fastestLaps,
-        reliability,
-        longevity: totalSeasons
-      };
-
+      const parsedStats = await getDriverCareerStats(driver.driverId);
+      if (request !== comparisonRequests.current[slot]) return;
       if (slot === 'A') {
         setStatsA(parsedStats);
       } else {
@@ -259,8 +243,9 @@ function Racers() {
       }
     } catch (err) {
       console.error('Error fetching comparison stats:', err);
+      if (request === comparisonRequests.current[slot]) setComparisonError('Comparison data is unavailable for a selected driver. Select the driver again to retry.');
     } finally {
-      setLoadingCompare(prev => ({ ...prev, [slot.toLowerCase()]: false }));
+      if (request === comparisonRequests.current[slot]) setLoadingCompare(prev => ({ ...prev, [slot.toLowerCase()]: false }));
     }
   };
 
@@ -285,6 +270,10 @@ function Racers() {
   };
 
   const handleClearComparison = () => {
+    comparisonRequests.current.A++;
+    comparisonRequests.current.B++;
+    setLoadingCompare({ a: false, b: false });
+    setComparisonError(null);
     setDriverA(null);
     setDriverB(null);
     setStatsA(null);
@@ -346,13 +335,8 @@ function Racers() {
     (sum, item) => sum + parseFloat(item.DriverStandings[0]?.points || 0), 0
   );
 
-  const totalRaces = careerStandings.reduce(
-    (sum, item) => sum + parseInt(item.round || 0, 10), 0
-  );
-
-  const estimatedPodiums = totalWins > 0 
-    ? Math.round(totalWins * 2.2) + (totalPoints > 200 ? Math.round(totalPoints / 35) : 0)
-    : totalPoints > 50 ? Math.round(totalPoints / 18) : 0;
+  const totalRaces = careerStats?.races ?? '—';
+  const estimatedPodiums = careerStats?.podiums ?? '—';
 
   const lineChartData = careerStandings.map((item) => ({
     season: item.season,
@@ -377,7 +361,7 @@ function Racers() {
       B: statsB ? Math.min((statsB.podiums / 200) * 100, 100) : 0,
     },
     {
-      subject: 'Reliability',
+      subject: 'Finish rate',
       A: statsA ? statsA.reliability : 0,
       B: statsB ? statsB.reliability : 0,
     },
@@ -437,6 +421,7 @@ function Racers() {
 
   return (
     <div className="pt-24 pb-12 px-6 max-w-7xl mx-auto space-y-16">
+      <DataNote kind="Historical statistics">Career totals reflect different cars, calendar lengths and scoring systems. Compare context as well as totals; these charts do not isolate driver skill. Source: Jolpica. Images: Wikipedia.</DataNote>
       {/* SECTION 1: Champions Hall of Fame */}
       <FadeInSection>
         <div className="border-l-2 border-f1-red pl-2 mb-4">
@@ -456,7 +441,7 @@ function Racers() {
               whileInView="visible"
               viewport={{ once: true, margin: "-50px" }}
               variants={cardVariants}
-              onClick={() => setSelectedChampion(champ)}
+              role="button" tabIndex={0} onKeyDown={event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setSelectedChampion(champ); } } } onClick={() => setSelectedChampion(champ)}
               className="bg-f1-panel border border-f1-border rounded-lg overflow-hidden cursor-pointer hover:border-f1-red/60 transition duration-300 flex flex-col group"
             >
               <div className="relative overflow-hidden h-44 bg-[#1a1a24] flex items-center justify-center">
@@ -944,6 +929,8 @@ function Racers() {
           </div>
         )}
 
+        {comparisonError && <p role="status" className="text-sm text-amber-300">{comparisonError}</p>}
+        <DataNote kind="Comparison guide">Wins, podiums and grid-P1 starts are counted from recorded results. Fastest-lap coverage varies by era. Finish rate counts results marked Finished or a lap deficit; it combines driving and mechanical outcomes. Radar scales cap wins and poles at 100, podiums at 200 and seasons at 20, so they are not a driver-skill rating.</DataNote>
         {driverA && driverB && statsA && statsB && !loadingCompare.a && !loadingCompare.b && (
           <>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
@@ -987,12 +974,12 @@ function Racers() {
                       <td className="py-4 text-center font-black text-base">{statsB.winRate}%</td>
                     </tr>
                     <tr>
-                      <td className="py-4 font-bold text-f1-muted text-left">Fastest Laps</td>
+                      <td className="py-4 font-bold text-f1-muted text-left">Recorded fastest laps</td>
                       <td className="py-4 text-center font-black text-base">{statsA.fastestLaps}</td>
                       <td className="py-4 text-center font-black text-base">{statsB.fastestLaps}</td>
                     </tr>
                     <tr>
-                      <td className="py-4 font-bold text-f1-muted text-left">Reliability Index</td>
+                      <td className="py-4 font-bold text-f1-muted text-left">Finish rate</td>
                       <td className="py-4 text-center font-black text-base">{statsA.reliability}%</td>
                       <td className="py-4 text-center font-black text-base">{statsB.reliability}%</td>
                     </tr>
@@ -1067,11 +1054,11 @@ function Racers() {
                 </div>
                 <div>
                   <h4 className="text-xs font-black uppercase text-f1-red mb-1.5">What is a Pole Position?</h4>
-                  <p className="text-sm text-f1-muted">Starting the race in 1st place at the very front of the grid because you drove the fastest lap in Saturday Qualifying.</p>
+                  <p className="text-sm text-f1-muted">Starting from the first grid slot. Qualifying usually decides it, but penalties and the applicable rules can change the grid.</p>
                 </div>
                 <div>
-                  <h4 className="text-xs font-black uppercase text-f1-red mb-1.5">Reliability Index</h4>
-                  <p className="text-sm text-f1-muted">How often the driver actually crosses the finish line without crashing or suffering mechanical failures.</p>
+                  <h4 className="text-xs font-black uppercase text-f1-red mb-1.5">Finish rate</h4>
+                  <p className="text-sm text-f1-muted">Recorded starts with a Finished or lap-deficit status, as a percentage of starts. This is not a pure measure of mechanical reliability.</p>
                 </div>
               </div>
             </div>
@@ -1187,6 +1174,7 @@ function Racers() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedChampion(null)}
+            ref={championDialogRef} role="dialog" aria-modal="true" aria-label="Champion details" tabIndex={-1}
             className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
           >
             <motion.div
@@ -1311,15 +1299,15 @@ function Racers() {
                   </div>
                   <div className="bg-[#07070a] p-3 border border-f1-border rounded">
                     <span className="text-[9px] text-f1-muted uppercase font-black tracking-wider block mb-0.5">Total Races</span>
-                    <span className="text-sm font-extrabold text-f1-light">{selectedChampion.totalRaces}</span>
+                    <span className="text-sm font-extrabold text-f1-light">{selectedChampion.totalRaces ?? '—'}</span>
                   </div>
                   <div className="bg-[#07070a] p-3 border border-f1-border rounded">
                     <span className="text-[9px] text-f1-muted uppercase font-black tracking-wider block mb-0.5">Podiums</span>
-                    <span className="text-sm font-extrabold text-f1-light">{selectedChampion.podiums}</span>
+                    <span className="text-sm font-extrabold text-f1-light">{selectedChampion.podiums ?? '—'}</span>
                   </div>
                   <div className="bg-[#07070a] p-3 border border-f1-border rounded">
                     <span className="text-[9px] text-f1-muted uppercase font-black tracking-wider block mb-0.5">Grand Prix Wins</span>
-                    <span className="text-sm font-extrabold text-f1-red">{selectedChampion.totalWins}</span>
+                    <span className="text-sm font-extrabold text-f1-red">{selectedChampion.totalWins ?? '—'}</span>
                   </div>
                   <div className="bg-[#07070a] p-3 border border-f1-border rounded">
                     <span className="text-[9px] text-f1-muted uppercase font-black tracking-wider block mb-0.5">Pole Positions</span>
@@ -1347,6 +1335,7 @@ function Racers() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedHeatmapCountry(null)}
+            ref={countryDialogRef} role="dialog" aria-modal="true" aria-label="Drivers by country" tabIndex={-1}
             className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
           >
             <motion.div
