@@ -1,23 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { fetchLiveF1News } from '../services/newsService';
+import { motion, useReducedMotion } from 'framer-motion';
 
-export default function NewsTicker() {
-  const [headlines, setHeadlines] = useState([]);
-
-  const loadHeadlines = async () => {
-    const news = await fetchLiveF1News();
-    if (news && news.length > 0) {
-      setHeadlines(news.slice(0, 8));
-    }
-  };
-
-  useEffect(() => {
-    loadHeadlines();
-    const interval = setInterval(loadHeadlines, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
+export default function NewsTicker({ headlines = [] }) {
+  const reducedMotion = useReducedMotion();
   if (headlines.length === 0) return null;
 
   return (
@@ -29,16 +13,16 @@ export default function NewsTicker() {
 
       <div className="flex-1 overflow-hidden relative">
         <motion.div
-          animate={{ x: ['0%', '-50%'] }}
+          animate={reducedMotion ? { x: 0 } : { x: ['0%', '-50%'] }}
           transition={{ duration: 35, repeat: Infinity, ease: 'linear' }}
           className="flex gap-12 whitespace-nowrap"
         >
           {[...headlines, ...headlines].map((item, idx) => (
-            <span key={`ticker-${idx}`} className="inline-flex items-center gap-3 text-f1-light hover:text-f1-red transition cursor-pointer">
+            <a href={item.url} target="_blank" rel="noreferrer" key={`ticker-${idx}`} className="inline-flex items-center gap-3 text-f1-light hover:text-f1-red transition cursor-pointer">
               <span className="text-f1-red font-bold">[{item.category}]</span>
               <span>{item.title}</span>
-              <span className="text-f1-muted text-[10px]">• {new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-            </span>
+              <span className="text-f1-muted text-[10px]">• {item.date ? new Date(item.date).toLocaleDateString() : 'Date unavailable'}</span>
+            </a>
           ))}
         </motion.div>
       </div>
