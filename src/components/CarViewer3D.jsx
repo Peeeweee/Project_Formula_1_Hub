@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 
 const CarViewer3D = ({ car }) => {
@@ -8,6 +8,7 @@ const CarViewer3D = ({ car }) => {
   useEffect(() => {
     if (!mountRef.current) return;
 
+    const mount = mountRef.current;
     // --- SETUP ---
     const scene = new THREE.Scene();
     scene.background = new THREE.Color('#0a0a0f');
@@ -50,7 +51,7 @@ const CarViewer3D = ({ car }) => {
     };
 
     if (car && car.modelConfig) {
-      const { bodyColor, accentColor, hasHighNose, wingSize, eraStyle } = car.modelConfig;
+      const { bodyColor, accentColor, wingSize, eraStyle } = car.modelConfig;
 
       const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.3 });
       const accentMat = new THREE.MeshStandardMaterial({ color: accentColor, roughness: 0.3 });
@@ -236,8 +237,8 @@ const CarViewer3D = ({ car }) => {
       geometries.forEach(g => g.dispose());
       materials.forEach(m => m.dispose());
       
-      if (mountRef.current && domElement.parentNode === mountRef.current) {
-        mountRef.current.removeChild(domElement);
+      if (domElement.parentNode === mount) {
+        mount.removeChild(domElement);
       }
       renderer.dispose();
     };
