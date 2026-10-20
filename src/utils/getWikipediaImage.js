@@ -11,13 +11,13 @@ try {
       cache.set(key, val);
     }
   }
-} catch (e) {}
+} catch { /* Optional persistent image cache. */ }
 
 const saveToLocalStorage = () => {
   try {
     const obj = Object.fromEntries(cache.entries());
     localStorage.setItem('wikiImageCache', JSON.stringify(obj));
-  } catch (e) {}
+  } catch { /* Optional persistent image cache. */ }
 };
 
 const processQueue = async () => {
@@ -52,7 +52,7 @@ const processQueue = async () => {
           resolve(null);
         }
       }
-    } catch(err) {
+    } catch {
       cache.set(driverFullName, null);
       resolve(null);
     }
