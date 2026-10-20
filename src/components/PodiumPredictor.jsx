@@ -1,50 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
 
-const TOP_DRIVERS = [
-  { id: 'verstappen', name: 'Max Verstappen', team: 'Red Bull Racing', color: '#3b82f6' },
-  { id: 'norris', name: 'Lando Norris', team: 'McLaren', color: '#ff8700' },
-  { id: 'leclerc', name: 'Charles Leclerc', team: 'Ferrari', color: '#e10600' },
-  { id: 'piastri', name: 'Oscar Piastri', team: 'McLaren', color: '#fb923c' },
-  { id: 'sainz', name: 'Carlos Sainz', team: 'Ferrari', color: '#f87171' },
-  { id: 'hamilton', name: 'Lewis Hamilton', team: 'Mercedes', color: '#00a19c' },
-  { id: 'russell', name: 'George Russell', team: 'Mercedes', color: '#2dd4bf' },
-  { id: 'perez', name: 'Sergio Pérez', team: 'Red Bull Racing', color: '#fbbf24' }
-];
+function readPrediction(key, ids) {
+  try {
+    const value = JSON.parse(localStorage.getItem(key));
+    return value && [value.p1, value.p2, value.p3].every(id => ids.includes(id)) && new Set([value.p1, value.p2, value.p3]).size === 3 ? value : {};
+  } catch { return {}; }
+}
 
-export default function PodiumPredictor({ nextRaceName = 'Upcoming Grand Prix' }) {
-  const [p1, setP1] = useState('');
-  const [p2, setP2] = useState('');
-  const [p3, setP3] = useState('');
-  const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    const savedPred = localStorage.getItem('f1_podium_prediction');
-    if (savedPred) {
-      try {
-        const parsed = JSON.parse(savedPred);
-        setP1(parsed.p1 || '');
-        setP2(parsed.p2 || '');
-        setP3(parsed.p3 || '');
-        setSaved(true);
-      } catch (e) {
-        console.error(e);
-      }
-    }
-  }, []);
-
+export default function PodiumPredictor({ nextRaceName = 'Upcoming Grand Prix', drivers = [], raceId = 'none' }) {
+  const TOP_DRIVERS = drivers.map(row => ({ id: row.Driver.driverId, name: `${row.Driver.givenName} ${row.Driver.familyName}`, team: row.Constructors?.map(team => team.name).join(' / ') || 'Team unavailable', color: '#e10600' }));
+  const storageKey = `fdc1_podium_${raceId}`;
+  const [initial] = useState(() => readPrediction(storageKey, TOP_DRIVERS.map(driver => driver.id)));
+  const [p1, setP1] = useState(initial.p1 || '');
+  const [p2, setP2] = useState(initial.p2 || '');
+  const [p3, setP3] = useState(initial.p3 || '');
+  const [saved, setSaved] = useState(Boolean(initial.p1));
+  const [saveError, setSaveError] = useState(null);
   const handleSave = () => {
-    if (!p1 || !p2 || !p3) return;
-    localStorage.setItem('f1_podium_prediction', JSON.stringify({ p1, p2, p3, date: new Date().toISOString() }));
-    setSaved(true);
+    if (!p1 || !p2 || !p3 || new Set([p1, p2, p3]).size !== 3) return;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify({ p1, p2, p3, date: new Date().toISOString() }));
+      setSaved(true);
+      setSaveError(null);
+    } catch { setSaveError('Device storage is unavailable. Your picks are still visible, but could not be saved.'); }
   };
-
   const handleReset = () => {
-    localStorage.removeItem('f1_podium_prediction');
-    setP1('');
-    setP2('');
-    setP3('');
-    setSaved(false);
+    try { localStorage.removeItem(storageKey); } catch { /* Editing still works. */ }
+    setP1(''); setP2(''); setP3(''); setSaved(false);
   };
 
   const getDriver = (id) => TOP_DRIVERS.find(d => d.id === id);
@@ -72,6 +54,9 @@ export default function PodiumPredictor({ nextRaceName = 'Upcoming Grand Prix' }
         )}
       </div>
 
+      <p className="text-sm text-f1-muted">Your personal picks for this race, saved on this device. Entrants shown come from the available season standings; the event entry list may differ.</p>
+      {TOP_DRIVERS.length === 0 && <p className="text-sm text-amber-300">Load the season standings to make your picks.</p>}
+      {saveError && <p role="status" className="text-sm text-amber-300">{saveError}</p>}
       {/* Podium Pickers */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* P1 */}
@@ -82,7 +67,8 @@ export default function PodiumPredictor({ nextRaceName = 'Upcoming Grand Prix' }
           </div>
 
           <select
-            disabled={saved}
+            disabled={saved || !TOP_DRIVERS.length}
+            aria-label="Choose P1"
             value={p1}
             onChange={(e) => setP1(e.target.value)}
             className="bg-[#07070a] border border-f1-border text-xs text-white p-3 rounded font-bold focus:outline-none focus:border-yellow-500 disabled:opacity-75"
@@ -111,7 +97,8 @@ export default function PodiumPredictor({ nextRaceName = 'Upcoming Grand Prix' }
           </div>
 
           <select
-            disabled={saved}
+            disabled={saved || !TOP_DRIVERS.length}
+            aria-label="Choose P2"
             value={p2}
             onChange={(e) => setP2(e.target.value)}
             className="bg-[#07070a] border border-f1-border text-xs text-white p-3 rounded font-bold focus:outline-none focus:border-slate-300 disabled:opacity-75"
@@ -140,7 +127,8 @@ export default function PodiumPredictor({ nextRaceName = 'Upcoming Grand Prix' }
           </div>
 
           <select
-            disabled={saved}
+            disabled={saved || !TOP_DRIVERS.length}
+            aria-label="Choose P3"
             value={p3}
             onChange={(e) => setP3(e.target.value)}
             className="bg-[#07070a] border border-f1-border text-xs text-white p-3 rounded font-bold focus:outline-none focus:border-amber-600 disabled:opacity-75"
