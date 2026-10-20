@@ -11,7 +11,7 @@ export default {
         'f1-dark': '#0a0a0f',
         'f1-panel': '#0f0f18',
         'f1-border': '#1a1a24',
-        'f1-muted': '#666666',
+        'f1-muted': '#a3a3b3',
         'f1-light': '#f0f0f0',
       },
       fontFamily: {
