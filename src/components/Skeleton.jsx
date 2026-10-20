@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 
 export function SkeletonBlock({ width = '100%', height = '1rem', rounded = 'rounded' }) {
