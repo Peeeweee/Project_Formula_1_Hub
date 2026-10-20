@@ -3,6 +3,7 @@ import { cachedFetch } from './cache';
 
 const api = axios.create({
   baseURL: 'https://api.openf1.org/v1',
+  timeout: 15000,
 });
 
 export const getLatestSession = async () => {
@@ -14,7 +15,7 @@ export const getLatestSession = async () => {
       console.error('Error fetching getLatestSession:', error);
       throw error;
     }
-  }, 30);
+  }, 0.2);
 };
 
 export const getLapTimes = async (sessionKey, driverNumber) => {
@@ -26,7 +27,7 @@ export const getLapTimes = async (sessionKey, driverNumber) => {
       console.error(`Error fetching getLapTimes for session ${sessionKey} and driver ${driverNumber}:`, error);
       throw error;
     }
-  }, 30);
+  }, 0.2);
 };
 
 export const getPitStops = async (sessionKey) => {
@@ -38,7 +39,7 @@ export const getPitStops = async (sessionKey) => {
       console.error(`Error fetching getPitStops for session ${sessionKey}:`, error);
       throw error;
     }
-  }, 30);
+  }, 0.2);
 };
 
 export const getDriverTelemetry = async (sessionKey, driverNumber) => {
@@ -50,7 +51,7 @@ export const getDriverTelemetry = async (sessionKey, driverNumber) => {
       console.error(`Error fetching getDriverTelemetry for session ${sessionKey} and driver ${driverNumber}:`, error);
       throw error;
     }
-  }, 30);
+  }, 0.2);
 };
 
 export const getRaceWeather = async (sessionKey) => {
@@ -62,7 +63,7 @@ export const getRaceWeather = async (sessionKey) => {
       console.error(`Error fetching getRaceWeather for session ${sessionKey}:`, error);
       throw error;
     }
-  }, 30);
+  }, 0.2);
 };
 
 export const getDriverPositions = async (sessionKey) => {
@@ -74,5 +75,5 @@ export const getDriverPositions = async (sessionKey) => {
       console.error(`Error fetching getDriverPositions for session ${sessionKey}:`, error);
       throw error;
     }
-  }, 30);
+  }, 0.2);
 };
