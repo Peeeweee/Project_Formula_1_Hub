@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import useDialogAccessibility from '../hooks/useDialogAccessibility';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { getAllTimeChampions } from '../services/jolpicaApi';
 import FadeInSection from '../components/FadeInSection';
@@ -6,6 +7,7 @@ import getWikipediaImage from '../utils/getWikipediaImage';
 import { AnimatePresence } from 'framer-motion';
 
 const ChampionModal = ({ champ, onClose }) => {
+  const dialogRef = useDialogAccessibility(true, onClose);
   const [imgUrl, setImgUrl] = useState(null);
 
   useEffect(() => {
@@ -20,7 +22,7 @@ const ChampionModal = ({ champ, onClose }) => {
   }, [champ]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-[#000000cc] backdrop-blur-sm" onClick={onClose}>
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Champion details" tabIndex={-1} className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-[#000000cc] backdrop-blur-sm" onClick={onClose}>
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
