@@ -1,4 +1,3 @@
-import React from 'react';
 
 const PlotlyTooltip = ({ active, payload, label, xKey = 'x', yFormatter }) => {
   if (!active || !payload || !payload.length) return null;
