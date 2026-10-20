@@ -1,16 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import useDialogAccessibility from '../hooks/useDialogAccessibility';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getSeasonRaces, getRaceResults } from '../services/jolpicaApi';
-import { TRACK_SPECS, getTrackSpecs } from '../data/trackSVGs';
+import { getSeasonRaces, getCircuitResults } from '../services/jolpicaApi';
+import { getTrackSpecs } from '../data/trackSVGs';
 import { COUNTRY_FLAGS } from '../utils/countryFlags';
 import { useFavorites } from '../hooks/useFavorites';
 import FadeInSection from '../components/FadeInSection';
 
 
 export default function Circuits() {
+  const [feedError, setFeedError] = useState(null);
+  const [refreshVersion, setRefreshVersion] = useState(0);
   const [races, setRaces] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCircuit, setSelectedCircuit] = useState(null);
+  const circuitDialogRef = useDialogAccessibility(Boolean(selectedCircuit), () => setSelectedCircuit(null));
   const [searchTerm, setSearchTerm] = useState('');
   const [circuitHistory, setCircuitHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -20,36 +24,41 @@ export default function Circuits() {
     async function loadCircuits() {
       setLoading(true);
       try {
-        const calendarRes = await getSeasonRaces('current');
+        const calendarRes = await getSeasonRaces('current', refreshVersion > 0);
         setRaces(calendarRes || []);
+        setFeedError(null);
       } catch (err) {
         console.error('Failed to load races for circuits:', err);
+        setFeedError('The calendar feed is unavailable. Try again shortly.');
       } finally {
         setLoading(false);
       }
     }
     loadCircuits();
-  }, []);
+  }, [refreshVersion]);
 
   // Fetch last 5 race results for selected circuit when modal opens
   useEffect(() => {
     if (!selectedCircuit) return;
-    setCircuitHistory([]);
-    setHistoryLoading(true);
-    const circuitRound = selectedCircuit.race.round;
+    Promise.resolve().then(() => { if (!cancelled) { setCircuitHistory([]); setHistoryLoading(true); } });
+    let cancelled = false;
+    const circuitId = selectedCircuit.race.Circuit.circuitId;
     const currentYear = new Date().getFullYear();
     const yearsToFetch = [currentYear - 1, currentYear - 2, currentYear - 3, currentYear - 4, currentYear - 5];
 
     Promise.all(
       yearsToFetch.map(yr =>
-        getRaceResults(yr, circuitRound)
-          .then(results => (results && results.length > 0 ? { year: yr, winner: results[0] } : null))
+        getCircuitResults(yr, circuitId)
+          .then(races => races.map(race => ({ year: yr, winner: race.Results?.[0] })).filter(race => race.winner))
           .catch(() => null)
       )
     ).then(results => {
-      setCircuitHistory(results.filter(Boolean));
-      setHistoryLoading(false);
+      if (!cancelled) {
+        setCircuitHistory(results.flat().filter(Boolean));
+        setHistoryLoading(false);
+      }
     });
+    return () => { cancelled = true; };
   }, [selectedCircuit]);
 
   const filteredRaces = races.filter(r => 
@@ -60,11 +69,12 @@ export default function Circuits() {
 
   return (
     <div className="pt-24 pb-16 min-h-screen bg-[#07070a] text-f1-light px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
+      {feedError && <p role="status" className="rounded-xl border border-f1-border p-4 text-amber-300">{feedError} <button className="underline" onClick={() => setRefreshVersion(value => value + 1)}>Retry calendar</button></p>}
       {/* Header */}
       <div>
         <div className="border-l-2 border-f1-red pl-2 mb-2">
           <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
-            Official FIA Grade 1 Track Directory
+            Explore the current calendar
           </h4>
         </div>
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -73,7 +83,7 @@ export default function Circuits() {
               🏁 F1 Circuit Directory
             </h1>
             <p className="text-f1-muted text-xs sm:text-sm mt-1 max-w-2xl">
-              Authentic track layout geometry, turn counts, lap records, and venue specs for all 24 Grand Prix circuits.
+              Explore calendar venues with illustrative track outlines and bundled reference specifications. Lap records and overtaking-zone counts may reflect older seasons.
             </p>
           </div>
 
@@ -191,6 +201,7 @@ export default function Circuits() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedCircuit(null)}
+            ref={circuitDialogRef} role="dialog" aria-modal="true" aria-label="Circuit details" tabIndex={-1}
             className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
           >
             <motion.div
