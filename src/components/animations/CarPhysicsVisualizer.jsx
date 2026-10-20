@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import F1CarSVG from '../F1CarSVG';
 
@@ -12,9 +11,9 @@ const CarPhysicsVisualizer = ({ phase, term }) => {
     <motion.div
       key={`bg-${i}`}
       className="absolute h-0.5 bg-white/10"
-      style={{ width: Math.random() * 100 + 50, top: `${Math.random() * 100}%` }}
+      style={{ width: 50 + (i * 31) % 100, top: `${(i * 17) % 100}%` }}
       animate={{ x: ['100vw', '-20vw'] }}
-      transition={{ repeat: Infinity, duration: Math.random() * 0.3 + 0.1, ease: "linear" }}
+      transition={{ repeat: Infinity, duration: 0.1 + (i % 4) * 0.08, ease: "linear" }}
     />
   ));
 
