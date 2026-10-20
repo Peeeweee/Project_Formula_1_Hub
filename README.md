@@ -71,3 +71,60 @@ The project includes several Python scripts that process raw F1 CSV datasets int
    python lap_anomaly.py
    python podium_predictor.py
    ```
+
+
+## Beginner experience and data integrity
+
+All original sections remain available under Learn, Explore, and Follow the Season.
+Start Here includes a five-step learning path with checks and local progress. Watch a
+Race explains a fictional timing tower, flags, tire codes, and race context. Strategy
+includes an interactive one-stop teaching model with visible assumptions. Garage
+part buttons explain systems and select camera views; models download on selection.
+The cinematic intro remains available as an optional choice.
+
+- Publisher news contains only linked RSS items; provider failure is shown explicitly.
+- Missing race results stay unavailable. Points progression uses round standings
+  (including Sprint points), with gaps for missing observations.
+- Circuit history queries circuit identity rather than reusing calendar round numbers.
+- OpenF1 uses a 12-second cache; source timestamps distinguish observations from polls.
+- Driver comparison counts recorded results instead of estimating poles and podiums.
+- Completed seasons are used for championship counts; an ongoing season leader is
+  not automatically awarded a title.
+- Pit Wall AI's existing bundled data remains explicitly labelled experimental and
+  illustrative. Its provenance and calibrated accuracy have not been established.
+- Podium training now uses prior-race features and a chronological race holdout.
+  Re-training requires the source CSVs and Python dependencies; no new accuracy is
+  claimed until this is run on an identified dataset. Generated metadata documents
+  the data cutoff, evaluation split, and hypothetical-grid assumption.
+
+## Verification
+
+```bash
+npm test
+npm run build
+npm run lint
+python -m unittest discover -s tests -p 'test_*.py'
+```
+
+Unit tests cover cache refresh/failures, missing standings, RSS deduplication and
+source dates, strategy-model tradeoffs, and driver-result counts. Python tests use
+synthetic fixtures to verify prior-race feature construction and the export pipeline;
+these are not real-world accuracy measurements. GLB files are preserved at their original
+quality; they remain large, but are no longer all preloaded. The 3D renderer is a
+separate on-demand bundle. Third-party data availability still depends on each
+provider. Rules and historical specifications should be reviewed by season.
+
+
+### Mercedes pit-stop opening
+
+The 3D pit-stop plays on every full site opening/reload, without interrupting in-app navigation. Requested pages load underneath it. Skip and Escape are available immediately. An 8.8-second shared animation clock drives entry, jacks, tire removal/refitting, crew clearance and release. The console labels the timings and choreography as an illustrative simulation. Reduced-motion visitors receive a short static pit-box view. Failed model/graphics loads and a 10-second maximum loading wait release the overlay.
+
+The environment contains code-built garage bays, overhead hoses, pit markings, equipment, a pit wall, fencing and instanced grandstand seats. Twelve crew prototypes use a skinned human mesh with procedural limb posing, with tire carriers, wheel-gun operators, jack operators and supporting personnel. Crew and jack equipment move clear before release. Rendering uses a capped pixel ratio, a single 1024-pixel shadow map and a precomputed studio reflection map. Human mesh provenance and project-use references are listed in public/pit-crew-base-attribution.txt. A purpose-built motorsport crew model is still required for authentic clothing and photo-level detail.
+
+The intro uses `public/mercedes-intro.glb` (5.85 MB), generated from the original 46.38 MB Mercedes asset. Its seventeen textures are capped at 1024 pixels; the source garage asset remains unchanged. Rebuild it with `python scripts/optimize_intro_model.py` (Pillow required). Downloads report byte progress when Content-Length is available and use normal browser caching. Skip aborts an outstanding download; unmounting disposes scene resources.
+
+### Free pit crew assets
+
+The intro uses the CC BY 4.0 OpenRC F1 crew mesh by 3D Print Tech Design for four wheel-gun operators. The original low-resolution STL is archived under `artifacts/asset-review/`; `python scripts/prepare_openrc_crew.py` rebuilds the 253 KB indexed GLB. It preserves the source kneeling pose and animates instance transforms, rather than claiming a full skeletal rig. Remaining personnel use an adapted generic rig. The in-app crew credits include source links, license and modifications. Framer Motion handles the UI; Three.js handles the 3D scene.
+
+The detailed Pit Crew Helmet PL by Pierre-Louis Baril is displayed using 16 directional rendered views (~641 KB total). `python scripts/render_pit_helmet.py` renders these locally with Blender Python; the original `.blend` and conversion tools stay ignored. Crew bodies and the Mercedes remain live Three.js geometry. This keeps the extractable source helmet mesh out of the web distribution, in accordance with Blendkit's rendered-use and distribution guidance. The credits link contains asset, author and license links.
