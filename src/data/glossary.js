@@ -1,7 +1,7 @@
-export const GLOSSARY = [
+const TERMS = [
   {
     term: 'DRS',
-    definition: 'Drag Reduction System. It is a movable flap on the rear wing that reduces air drag and helps you go faster on straights.',
+    definition: 'Drag Reduction System: the rear-wing overtaking aid used in F1 from 2011 through 2025. It reduces drag in eligible zones. The 2026 cars use different active-aero and overtaking systems.',
     engine: 'car_physics',
     action: 'The driver presses a button, opening the rear wing flap.',
     demonstration: 'Air drag lines immediately straighten out, showing less wind resistance.',
@@ -37,7 +37,7 @@ export const GLOSSARY = [
     engine: 'race_control',
     action: 'A hazard is detected. Race control activates the VSC screens.',
     demonstration: 'All drivers must instantly reduce speed to a target delta time.',
-    result: 'The gaps between all cars remain perfectly frozen while marshals clear the track.'
+    result: 'Minimum time requirements slow the field while marshals work. Time gaps can still change slightly.'
   },
   {
     term: 'Safety Car',
@@ -49,11 +49,11 @@ export const GLOSSARY = [
   },
   {
     term: 'Parc Fermé',
-    definition: 'It translates to "closed park." It is a locked zone where teams cannot touch the cars overnight after qualifying.',
+    definition: 'It means "closed park." These are restrictions on changing car setup during specified parts of a weekend; permitted maintenance and repairs still exist.',
     engine: 'race_control',
     action: 'Qualifying finishes and the cars are parked in the garage.',
     demonstration: 'FIA officials lock down the cars with virtual seals.',
-    result: 'Mechanics are forbidden from changing any performance parts before the race.'
+    result: 'Teams must follow setup restrictions and obtain approval for permitted work; unauthorised changes can lead to penalties.'
   },
   {
     term: 'Box',
@@ -69,7 +69,7 @@ export const GLOSSARY = [
     engine: 'race_control',
     action: 'A car suffers a massive engine failure on the main straight.',
     demonstration: 'Smoke pours from the rear and the driver pulls to the side.',
-    result: 'The driver climbs out and is officially retired from the classification.'
+    result: 'The driver retires. Depending on distance completed, they may still appear as classified in the final result.'
   },
   {
     term: 'Pit Window',
@@ -85,19 +85,19 @@ export const GLOSSARY = [
     engine: 'car_physics',
     action: 'Debris from another car flies towards the driver\'s helmet.',
     demonstration: 'The titanium Halo structure deflects the incoming object.',
-    result: 'The driver remains completely safe and continues racing.'
+    result: 'The Halo reduces the risk of head injury. No safety device can guarantee protection in every accident.'
   },
   {
     term: 'MGUK',
-    definition: 'A part of the engine that catches energy when you brake. It turns that heat into electricity to make the car faster.',
+    definition: 'Motor Generator Unit–Kinetic: an electric machine that recovers kinetic energy through the drivetrain during braking and can deliver electrical power back to the drivetrain.',
     engine: 'car_physics',
     action: 'The driver hits the brakes hard for a hairpin turn.',
     demonstration: 'Kinetic energy from the spinning axle is absorbed by the Motor Generator Unit.',
-    result: 'The battery charges, ready to deploy 160 extra horsepower later.'
+    result: 'Recovered energy can be stored and later deployed. Electrical power limits differ between the 2014–2025 and 2026 regulations.'
   },
   {
     term: 'MGUH',
-    definition: 'A part of the engine that catches heat from the exhaust pipe. It also turns heat into electricity.',
+    definition: 'Motor Generator Unit–Heat: a turbo-linked electrical machine used in the 2014–2025 power units. It was removed for 2026.',
     engine: 'car_physics',
     action: 'Hot exhaust gases flow out of the roaring engine.',
     demonstration: 'The MGU-H spins with the turbocharger to capture heat energy.',
@@ -129,15 +129,15 @@ export const GLOSSARY = [
   },
   {
     term: 'Blistering',
-    definition: 'When the tire gets so hot that the rubber boils and bubbles pop out. It ruins the tire and slows you down.',
+    definition: 'Damage caused by excessive heat within the tire, which can separate rubber layers and leave blisters or missing patches.',
     engine: 'tire_physics',
     action: 'The inside of the tire overheats drastically.',
-    demonstration: 'Chunks of rubber literally boil and explode off the surface.',
+    demonstration: 'Heat damages the rubber structure, causing blisters and patches of missing tread.',
     result: 'Deep holes form in the tire, destroying its performance completely.'
   },
   {
     term: 'Quali Mode',
-    definition: 'Turning the engine up to maximum power. You only use it for one lap because it can damage the engine.',
+    definition: 'A historical nickname for aggressive qualifying power settings. Engine-mode rules and electrical deployment vary by era; it is not a universal current one-lap engine switch.',
     engine: 'car_physics',
     action: 'The driver switches the steering wheel dial to "Engine Mode 1".',
     demonstration: 'The internal combustion engine runs at extreme limits, draining the battery fully.',
@@ -173,15 +173,15 @@ export const GLOSSARY = [
     engine: 'race_control',
     action: 'The five red lights are illuminated on the gantry.',
     demonstration: 'A car twitches forward before the lights go out.',
-    result: 'Sensors detect the movement and the driver receives a 5-second penalty.'
+    result: 'The stewards assess the start and apply the penalty allowed by the applicable regulations.'
   },
   {
     term: 'Backmarker',
-    definition: 'A slow driver at the very back of the race. The leaders often have to drive past them.',
+    definition: 'A car running near the back of the field. Its pace can reflect car performance, damage or strategy, as well as driving.',
     engine: 'strategy',
     action: 'The race leader catches up to the 20th place car.',
     demonstration: 'The 20th place car is driving much slower than the front runner.',
-    result: 'The slow car is designated a backmarker and must yield to the leader.'
+    result: 'If the car is being lapped, blue-flag rules apply; being near the back alone does not require giving up a racing position.'
   },
   {
     term: 'Lapped Car',
@@ -193,10 +193,17 @@ export const GLOSSARY = [
   },
   {
     term: 'Blue Flag',
-    definition: 'A blue flag tells a slow driver that a fast driver is behind them. The slow driver must move out of the way.',
+    definition: 'In a race, blue flags warn a driver they are about to be lapped and must let the lapping car through. Practice and qualifying use blue flags differently.',
     engine: 'race_control',
     action: 'A leader approaches a lapped car.',
     demonstration: 'Marshals wave physical blue flags and blue lights flash in the cockpit.',
     result: 'The lapped car moves off the racing line to safely let the leader pass.'
   }
 ];
+
+
+TERMS.unshift(
+  { term: 'Active Aero', definition: '2026: front and rear wings change configuration in designated zones to balance cornering downforce with lower drag on straights.', action: 'The car reaches an enabled straight-line zone.', demonstration: 'The wings change to a lower-drag configuration.', result: 'Drag is reduced on the straight; corner configuration is restored for braking and cornering.' },
+  { term: 'Overtake Mode', definition: '2026: an electrical overtaking assist for eligible drivers close to the car ahead. It is separate from active aero.', action: 'A driver meets the eligibility conditions at the detection point.', demonstration: 'Additional electrical deployment is made available under the rules.', result: 'The driver has an extra tool to attempt an overtake, but passing is not guaranteed.' }
+);
+export const GLOSSARY = TERMS.map(term => ({ ...term, era: ['DRS', 'MGUH', 'Quali Mode'].includes(term.term) ? 'Historical / era-dependent' : ['Active Aero', 'Overtake Mode'].includes(term.term) ? '2026 regulations' : 'General concept · rules vary by season' }));
