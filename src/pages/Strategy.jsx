@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
+import StrategyLab from '../components/StrategyLab';
+import DataNote from '../components/DataNote';
 import { 
   ResponsiveContainer, 
   LineChart, 
@@ -19,7 +20,7 @@ const TIRE_GUIDE = [
     color: '#ef4444',
     badgeBg: 'bg-red-500/20 text-red-400 border-red-500/40',
     speed: 'Fastest Speed',
-    durability: 'Low Durability (10–15 Laps)',
+    durability: 'Shorter life · conditions vary',
     description: 'Provides maximum grip for qualifying or aggressive overtakes, but wears down quickly.'
   },
   {
@@ -27,15 +28,15 @@ const TIRE_GUIDE = [
     color: '#fbbf24',
     badgeBg: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40',
     speed: 'Balanced Speed',
-    durability: 'Medium Durability (15–28 Laps)',
-    description: 'The most popular starting tire. Good speed with solid longevity for race stints.'
+    durability: 'Balanced life · conditions vary',
+    description: 'A common compromise. Good speed with solid longevity for race stints.'
   },
   {
     name: 'HARD TIRES',
     color: '#ffffff',
     badgeBg: 'bg-white/20 text-white border-white/40',
     speed: 'Moderate Speed',
-    durability: 'High Durability (30+ Laps)',
+    durability: 'Longer life · conditions vary',
     description: 'Takes longer to warm up, but lasts the longest distance without degradation.'
   }
 ];
@@ -79,7 +80,7 @@ const DRIVER_STRATEGIES = [
     team: 'Mercedes',
     color: '#00a19c',
     strategyName: '2-Stop Attack (Medium ➔ Hard ➔ Soft)',
-    summary: 'Lewis pitted early on Lap 18, then made a late sprint pit stop on Lap 43 for Soft tires to secure the Fastest Lap bonus point.',
+    summary: 'Lewis pitted early on Lap 18, then made a late sprint pit stop on Lap 43 for Soft tires to attack on fresh tires late in the race.',
     stints: [
       { compound: 'MEDIUM', start: 1, end: 18, color: '#fbbf24' },
       { compound: 'HARD', start: 19, end: 42, color: '#ffffff' },
@@ -200,12 +201,9 @@ const generateLapTelemetry = () => {
 export default function Strategy() {
   const [mode, setMode] = useState('beginner'); // 'beginner' or 'pro'
   const [selectedDriver, setSelectedDriver] = useState(DRIVER_STRATEGIES[0]);
-  const [telemetryData, setTelemetryData] = useState([]);
+  const [telemetryData] = useState(generateLapTelemetry);
   const [proFocus, setProFocus] = useState('verstappen');
 
-  useEffect(() => {
-    setTelemetryData(generateLapTelemetry());
-  }, []);
 
   return (
     <div className="pt-24 pb-16 min-h-screen bg-[#07070a] text-f1-light px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
@@ -214,7 +212,7 @@ export default function Strategy() {
         <div>
           <div className="border-l-2 border-f1-red pl-2 mb-2">
             <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
-              {mode === 'beginner' ? 'F1 Race Strategy Made Simple' : 'FIA Grade 1 Telemetry Engine'}
+              {mode === 'beginner' ? 'F1 Race Strategy Made Simple' : 'Explore the strategy model'}
             </h4>
           </div>
           <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
@@ -223,7 +221,7 @@ export default function Strategy() {
           <p className="text-f1-muted text-xs sm:text-sm mt-1 max-w-2xl">
             {mode === 'beginner' 
               ? 'Understand how Formula 1 pit stops, tire compounds, and race tactics decide who wins the Grand Prix!' 
-              : 'Advanced lap time deltas, tire thermal degradation rates, and automated telemetry anomaly detection.'}
+              : 'Illustrative lap-time patterns and unusual-lap examples, with their assumptions explained.'}
           </p>
         </div>
 
@@ -252,6 +250,8 @@ export default function Strategy() {
         </div>
       </div>
 
+      <DataNote kind="Teaching simulation">The driver stories, stints and lap traces on this page illustrate strategy concepts; they are not a reconstruction of a particular Grand Prix. Team labels are illustrative historical examples. Lower lap times mean faster laps. A slow lap alone does not prove what happened.</DataNote>
+      <StrategyLab />
       {/* BEGINNER MODE VIEW */}
       {mode === 'beginner' ? (
         <div className="space-y-10">
@@ -264,7 +264,7 @@ export default function Strategy() {
                   <h2 className="text-xl font-black text-white uppercase tracking-tight">
                     F1 Tyre Compounds Explained
                   </h2>
-                  <p className="text-xs text-f1-muted">Every F1 car must use at least two different tire types during a dry race!</p>
+                  <p className="text-xs text-f1-muted">Normally, drivers must use two different slick specifications in a dry Grand Prix. Wet-weather use and event-specific rules can change the requirements.</p>
                 </div>
               </div>
 
@@ -447,7 +447,7 @@ export default function Strategy() {
                   <h2 className="text-xl font-black text-white uppercase tracking-tight">
                     Lap Time Trace & Degradation Delta
                   </h2>
-                  <p className="text-xs text-f1-muted font-mono">Raw lap duration telemetry traces across leading constructors (seconds).</p>
+                  <p className="text-xs text-f1-muted font-mono">Generated lap-time traces for learning (seconds); these are not measured telemetry.</p>
                 </div>
 
                 <div className="flex gap-2 font-mono text-xs">
@@ -499,7 +499,7 @@ export default function Strategy() {
                 <h2 className="text-xl font-black text-white uppercase tracking-tight">
                   Automated Telemetry Anomaly Detector
                 </h2>
-                <p className="text-xs text-f1-muted font-mono">Algorithmic Z-score analysis detecting pit stops, VSC windows, and lap time spikes.</p>
+                <p className="text-xs text-f1-muted font-mono">Bundled Isolation Forest examples flag unusual lap durations. Suggested causes are hypotheses, not verified race-control events.</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-xs">
@@ -515,7 +515,7 @@ export default function Strategy() {
                       </span>
                     </div>
                     <div className="text-[11px]">
-                      Raw Timestamp: {anom.milliseconds} ms ({(anom.milliseconds / 1000).toFixed(2)}s)
+                      Example duration: {anom.milliseconds} ms ({(anom.milliseconds / 1000).toFixed(2)}s)
                     </div>
                     {anom.reason && (
                       <div className="text-[10px] mt-2 bg-black/50 p-2 rounded text-f1-light border border-f1-red/30">
