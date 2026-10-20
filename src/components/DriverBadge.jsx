@@ -1,4 +1,3 @@
-import React from 'react';
 
 function DriverBadge({ position, name, team, points, teamColor }) {
   return (
