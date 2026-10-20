@@ -1,309 +1,98 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import * as THREE from 'three';
-import { Canvas } from '@react-three/fiber';
-import { useProgress } from '@react-three/drei';
-import { createTimeline } from 'animejs';
-import { F1CarModel } from './animations/F1CarModel';
-import { IntroCamera } from './animations/IntroCamera';
-import f1LogoSrc from '../assets/f1_logo.svg';
+import { Component, lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import useDialogAccessibility from '../hooks/useDialogAccessibility';
+import { introFrame, INTRO_DURATION_MS, INTRO_FADE_MS, INTRO_LAUNCH_MS, INTRO_LOGO_MS, PIT_STOP_DURATION_MS } from '../utils/introSequence';
+import PitWallConsole from './animations/PitWallConsole';
+import logo from '../assets/f1_logo.svg';
+const LogoReveal = lazy(() => import('./animations/IntroLogoReveal'));
+const MercedesScene = lazy(() => import('./animations/MercedesIntroScene'));
 
-// ── Thin red loading bar shown while GLB downloads ───────────────────────────
-function LoadingBar({ progress }) {
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        bottom: '72px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: '220px',
-        textAlign: 'center',
-        zIndex: 20,
-        pointerEvents: 'none',
-      }}
-    >
-      <div
-        style={{
-          color: 'rgba(255,255,255,0.35)',
-          fontSize: '9px',
-          letterSpacing: '3px',
-          fontFamily: 'Rajdhani, sans-serif',
-          textTransform: 'uppercase',
-          marginBottom: '6px',
-        }}
-      >
-        Loading model… {Math.round(progress)}%
-      </div>
-      <div
-        style={{
-          height: '2px',
-          background: 'rgba(255,255,255,0.07)',
-          borderRadius: '2px',
-          overflow: 'hidden',
-        }}
-      >
-        <div
-          style={{
-            height: '100%',
-            width: `${progress}%`,
-            background: 'linear-gradient(90deg,#e10600,#ff5500)',
-            borderRadius: '2px',
-            transition: 'width 0.25s ease',
-            boxShadow: '0 0 8px rgba(225,6,0,0.7)',
-          }}
-        />
-      </div>
-    </div>
-  );
+class SceneBoundary extends Component {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch() { this.props.onFailure(); }
+  render() { return this.state.failed ? null : this.props.children; }
 }
 
-// ── useProgress must be inside React tree; this reads drei's global store ─────
-function ProgressHUD() {
-  const { progress, active } = useProgress();
-  if (!active && progress === 0) return null;
-  if (progress >= 100) return null;
-  return <LoadingBar progress={progress} />;
+const BEATS = [
+  { phase: 'arrival', label: 'Box entry', tag: '01 / APPROACH', title: 'Hit the marks.', text: 'The driver stops on the pit-box marks so the crew can reach all four wheels.', command: 'box_entry', detail: 'Car positioning' },
+  { phase: 'jack', label: 'Jacks up', tag: '02 / LIFT', title: 'Lift. Stabilize. Service.', text: 'Front and rear jack operators lift the car, letting the tire crews begin work.', command: 'jacks_up', detail: 'Front + rear lift' },
+  { phase: 'tires', label: 'Tire change', tag: '03 / WHEEL SERVICE', title: 'Four corners. One crew.', text: 'Wheel-gun operators release the nuts while carriers remove the old tires and bring in replacements.', command: 'wheel_service', detail: 'Remove → replace' },
+  { phase: 'secure', label: 'Wheels secure', tag: '04 / CONFIRM', title: 'Secure every wheel.', text: 'Wheel nuts must be secured before the car is lowered. This animation simplifies the crew choreography.', command: 'wheels_secure', detail: 'Fit + secure' },
+  { phase: 'clear', label: 'Crew clear', tag: '05 / SAFETY CHECK', title: 'Clear the car.', text: 'The jacks drop and personnel move clear. The release controller checks the pit lane for traffic.', command: 'crew_clear', detail: 'Lower + clear' },
+  { phase: 'release', label: 'Release', tag: '06 / GO', title: 'Back into the race.', text: 'The release light turns green and the driver accelerates away. A real release also depends on approaching traffic.', command: 'release', detail: 'Lane clear → go' },
+];
+
+export default function IntroScreen({ onComplete }) {
+  const [started, setStarted] = useState(null);
+  const [frame, setFrame] = useState({ lights: 0, phase: 'loading' });
+  const [stopTime, setStopTime] = useState(0);
+  const [progress, setProgress] = useState(null);
+  const [leaving, setLeaving] = useState(false);
+  const [reducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const exiting = useRef(false);
+  const completed = useRef(false);
+  const completeRef = useRef(onComplete);
+  useEffect(() => { completeRef.current = onComplete; }, [onComplete]);
+  const finish = useCallback(() => {
+    if (exiting.current) return;
+    exiting.current = true;
+    setLeaving(true);
+  }, []);
+  const dialogRef = useDialogAccessibility(true, finish, true);
+  const ready = useCallback(() => {
+    setStarted(performance.now());
+  }, []);
+  const reportProgress = useCallback(value => setProgress(value), []);
+  const complete = useCallback(() => {
+    if (!exiting.current || completed.current) return;
+    completed.current = true;
+    completeRef.current();
+  }, []);
+  useEffect(() => {
+    // Bound loading time separately so it never cuts off the longer animation.
+    if (started !== null) return;
+    const timeout = setTimeout(finish, 10000);
+    return () => clearTimeout(timeout);
+  }, [finish, started]);
+  useEffect(() => {
+    if (started === null) return;
+    const timer = setInterval(() => {
+      const elapsed = performance.now() - started;
+      const next = introFrame(elapsed, reducedMotion);
+      setStopTime(Math.floor(Math.max(0, Math.min(elapsed, INTRO_LAUNCH_MS) - 2000 * PIT_STOP_DURATION_MS / 8800) / 100) / 10);
+      if (exiting.current) return;
+      setFrame(previous => previous.lights === next.lights && previous.phase === next.phase ? previous : next);
+      if (reducedMotion ? next.phase === 'done' : elapsed >= INTRO_DURATION_MS - INTRO_FADE_MS) finish();
+    }, 50);
+    return () => clearInterval(timer);
+  }, [started, reducedMotion, finish]);
+  const showingLogo = frame.phase === 'logo';
+  const beatIndex = showingLogo ? BEATS.length - 1 : Math.max(0, BEATS.findIndex(beat => beat.phase === frame.phase));
+  const beat = BEATS[beatIndex];
+  return <motion.section initial={false} animate={{ opacity: leaving ? 0 : 1 }} transition={{ duration: reducedMotion ? .1 : INTRO_FADE_MS / 1000, ease: [0.4, 0, 0.2, 1] }} onAnimationComplete={complete} ref={dialogRef} role="dialog" aria-modal="true" aria-label="Mercedes pit-stop animation" tabIndex={-1} className={`mercedes-intro pit-intro ${leaving ? 'is-leaving' : ''} ${showingLogo ? 'is-logo-reveal' : ''} phase-${frame.phase}`}>
+    <motion.header initial={reducedMotion ? false : { opacity: 0, y: -12 }} animate={{ opacity: showingLogo ? 0 : 1, y: 0 }} transition={{ duration: .35 }} className="intro-header">
+      <div className="intro-brand"><img src={logo} alt="Formula 1" /><span>FORMULA <strong>DC-1</strong></span></div>
+      <div className="intro-edition"><i aria-hidden="true" />MERCEDES PIT GARAGE<span>3D / ILLUSTRATIVE SEQUENCE</span></div>
+    </motion.header>
+    <div className="intro-teal-halo" aria-hidden="true" />
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: started === null ? 0 : 1 }} transition={{ duration: reducedMotion ? .1 : 1, ease: [0.22, 1, 0.36, 1] }} style={{ position: 'absolute', inset: 0 }}><SceneBoundary onFailure={finish}><Suspense fallback={null}><MercedesScene paused={showingLogo} started={started} reducedMotion={reducedMotion} onReady={ready} onProgress={reportProgress} onFailure={finish} /></Suspense></SceneBoundary></motion.div>
+    <div className="intro-phase-title" aria-hidden="true"><span>GRAND PRIX / PIT LANE</span><AnimatePresence mode="wait" initial={false}><motion.p key={beat.phase} initial={{ opacity: 0, y: reducedMotion ? 0 : 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: reducedMotion ? 0 : -8 }} transition={{ duration: reducedMotion ? 0 : .16 }}>{["BOX, BOX", "JACKS UP", "TIRE CHANGE", "WHEELS SECURE", "CREW CLEAR", "RELEASE"][beatIndex]}</motion.p></AnimatePresence><small>0{beatIndex + 1}<i />06</small></div>
+    <div className="intro-stage-number" aria-hidden="true">0{beatIndex + 1}</div>
+    <div className="intro-scene-frame" aria-hidden="true"><span /><span /><span /><span /></div>
+    <ol className="intro-sequence" aria-label="Opening sequence">
+      {BEATS.map((item, index) => <li key={item.phase} aria-current={started !== null && beatIndex === index ? 'step' : undefined} className={beatIndex > index ? 'complete' : ''}><span>0{index + 1}</span><div>{item.label}<i /></div></li>)}
+    </ol>
+    <PitWallConsole beatIndex={beatIndex} loading={started === null} showingLogo={showingLogo} stopTime={stopTime} reducedMotion={reducedMotion} />
+    <footer className="intro-bottom">
+      <div className="intro-model-label"><h1>W13</h1><div><span>MERCEDES-AMG</span><p>MERCEDES PIT STOP</p></div></div>
+      <div className="intro-start-control">
+<div className={`pit-release-signal ${frame.phase === "release" ? "released" : ""}`} aria-hidden="true"><i /><span>{frame.phase === "release" ? "RELEASE" : "HOLD"}</span></div>
+        <div className="intro-status" role="status">{started === null ? <><span>{progress === 100 ? 'Preparing graphics' : 'Loading Mercedes'}</span>{progress !== null && progress < 100 && <small>{progress}%</small>}</> : <span>{started !== null ? beat.label.toUpperCase() : 'PREPARING PIT BOX'}</span>}</div>
+      </div>
+      <a className="pit-asset-credit" href={`${import.meta.env.BASE_URL}pit-crew-base-attribution.txt`} target="_blank" rel="noreferrer">Crew asset credits ↗</a>
+      <motion.button whileHover={reducedMotion ? undefined : { x: 3 }} whileTap={reducedMotion ? undefined : { scale: .97 }} className="intro-skip" onClick={finish} aria-label="Skip intro"><span>Skip intro</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12h15m-5-5 5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg><kbd>esc</kbd></motion.button>
+    </footer>
+    {started !== null && !reducedMotion && <SceneBoundary onFailure={finish}><Suspense fallback={null}><LogoReveal active={showingLogo} started={started + INTRO_LOGO_MS} reducedMotion={reducedMotion} /></Suspense></SceneBoundary>}
+  </motion.section>;
 }
-
-// ── Main intro component ─────────────────────────────────────────────────────
-const IntroScreen = ({ onComplete }) => {
-  const containerRef = useRef(null);
-  const [phase, setPhase] = useState('reveal');
-  // modelReady = true once the GLB is parsed and onReady fires
-  const [modelReady, setModelReady] = useState(false);
-  const timersRef = useRef([]);
-
-  // ── Finish: mark session done and hand off to main app ─────────────────────
-  const handleFinish = useCallback(() => {
-    sessionStorage.setItem('fdc1_intro_seen', 'true');
-    onComplete();
-  }, [onComplete]);
-
-  // ── Skip button / ESC ───────────────────────────────────────────────────────
-  const handleSkip = useCallback(() => {
-    timersRef.current.forEach(clearTimeout);
-    setPhase('done');
-    // Instant fade to black then redirect
-    if (containerRef.current) {
-      createTimeline({ onComplete: handleFinish }).add(containerRef.current, {
-        opacity: [1, 0],
-        duration: 250,
-        ease: 'inQuad',
-      });
-    } else {
-      handleFinish();
-    }
-  }, [handleFinish]);
-
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') handleSkip(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [handleSkip]);
-
-  // ── Sequence — starts only once the real GLB is ready ──────────────────────
-  useEffect(() => {
-    if (!modelReady) return;
-    timersRef.current.forEach(clearTimeout);
-
-    // Phase 1 → revving (1.4s): fade in logo + sequential start lights
-    const t1 = setTimeout(() => {
-      setPhase('revving');
-
-      const logoEl = containerRef.current?.querySelector('#intro-logo');
-      const taglineEl = containerRef.current?.querySelector('#intro-tagline');
-      if (logoEl) {
-        createTimeline()
-          .add(logoEl, { opacity: [0, 1], translateY: [-8, 0], duration: 500, ease: 'outExpo' })
-          .add(taglineEl, { opacity: [0, 1], translateY: [8, 0], duration: 400, ease: 'outExpo' }, '-=200');
-      }
-
-      const lights = containerRef.current?.querySelectorAll('.start-light') ?? [];
-      lights.forEach((light, i) => {
-        setTimeout(() => {
-          light.style.backgroundColor = '#e10600';
-          light.style.boxShadow = '0 0 14px #e10600, 0 0 32px #e10600cc';
-        }, i * 340);
-      });
-    }, 1400);
-
-    // Phase 2 → launch (3.2s): lights out + wordmark slam
-    const t2 = setTimeout(() => {
-      setPhase('launch');
-
-      const lights = containerRef.current?.querySelectorAll('.start-light') ?? [];
-      lights.forEach((light) => {
-        light.style.backgroundColor = '#150000';
-        light.style.boxShadow = 'none';
-        light.style.transition = 'all 0.08s linear';
-      });
-
-      const wm = containerRef.current?.querySelector('#intro-wordmark');
-      if (wm) {
-        createTimeline().add(wm, { opacity: [0, 1], scale: [1.25, 1], duration: 380, ease: 'outBounce' });
-      }
-    }, 3200);
-
-    // Phase 3 → redirect (4.4s): car has been "launched" — cut to menu NOW
-    // Fast fade-out then call onComplete; no lingering scene.
-    const t3 = setTimeout(() => {
-      setPhase('done');
-      if (containerRef.current) {
-        createTimeline({ onComplete: handleFinish }).add(containerRef.current, {
-          opacity: [1, 0],
-          duration: 350,
-          ease: 'inQuad',
-        });
-      } else {
-        handleFinish();
-      }
-    }, 4400);
-
-    timersRef.current = [t1, t2, t3];
-    return () => timersRef.current.forEach(clearTimeout);
-  }, [modelReady, handleFinish]);
-
-  return (
-    <div
-      ref={containerRef}
-      className="fixed inset-0 z-[9999] bg-[#07070b] flex flex-col justify-between p-6 md:p-10 overflow-hidden select-none"
-      style={{ opacity: 1 }}
-    >
-      {/* ── 3D Canvas ── */}
-      <div className="absolute inset-0 z-0">
-        <Canvas
-          camera={{ position: [-4.2, 2.2, -4.6], fov: 45 }}
-          gl={{
-            antialias: true,
-            toneMapping: 4, // ACESFilmicToneMapping
-            toneMappingExposure: 1.2,
-            physicallyCorrectLights: true,
-          }}
-          shadows={{ type: 'PCFShadowMap' }}
-          onCreated={({ gl }) => {
-            gl.outputColorSpace = THREE.SRGBColorSpace;
-          }}
-        >
-          <color attach="background" args={['#07070b']} />
-
-          <ambientLight intensity={1.2} color="#ffffff" />
-
-          <directionalLight
-            position={[-6, 10, -6]}
-            intensity={4.0}
-            color="#ffffff"
-            castShadow
-            shadow-mapSize={[1024, 1024]}
-          />
-          <directionalLight position={[6, 8, 6]} intensity={2.2} color="#ffffff" />
-          <directionalLight position={[0, 12, 0]} intensity={2.5} color="#ffffff" />
-
-          {/* Petronas turquoise rim light */}
-          <pointLight position={[-3, 1.5, -2]} intensity={2.5} color="#00e5c0" />
-          {/* F1 red accent */}
-          <pointLight position={[0, 0.8, 3]} intensity={3.0} color="#e10600" />
-
-          <IntroCamera phase={phase} />
-          <F1CarModel phase={phase} onReady={() => setModelReady(true)} />
-        </Canvas>
-      </div>
-
-      {/* Loading bar (shown while model is downloading; hidden once ready) */}
-      {!modelReady && <ProgressHUD />}
-
-      {/* Subtle grid overlay */}
-      <div
-        className="absolute inset-0 z-[1] pointer-events-none"
-        style={{
-          backgroundImage:
-            'linear-gradient(rgba(225,6,0,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(225,6,0,0.03) 1px,transparent 1px)',
-          backgroundSize: '48px 48px',
-        }}
-      />
-
-      {/* ── Top bar ── */}
-      <div className="relative z-10 w-full flex items-center justify-between pointer-events-none">
-        {/* Logo (fades in during revving phase) */}
-        <div id="intro-logo" className="flex items-center gap-3 opacity-0">
-          <img
-            src={f1LogoSrc}
-            alt="Formula 1"
-            style={{ height: '32px', width: 'auto', filter: 'drop-shadow(0 0 16px rgba(225,6,0,0.8))' }}
-          />
-          <div className="hidden sm:flex flex-col">
-            <span className="text-[10px] text-white/40 uppercase tracking-[3px] font-rajdhani">
-              Official 3D View
-            </span>
-            <span className="text-xs font-bold text-white tracking-widest font-rajdhani">
-              MERCEDES W13
-            </span>
-          </div>
-        </div>
-
-        {/* Start lights */}
-        <div className="flex gap-2.5 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-2xl">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="start-light w-4 h-4 md:w-5 md:h-5 rounded-full border-[1.5px] border-[#3a0000] bg-[#150000]"
-              style={{ transition: 'background-color 0.1s, box-shadow 0.1s' }}
-            />
-          ))}
-        </div>
-
-        {/* Skip */}
-        <button
-          onClick={handleSkip}
-          className="pointer-events-auto text-[11px] font-bold text-white/50 hover:text-white border border-white/15 hover:border-f1-red bg-black/50 hover:bg-f1-red/10 px-3 py-1.5 rounded uppercase tracking-wider transition-all cursor-pointer font-rajdhani"
-        >
-          Skip <span className="text-[9px] text-white/30 ml-1">[ESC]</span>
-        </button>
-      </div>
-
-      {/* Middle spacer */}
-      <div className="relative z-10 pointer-events-none my-auto" />
-
-      {/* ── Bottom bar ── */}
-      <div className="relative z-10 flex flex-col items-center gap-2 pointer-events-none pb-2">
-        <p
-          id="intro-tagline"
-          style={{
-            opacity: 0,
-            color: 'rgba(255,255,255,0.4)',
-            fontSize: '12px',
-            letterSpacing: '5px',
-            fontFamily: 'Rajdhani, sans-serif',
-            textTransform: 'uppercase',
-            fontWeight: 600,
-          }}
-        >
-          The Fastest Sport on Earth
-        </p>
-
-        <div
-          id="intro-wordmark"
-          style={{
-            opacity: 0,
-            fontFamily: 'Rajdhani, sans-serif',
-            fontWeight: 800,
-            fontSize: '44px',
-            letterSpacing: '10px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '16px',
-            lineHeight: 1,
-          }}
-        >
-          <span style={{ color: 'white', textShadow: '0 2px 20px rgba(0,0,0,0.8)' }}>
-            FORMULA
-          </span>
-          <span style={{ color: '#e10600', filter: 'drop-shadow(0 0 18px rgba(225,6,0,0.8))' }}>
-            DC-1
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default IntroScreen;
