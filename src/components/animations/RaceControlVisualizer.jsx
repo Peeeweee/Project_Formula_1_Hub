@@ -1,9 +1,4 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-
-const RaceControlVisualizer = ({ phase, term }) => {
-  const isFlag = ['VSC', 'Safety Car', 'Blue Flag', 'Jump Start'].includes(term);
-  const isTiming = ['Purple Sector', 'Delta Time', 'DNF', 'Parc Fermé'].includes(term);
+import { motion } from 'framer-motion';
 
   // Digital FIA Light Panel (Marshaling panel)
   const LightPanel = ({ type, blinking }) => {
@@ -55,7 +50,7 @@ const RaceControlVisualizer = ({ phase, term }) => {
   };
 
   // Realistic F1 Steering Wheel Dash
-  const SteeringWheelDash = () => {
+  const SteeringWheelDash = ({ phase, term }) => {
     const rpmLeds = Array.from({ length: 15 }).map((_, i) => {
       let color = i < 5 ? '#00a650' : i < 10 ? '#e10600' : '#007aff';
       return (
@@ -109,7 +104,7 @@ const RaceControlVisualizer = ({ phase, term }) => {
 
             {term === 'Delta Time' && (
               <>
-                <div className="text-gray-400 text-xs mb-1">DELTA VSC</div>
+                <div className="text-gray-400 text-xs mb-1">LAP DELTA</div>
                 <motion.div className="text-4xl font-black tracking-tighter"
                   animate={{ color: phase === 'demonstration' || phase === 'result' ? '#00a650' : '#e10600' }}
                 >
@@ -139,6 +134,11 @@ const RaceControlVisualizer = ({ phase, term }) => {
       </div>
     );
   };
+
+
+const RaceControlVisualizer = ({ phase, term }) => {
+  const isFlag = ['VSC', 'Safety Car', 'Blue Flag', 'Jump Start'].includes(term);
+  const isTiming = ['Purple Sector', 'Delta Time', 'DNF', 'Parc Fermé'].includes(term);
 
   return (
     <div className="w-full h-72 bg-[#0a0a0f] rounded-lg overflow-hidden relative flex items-center justify-center border border-white/10 shadow-[inset_0_0_50px_rgba(0,0,0,0.8)]">
@@ -193,7 +193,7 @@ const RaceControlVisualizer = ({ phase, term }) => {
       {/* Steering Wheel Dash */}
       {isTiming && (
         <div className="relative z-10">
-          <SteeringWheelDash />
+          <SteeringWheelDash phase={phase} term={term} />
         </div>
       )}
       
