@@ -33,6 +33,7 @@ export function IntroCamera({ phase }) {
 
   // ── Smooth camera movement ────────────────────────────────────────────────
   useFrame((state, delta) => {
+    const camera = state.camera;
     const dt = Math.min(delta, 0.05);
 
     // Translate toward target
