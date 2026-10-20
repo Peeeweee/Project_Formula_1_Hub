@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 
 function StatCard({ label, value, sub, delta, onClick }) {
@@ -7,6 +6,9 @@ function StatCard({ label, value, sub, delta, onClick }) {
     <motion.div 
       whileHover={{ scale: 1.02, transition: { duration: 0.15 } }}
       whileTap={onClick ? { scale: 0.98 } : {}}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={event => { if (onClick && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); onClick(); } }}
       onClick={onClick}
       className={`bg-f1-panel border border-f1-border p-5 rounded-lg shadow-xl relative overflow-hidden flex flex-col justify-between ${onClick ? 'cursor-pointer hover:border-f1-red/50' : ''}`}
     >
