@@ -1,25 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const VIEWS = ['SIDE VIEW', 'FRONT VIEW', 'REAR VIEW', 'TOP VIEW'];
 
 const CarViewer2D = ({ car }) => {
   const [currentView, setCurrentView] = useState('SIDE VIEW');
-  const [sideColor, setSideColor] = useState('#e10600');
-  const [accentColor, setAccentColor] = useState('#ffffff');
-
-  useEffect(() => {
-    if (car) {
-      setSideColor(car.sideViewColor || car.modelConfig?.bodyColor || '#e10600');
-      setAccentColor(car.accentColor || car.modelConfig?.accentColor || '#ffffff');
-    }
-  }, [car]);
+  const [customSideColor, setSideColor] = useState(null);
+  const [customAccentColor, setAccentColor] = useState(null);
+  const sideColor = customSideColor || car?.sideViewColor || car?.modelConfig?.bodyColor || '#e10600';
+  const accentColor = customAccentColor || car?.accentColor || car?.modelConfig?.accentColor || '#ffffff';
 
   if (!car) return null;
 
   const isPreAero = car.eraId === 'early_years' || car.eraId === 'rear_engine';
-  const isWings = car.eraId === 'wings_dfv';
-  const isTurbo = car.eraId === 'turbo_ground_effect';
   const isV10V8 = car.eraId === 'v10_era' || car.eraId === 'v8_era';
   const isModern = car.eraId === 'turbo_hybrid' || car.eraId === 'ground_effect_hybrid';
 
