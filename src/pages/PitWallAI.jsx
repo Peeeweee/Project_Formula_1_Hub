@@ -1,11 +1,12 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { ResponsiveContainer, LineChart, Line, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ZAxis, Cell } from 'recharts';
 import * as d3 from 'd3';
 import driverClusters from '../data/driver_clusters.json';
 import podiumPredictions from '../data/podium_predictions.json';
 import anomalySummary from '../data/lap_anomalies/summary.json';
 import networkData from '../data/sna/constructor_network.json';
+import DataNote from '../components/DataNote';
 import FadeInSection from '../components/FadeInSection';
 import { SkeletonCard, PlotlyTooltip } from '../components';
 
@@ -84,7 +85,7 @@ const DriverTooltip = ({ active, payload }) => {
         </div>
         <div className="space-y-1">
           <div><span className="text-gray-400 font-semibold">style</span>={data.clusterLabel}</div>
-          <div><span className="text-gray-400 font-semibold">podium_chances</span>={(data.podium_rate * 100).toFixed(1)}%</div>
+          <div><span className="text-gray-400 font-semibold">historical_podium_rate</span>={(data.podium_rate * 100).toFixed(1)}%</div>
           <div><span className="text-gray-400 font-semibold">avg_places_gained</span>={data.avg_position_gain > 0 ? '+' : ''}{data.avg_position_gain.toFixed(2)}</div>
         </div>
       </div>
@@ -386,7 +387,7 @@ function PitWallAI() {
     return [];
   }, [anomalyLapData]);
 
-  const currentAnomalyDriverData = anomalySummary.find(d => d.driverId === selectedAnomalyDriver);
+  const currentAnomalyDriverData = anomalyLapData.length ? { anomalyCount: anomalyLapData.filter(lap => lap.isAnomaly).length, totalLaps: anomalyLapData.length } : null;
 
   // Prepare SNA Data
   let currentNetworkData = networkData[selectedEra];
@@ -414,6 +415,8 @@ function PitWallAI() {
         <p className="text-f1-muted text-sm mt-2 max-w-2xl">Smart tools that help you understand driver habits, predict who will finish on the podium, find unusual lap times, and pick the best race strategy.</p>
       </div>
 
+      <DataNote kind="Experimental learning tools">Bundled examples demonstrate clustering, podium probabilities, networks and unusual laps. Their source period and model validation are not documented, so they are not current forecasts. Driver clusters describe these inputs, not innate ability. Lap anomalies suggest possible causes; they do not verify pit stops or Safety Car events.</DataNote>
+      <details className="rounded-xl border border-f1-border bg-f1-panel p-4 text-sm text-f1-muted"><summary className="cursor-pointer font-bold text-white">How to read these tools</summary><ul className="mt-3 list-disc pl-5 space-y-2"><li>Clustering groups similar statistics; car strength, era and sample size affect the result.</li><li>A podium score concerns a top-three finish, not a win. These bundled probabilities have no verified calibration or test metrics.</li><li>Only selected example laps are bundled. Lines between them do not represent every lap.</li><li>Constructor network values are bundled examples; connections do not prove that transfers caused success.</li><li>The strategy durations below are fixed teaching assumptions, not live model output.</li></ul></details>
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)}
@@ -586,18 +589,18 @@ function PitWallAI() {
 
           <div className="lg:col-span-1">
             <div className="bg-f1-panel border border-f1-border p-6 rounded-lg shadow-xl sticky top-24">
-              <h3 className="text-xs font-bold text-f1-muted uppercase tracking-widest mb-4">Most Likely Winner</h3>
+              <h3 className="text-xs font-bold text-f1-muted uppercase tracking-widest mb-4">Highest example podium score</h3>
               {likelyWinner ? (
                 <div className="flex flex-col items-center justify-center py-6 text-center">
                   <div className="w-16 h-16 rounded-full border-4 flex items-center justify-center mb-4 shadow-lg" style={{ borderColor: likelyWinner.teamColor || '#e10600', backgroundColor: '#1a1a24' }}>
-                    <span className="text-xl font-black text-f1-light">1st</span>
+                    <span className="text-xl font-black text-f1-light">Top 3</span>
                   </div>
                   <h4 className="text-2xl font-black text-f1-light mb-1">{likelyWinner.driverName}</h4>
                   <p className="text-sm text-f1-muted mb-4 font-semibold">{likelyWinner.circuit}</p>
                   
                   <div className="bg-[#0f0f18] px-4 py-2 rounded border border-[#2a2a35] inline-block">
                     <span className="text-f1-red font-black text-lg">{(likelyWinner.podiumProbability * 100).toFixed(1)}%</span>
-                    <span className="text-xs text-f1-muted ml-2 font-bold uppercase">Podium Chance</span>
+                    <span className="text-xs text-f1-muted ml-2 font-bold uppercase">Example podium score</span>
                   </div>
                 </div>
               ) : (
@@ -633,7 +636,7 @@ function PitWallAI() {
             <h3 className="text-lg font-bold text-f1-light">Lap Times Chart</h3>
             {currentAnomalyDriverData && (
               <span className="text-xs bg-f1-red/10 text-f1-red border border-f1-red/30 px-3 py-1 rounded font-bold uppercase tracking-wider">
-                {currentAnomalyDriverData.anomalyCount} unusual laps found out of {currentAnomalyDriverData.totalLaps} laps
+                {currentAnomalyDriverData.anomalyCount} unusual laps found out of {currentAnomalyDriverData.totalLaps} bundled lap records
               </span>
             )}
           </div>
