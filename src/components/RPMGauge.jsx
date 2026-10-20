@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
 const RPMGauge = ({ driverId }) => {
@@ -6,7 +6,7 @@ const RPMGauge = ({ driverId }) => {
   
   useEffect(() => {
     // Reset RPM to 0 when a new driver is loaded
-    setRpm(0);
+    const reset = setTimeout(() => setRpm(0), 0);
     
     // Animate RPM revving up
     let timeout1, timeout2, timeout3;
@@ -19,6 +19,7 @@ const RPMGauge = ({ driverId }) => {
     timeout3 = setTimeout(() => setRpm(85 + Math.random() * 10), 1000);
 
     return () => {
+      clearTimeout(reset);
       clearTimeout(timeout1);
       clearTimeout(timeout2);
       clearTimeout(timeout3);
