@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ERAS = [
@@ -13,16 +13,16 @@ const ERAS = [
 ];
 
 const CarVaultFilters = ({ cars = [], onFilterChange }) => {
+  const latestYear = Math.max(new Date().getFullYear(), ...cars.map(car => Number(car.year) || 1950));
   const [selectedEra, setSelectedEra] = useState('all');
   const [selectedTeam, setSelectedTeam] = useState('all');
-  const [yearRange, setYearRange] = useState([1950, 2024]);
+  const [yearRange, setYearRange] = useState([1950, latestYear]);
   const [searchInput, setSearchInput] = useState('');
   const [driverSearch, setDriverSearch] = useState('');
   const [championshipOnly, setChampionshipOnly] = useState(false);
   const [sortBy, setSortBy] = useState('year-asc');
   
   const [isExpanded, setIsExpanded] = useState(false);
-  const [filteredCount, setFilteredCount] = useState(cars.length);
 
   // Debounce search
   useEffect(() => {
@@ -38,8 +38,8 @@ const CarVaultFilters = ({ cars = [], onFilterChange }) => {
     return [...new Set(allTeams)].sort();
   }, [cars]);
 
-  // Filtering logic
-  useEffect(() => {
+  // Derive counts and results from filters without an extra state update.
+  const filtered = useMemo(() => {
     let result = [...cars];
 
     if (selectedEra !== 'all') {
@@ -69,16 +69,15 @@ const CarVaultFilters = ({ cars = [], onFilterChange }) => {
       return 0;
     });
 
-    setFilteredCount(result.length);
-    if (onFilterChange) {
-      onFilterChange(result);
-    }
-  }, [cars, selectedEra, selectedTeam, yearRange, driverSearch, championshipOnly, sortBy]); // Excluding onFilterChange to avoid loop if parent recreates it
+    return result;
+  }, [cars, selectedEra, selectedTeam, yearRange, driverSearch, championshipOnly, sortBy]);
+  const filteredCount = filtered.length;
+  useEffect(() => { onFilterChange?.(filtered); }, [filtered, onFilterChange]);
 
   const resetAll = () => {
     setSelectedEra('all');
     setSelectedTeam('all');
-    setYearRange([1950, 2024]);
+    setYearRange([1950, latestYear]);
     setSearchInput('');
     setChampionshipOnly(false);
     setSortBy('year-asc');
@@ -94,8 +93,8 @@ const CarVaultFilters = ({ cars = [], onFilterChange }) => {
   if (selectedTeam !== 'all') {
     badges.push({ id: 'team', label: `Team: ${selectedTeam}`, onRemove: () => setSelectedTeam('all') });
   }
-  if (yearRange[0] > 1950 || yearRange[1] < 2024) {
-    badges.push({ id: 'year', label: `Years: ${yearRange[0]}–${yearRange[1]}`, onRemove: () => setYearRange([1950, 2024]) });
+  if (yearRange[0] > 1950 || yearRange[1] < latestYear) {
+    badges.push({ id: 'year', label: `Years: ${yearRange[0]}–${yearRange[1]}`, onRemove: () => setYearRange([1950, latestYear]) });
   }
   if (searchInput.trim() !== '') {
     badges.push({ id: 'driver', label: `Driver: "${searchInput}"`, onRemove: () => setSearchInput('') });
@@ -249,14 +248,14 @@ const CarVaultFilters = ({ cars = [], onFilterChange }) => {
                     <div 
                       className="absolute h-full bg-f1-red rounded-full" 
                       style={{ 
-                        left: `${((yearRange[0] - 1950) / (2024 - 1950)) * 100}%`,
-                        right: `${100 - ((yearRange[1] - 1950) / (2024 - 1950)) * 100}%` 
+                        left: `${((yearRange[0] - 1950) / (latestYear - 1950)) * 100}%`,
+                        right: `${100 - ((yearRange[1] - 1950) / (latestYear - 1950)) * 100}%`
                       }} 
                     />
                     <input 
                       type="range" 
                       min="1950" 
-                      max="2024" 
+                      max={latestYear}
                       value={yearRange[0]} 
                       onChange={(e) => setYearRange([Math.min(parseInt(e.target.value), yearRange[1]), yearRange[1]])}
                       className="absolute w-full -top-1 appearance-none bg-transparent pointer-events-none dual-slider z-10"
@@ -264,7 +263,7 @@ const CarVaultFilters = ({ cars = [], onFilterChange }) => {
                     <input 
                       type="range" 
                       min="1950" 
-                      max="2024" 
+                      max={latestYear}
                       value={yearRange[1]} 
                       onChange={(e) => setYearRange([yearRange[0], Math.max(parseInt(e.target.value), yearRange[0])])}
                       className="absolute w-full -top-1 appearance-none bg-transparent pointer-events-none dual-slider z-20"
