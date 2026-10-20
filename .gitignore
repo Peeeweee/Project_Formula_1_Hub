@@ -22,3 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Python analysis outputs
+__pycache__/
+*.pyc
+podium_model.pkl
+
+.tools/
+
+artifacts/asset-review/
