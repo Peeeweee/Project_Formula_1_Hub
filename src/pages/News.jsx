@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import useDialogAccessibility from '../hooks/useDialogAccessibility';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import DataNote from '../components/DataNote';
+import { getCacheInfo } from '../services/cache';
 import { fetchLiveF1News } from '../services/newsService';
 import { NewsTicker } from '../components';
 import FadeInSection from '../components/FadeInSection';
@@ -78,16 +81,19 @@ const QUICK_TAGS = [
 
 export default function News() {
   const [articles, setArticles] = useState([]);
+  const [feedError, setFeedError] = useState(null);
+  const [fetchedAt, setFetchedAt] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedArticle, setSelectedArticle] = useState(null);
-  const { toggleFavorite, isFavorite, getFavoritesByType } = useFavorites();
+  const articleDialogRef = useDialogAccessibility(Boolean(selectedArticle), () => setSelectedArticle(null));
+  const { toggleFavorite, isFavorite } = useFavorites();
 
   // Live Auto-Update State
   const [autoUpdate, setAutoUpdate] = useState(true);
-  const [countdown, setCountdown] = useState(15);
+  const [countdown, setCountdown] = useState(60);
   const [toastMessage, setToastMessage] = useState(null);
 
   const loadNews = async (isSync = false) => {
@@ -95,7 +101,9 @@ export default function News() {
     else setLoading(true);
 
     try {
-      const data = await fetchLiveF1News();
+      const data = await fetchLiveF1News(isSync);
+      setFeedError(null);
+      setFetchedAt(getCacheInfo('rss_news')?.timestamp);
       setArticles(prev => {
         if (isSync && prev.length > 0 && data.length > prev.length) {
           const diff = data.length - prev.length;
@@ -105,33 +113,24 @@ export default function News() {
         return data;
       });
     } catch (err) {
-      console.error(err);
+      setFeedError(err.message);
     } finally {
       setLoading(false);
       setRefreshing(false);
-      setCountdown(15);
+      setCountdown(60);
     }
   };
 
   useEffect(() => {
-    loadNews();
+    void Promise.resolve().then(() => loadNews());
   }, []);
 
-  // Auto-Update Polling Interval (15 seconds)
+  // Keep polling outside state updater functions (which React can replay).
   useEffect(() => {
     if (!autoUpdate) return;
-
-    const timer = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          loadNews(true);
-          return 15;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
+    const interval = setInterval(() => loadNews(true), 60000);
+    const countdownTimer = setInterval(() => setCountdown(value => value <= 1 ? 60 : value - 1), 1000);
+    return () => { clearInterval(interval); clearInterval(countdownTimer); };
   }, [autoUpdate]);
 
   const filteredArticles = articles.filter(item => {
@@ -160,7 +159,8 @@ export default function News() {
 
   return (
     <div className="pt-20 pb-16 min-h-screen bg-[#07070a] text-f1-light relative">
-      <NewsTicker />
+      <NewsTicker headlines={articles.slice(0, 8)} />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6"><DataNote kind={feedError ? 'Feed unavailable' : 'Publisher RSS'}>Source: publisher feeds via rss2json. Categories are automatically assigned; summaries may be incomplete. {fetchedAt && `Retrieved ${new Date(fetchedAt).toLocaleString()}.`} {feedError && `${feedError} Any articles still shown are from the last successful retrieval.`} {feedError && <button onClick={() => loadNews(true)} className="ml-2 underline text-white">Retry</button>}</DataNote></div>
 
       {/* Live Toast Alert for New Wire Articles */}
       <AnimatePresence>
@@ -304,7 +304,7 @@ export default function News() {
           {['ALL', ...CATEGORIES.filter(c => c !== 'ALL'), 'BOOKMARKED'].map(cat => (
             <button
               key={cat}
-              onClick={() => setSelectedCategory(cat)}
+              role="button" tabIndex={0} onKeyDown={event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setSelectedCategory(cat); } } } onClick={() => setSelectedCategory(cat)}
               className={`px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider whitespace-nowrap transition duration-200 ${
                 selectedCategory === cat 
                   ? 'bg-f1-red text-white shadow-lg shadow-f1-red/20' 
@@ -327,7 +327,7 @@ export default function News() {
             {heroArticle && selectedCategory === 'ALL' && !searchQuery && (
               <FadeInSection>
                 <div 
-                  onClick={() => setSelectedArticle(heroArticle)}
+                  role="button" tabIndex={0} onKeyDown={event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setSelectedArticle(heroArticle); } } } onClick={() => setSelectedArticle(heroArticle)}
                   className="group cursor-pointer relative overflow-hidden rounded-2xl border border-f1-border bg-[#0e0e15] grid grid-cols-1 lg:grid-cols-12 shadow-2xl hover:border-f1-red transition duration-300"
                 >
                   <div className="lg:col-span-7 relative h-72 lg:h-auto overflow-hidden">
@@ -402,7 +402,7 @@ export default function News() {
                       <motion.div
                         key={article.id}
                         whileHover={{ y: -4 }}
-                        onClick={() => setSelectedArticle(article)}
+                        role="button" tabIndex={0} onKeyDown={event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setSelectedArticle(article); } } } onClick={() => setSelectedArticle(article)}
                         className="bg-[#0e0e15] border border-f1-border hover:border-f1-red/50 rounded-xl overflow-hidden shadow-lg cursor-pointer flex flex-col justify-between transition duration-200 group"
                       >
                         <div>
@@ -419,7 +419,7 @@ export default function News() {
 
                           <div className="p-5">
                             <div className="text-[10px] text-f1-muted font-mono mb-2">
-                              {new Date(article.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {article.readTime}
+                              {article.date ? new Date(article.date).toLocaleString() : 'Date unavailable'} • {article.readTime}
                             </div>
                             <h4 className="font-extrabold text-base text-white group-hover:text-f1-red transition leading-snug mb-2">
                               {article.title}
@@ -465,7 +465,7 @@ export default function News() {
                     {trendingArticles.map((art, idx) => (
                       <div 
                         key={`trending-${art.id}`}
-                        onClick={() => setSelectedArticle(art)}
+                        role="button" tabIndex={0} onKeyDown={event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setSelectedArticle(art); } } } onClick={() => setSelectedArticle(art)}
                         className="pt-4 first:pt-0 cursor-pointer group flex items-start gap-4"
                       >
                         <span className="text-2xl font-black text-f1-red/40 font-mono group-hover:text-f1-red transition">
@@ -515,7 +515,8 @@ export default function News() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedArticle(null)}
-              className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+              ref={articleDialogRef} role="dialog" aria-modal="true" aria-label="News article" tabIndex={-1}
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
             >
               <motion.div
                 initial={{ scale: 0.95, y: 20 }}
@@ -548,7 +549,7 @@ export default function News() {
                   <div className="flex flex-wrap items-center justify-between text-xs text-f1-muted font-mono border-b border-f1-border/40 pb-4">
                     <span>Source: {selectedArticle.source}</span>
                     <span>By {selectedArticle.author}</span>
-                    <span>Published: {new Date(selectedArticle.date).toLocaleDateString()}</span>
+                    <span>Published: {selectedArticle.date ? new Date(selectedArticle.date).toLocaleDateString() : 'Date unavailable'}</span>
                   </div>
 
                   <div className="text-sm text-f1-light leading-relaxed space-y-4 font-sans">
