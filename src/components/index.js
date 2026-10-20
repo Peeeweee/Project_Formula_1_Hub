@@ -6,7 +6,6 @@ export * from './Skeleton';
 export { default as SearchBar } from './SearchBar';
 export { default as ErrorBoundary } from './ErrorBoundary';
 export { default as ApiErrorCard } from './ApiErrorCard';
-export { default as IntroScreen } from './IntroScreen';
 export { default as AnimatedBackground } from './AnimatedBackground';
 export { default as CarViewer3D } from './CarViewer3D';
 export { default as F1CarSVG } from './F1CarSVG';
