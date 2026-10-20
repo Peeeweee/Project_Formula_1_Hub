@@ -1,16 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import useDialogAccessibility from '../hooks/useDialogAccessibility';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   getCurrentDriverStandings, 
   getCurrentConstructorStandings, 
   getSeasonRaces, 
-  getRaceResults,
+  getSeasonWinners,
+  getRoundStandings,
   getLastRaceResults 
 } from '../services/jolpicaApi';
 import { getLatestSession, getRaceWeather, getDriverPositions, getLapTimes } from '../services/openf1Api';
 import { StatCard, SkeletonTable, PlotlyTooltip, PodiumPredictor } from '../components';
+import DataNote from '../components/DataNote';
+import { Link } from 'react-router-dom';
+import { getCacheInfo } from '../services/cache';
+import { standingsProgression, latestObservationDate } from '../utils/raceData';
 import FadeInSection from '../components/FadeInSection';
-import { COUNTRY_FLAGS, getFlagEmoji } from '../utils/countryFlags';
+import { getFlagEmoji } from '../utils/countryFlags';
 import { 
   ResponsiveContainer, 
   BarChart, 
@@ -68,6 +74,17 @@ const itemVariants = {
   show: { opacity: 1, y: 0 }
 };
 
+function calculateTimeLeft(dateStr) {
+    const difference = +new Date(dateStr) - +new Date();
+    if (difference <= 0) return { days: 0, hours: 0, minutes: 0 };
+
+    return {
+      days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+      minutes: Math.floor((difference / 1000 / 60) % 60)
+    };
+  }
+
 function Countdown({ targetDate }) {
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft(targetDate));
 
@@ -78,16 +95,7 @@ function Countdown({ targetDate }) {
     return () => clearInterval(timer);
   }, [targetDate]);
 
-  function calculateTimeLeft(dateStr) {
-    const difference = +new Date(dateStr) - +new Date();
-    if (difference <= 0) return { days: 0, hours: 0, minutes: 0 };
-    
-    return {
-      days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-      hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-      minutes: Math.floor((difference / 1000 / 60) % 60)
-    };
-  }
+
 
   return (
     <div className="mt-2 text-xs font-mono font-bold text-f1-red uppercase tracking-wider bg-f1-red/10 border border-f1-red/20 px-2 py-1 rounded inline-block">
@@ -221,6 +229,7 @@ const LeaderSpotlight = ({ leaderDriver }) => {
 };
 
 const DriverSpotlightModal = ({ spotlightDriver, onClose }) => {
+  const dialogRef = useDialogAccessibility(true, onClose);
   const [headshotUrl, setHeadshotUrl] = useState(null);
   const [teamColor, setTeamColor] = useState('#e10600');
 
@@ -257,7 +266,7 @@ const DriverSpotlightModal = ({ spotlightDriver, onClose }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+      ref={dialogRef} role="dialog" aria-modal="true" aria-label="Driver details" tabIndex={-1} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
       onClick={onClose}
     >
       <motion.div
@@ -366,6 +375,7 @@ function LiveTelemetryTab() {
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [telemetryError, setTelemetryError] = useState(null);
 
   const fetchTelemetry = async () => {
     try {
@@ -390,11 +400,13 @@ function LiveTelemetryTab() {
       });
       const ranked = Object.values(latestPosMap).sort((a, b) => a.position - b.position);
       setPositions(ranked);
-      if (ranked.length > 0 && !selectedDriver) setSelectedDriver(ranked[0].driver_number);
+      if (ranked.length > 0) setSelectedDriver(previous => ranked.some(row => row.driver_number === previous) ? previous : ranked[0].driver_number);
 
-      setLastUpdated(new Date());
+      setLastUpdated(latestObservationDate(weatherData, posData));
+      setTelemetryError(null);
     } catch (err) {
       console.error('Telemetry fetch error:', err);
+      setTelemetryError('Session data is unavailable. Any observations still shown are from the last successful retrieval.');
     } finally {
       setLoading(false);
     }
@@ -416,7 +428,7 @@ function LiveTelemetryTab() {
 
   // Initial + poll every 15s
   useEffect(() => {
-    fetchTelemetry();
+    void Promise.resolve().then(fetchTelemetry);
     const iv = setInterval(fetchTelemetry, 15000);
     return () => clearInterval(iv);
   }, []);
@@ -431,28 +443,31 @@ function LiveTelemetryTab() {
   if (!session) return (
     <div className="text-center py-20 text-f1-muted">
       <div className="text-5xl mb-4">📡</div>
-      <p className="font-mono text-sm">No active session found.</p>
-      <p className="text-xs mt-2 opacity-60">OpenF1 only provides data during live or recent sessions.</p>
+      <p className="font-mono text-sm">{telemetryError || 'No session data is available.'}</p>
+      <button className="mt-4 underline" onClick={fetchTelemetry}>Retry connection</button>
+      <p className="text-xs mt-2 opacity-60">Access and availability depend on the data provider.</p>
     </div>
   );
 
   return (
     <div className="space-y-6">
+      <DataNote kind="OpenF1 session data">This is the latest available session, which may have ended. {lastUpdated && `Latest source observation: ${lastUpdated.toLocaleString()}.`} {telemetryError} <Link to="/watch" className="underline text-white">Understand the timing screen →</Link></DataNote>
       {/* Session Banner */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0e0e16] border border-f1-red/30 rounded-xl px-5 py-3">
         <div className="flex items-center gap-3">
           <span className="w-2 h-2 rounded-full bg-f1-red animate-pulse" />
           <div>
-            <div className="text-[10px] text-f1-muted uppercase tracking-widest font-mono">Live Session</div>
+            <div className="text-[10px] text-f1-muted uppercase tracking-widest font-mono">Latest available session</div>
             <div className="text-white font-black text-sm">{session.session_name} — {session.location}, {session.country_name}</div>
           </div>
         </div>
         <div className="flex items-center gap-2 text-[10px] text-f1-muted font-mono">
-          {lastUpdated && <span>Updated {lastUpdated.toLocaleTimeString()}</span>}
+          {lastUpdated && <span>Observed {lastUpdated.toLocaleTimeString()}</span>}
           <span className="px-2 py-0.5 rounded bg-f1-red/20 text-f1-red border border-f1-red/30 uppercase">{session.session_type}</span>
         </div>
       </div>
 
+      <p className="text-sm text-f1-muted">Lower lap times mean faster laps. A spike may reflect traffic, a pit stop or flags; lap duration alone cannot identify the cause.</p>
       {/* Weather Cards */}
       {weather && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -475,7 +490,7 @@ function LiveTelemetryTab() {
         {/* Live Position Board */}
         <div className="bg-[#0e0e16] border border-f1-border rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-f1-border flex items-center justify-between">
-            <span className="text-[11px] font-black uppercase tracking-widest text-f1-light">Live Positions</span>
+            <span className="text-[11px] font-black uppercase tracking-widest text-f1-light">Latest observed positions</span>
             <span className="text-[10px] text-f1-muted font-mono">{positions.length} drivers</span>
           </div>
           <div className="max-h-80 overflow-y-auto">
@@ -548,6 +563,7 @@ function LiveSeason() {
   const [calendarRefreshing, setCalendarRefreshing] = useState(false);
 
   // OpenF1 State
+  const [snapshotError, setSnapshotError] = useState(null);
   const [openF1Data, setOpenF1Data] = useState({ session: null, weather: null, positions: [] });
   const [openF1Loading, setOpenF1Loading] = useState(true);
   const [openF1Refreshing, setOpenF1Refreshing] = useState(false);
@@ -591,6 +607,7 @@ function LiveSeason() {
       const rankedPositions = Object.values(latestPosMap).sort((a, b) => a.position - b.position);
 
       setOpenF1Data({ session, weather: latestWeather, positions: rankedPositions });
+      setSnapshotError(null);
       
       // Give the animation time to be seen if it was a refresh
       if (isRefresh) {
@@ -598,209 +615,84 @@ function LiveSeason() {
       }
     } catch (err) {
       console.error(err);
+      setSnapshotError('Session feed unavailable. Any snapshot still shown is from the last successful retrieval.');
     } finally {
       setOpenF1Loading(false);
       setOpenF1Refreshing(false);
     }
   };
 
+  const [seasonFetchedAt, setSeasonFetchedAt] = useState(null);
+  const [progressionError, setProgressionError] = useState(null);
+  const [progressionLoading, setProgressionLoading] = useState(false);
+  const seasonAlive = useRef(true);
   const fetchSeasonData = async (isRefresh = false) => {
     if (isRefresh) setCalendarRefreshing(true);
     else setLoading(true);
     setError(null);
     try {
-        const [driversRes, constructorsRes, calendarRes, lastRaceRes] = await Promise.all([
-          getCurrentDriverStandings(),
-          getCurrentConstructorStandings(),
-          getSeasonRaces('current'),
-          getLastRaceResults()
-        ]);
-
-        setDriversData(driversRes);
-        setConstructorsData(constructorsRes);
-
-        const now = new Date();
-        const nextRaceIndex = calendarRes.findIndex(r => new Date(r.date + 'T' + (r.time || '12:00:00Z')) > now);
-
-        let processedRaces = calendarRes.map((r, idx) => {
-          const raceDate = new Date(r.date + 'T' + (r.time || '12:00:00Z'));
-          return {
-            ...r,
-            isCompleted: raceDate < now,
-            isNext: idx === nextRaceIndex,
-            winner: "TBD"
-          };
-        });
-        setCalendarRaces(processedRaces);
-        setLastRace(lastRaceRes);
-
-        // Fetch top 5 drivers points progression
-        const top5 = (driversRes?.DriverStandings || []).slice(0, 5);
-        const top5Ids = top5.map(d => d.Driver.driverId);
-        
-        // Initialize visibility
-        const visibility = {};
-        top5Ids.forEach(id => { visibility[id] = true; });
-        setVisibleDrivers(visibility);
-
-        const completedRounds = parseInt(driversRes?.round || 0);
-        const roundsList = Array.from({ length: completedRounds }, (_, i) => i + 1);
-
-        try {
-          const resultsPromises = roundsList.map(r => getRaceResults('current', r));
-          const allRoundsResults = await Promise.all(resultsPromises);
-
-          processedRaces = processedRaces.map((r, idx) => {
-            if (r.isCompleted) {
-              if (allRoundsResults[idx] && allRoundsResults[idx].length > 0) {
-                const p1 = allRoundsResults[idx][0]?.Driver;
-                if (p1) r.winner = `${p1.givenName} ${p1.familyName}`;
-              } else {
-                // Fallback mock winners if API hasn't updated results yet but race is completed
-                const fallbackWinners = [
-                  "Max Verstappen", "Charles Leclerc", "Lando Norris", "Carlos Sainz", "Oscar Piastri"
-                ];
-                r.winner = fallbackWinners[idx % fallbackWinners.length];
-              }
-            }
-            return r;
-          });
-          setCalendarRaces(processedRaces);
-
-          const cumulativePoints = {};
-          top5Ids.forEach(id => { cumulativePoints[id] = 0; });
-
-          const progression = roundsList.map((round) => {
-            const roundResults = allRoundsResults[round - 1] || [];
-            const dataPoint = { round: `R${round}` };
-            
-            top5Ids.forEach(id => {
-              const driverResult = roundResults.find(res => res.Driver.driverId === id);
-              const pts = driverResult ? parseFloat(driverResult.points || 0) : 0;
-              cumulativePoints[id] += pts;
-              dataPoint[id] = cumulativePoints[id];
-            });
-            
-            return dataPoint;
-          });
-
-          setProgressionData(progression);
-        } catch (chartErr) {
-          console.error('Error generating live chart progression:', chartErr);
-          // Fallback dynamic generator matching active standings points
-          const progression = roundsList.map((roundNum) => {
-            const dataPoint = { round: `R${roundNum}` };
-            top5.forEach(d => {
-              const id = d.Driver.driverId;
-              const totalPts = parseFloat(d.points || 100);
-              const ratio = roundNum / completedRounds;
-              // Add a slightly curved distribution
-              dataPoint[id] = Math.round(totalPts * Math.pow(ratio, 0.9));
-            });
-            return dataPoint;
-          });
-          setProgressionData(progression);
-        }
-
-      } catch (err) {
-        console.error('Error fetching live data:', err);
-        setError('Failed to query active timing feeds. Showing cached championship statistics.');
-        
-        // Set standard fallbacks
-        const mockDrivers = [
-          { position: '1', points: '194', wins: '6', Driver: { givenName: 'Max', familyName: 'Verstappen', code: 'VER', driverId: 'verstappen', nationality: 'Dutch' }, Constructors: [{ name: 'Red Bull Racing' }] },
-          { position: '2', points: '138', wins: '1', Driver: { givenName: 'Charles', familyName: 'Leclerc', code: 'LEC', driverId: 'leclerc', nationality: 'Monegasque' }, Constructors: [{ name: 'Ferrari' }] },
-          { position: '3', points: '131', wins: '1', Driver: { givenName: 'Lando', familyName: 'Norris', code: 'NOR', driverId: 'norris', nationality: 'British' }, Constructors: [{ name: 'McLaren' }] },
-          { position: '4', points: '108', wins: '1', Driver: { givenName: 'Carlos', familyName: 'Sainz', code: 'SAI', driverId: 'sainz', nationality: 'Spanish' }, Constructors: [{ name: 'Ferrari' }] },
-          { position: '5', points: '107', wins: '0', Driver: { givenName: 'Sergio', familyName: 'Pérez', code: 'PER', driverId: 'perez', nationality: 'Mexican' }, Constructors: [{ name: 'Red Bull Racing' }] },
-          { position: '6', points: '81', wins: '0', Driver: { givenName: 'Oscar', familyName: 'Piastri', code: 'PIA', driverId: 'piastri', nationality: 'Australian' }, Constructors: [{ name: 'McLaren' }] },
-          { position: '7', points: '70', wins: '0', Driver: { givenName: 'George', familyName: 'Russell', code: 'RUS', driverId: 'russell', nationality: 'British' }, Constructors: [{ name: 'Mercedes' }] },
-          { position: '8', points: '42', wins: '0', Driver: { givenName: 'Lewis', familyName: 'Hamilton', code: 'HAM', driverId: 'hamilton', nationality: 'British' }, Constructors: [{ name: 'Mercedes' }] }
-        ];
-
-        setDriversData({
-          round: '8',
-          season: '2024',
-          DriverStandings: mockDrivers
-        });
-
-        setConstructorsData({
-          round: '8',
-          season: '2024',
-          ConstructorStandings: [
-            { position: '1', points: '301', wins: '6', Constructor: { name: 'Red Bull Racing', nationality: 'Austrian' } },
-            { position: '2', points: '252', wins: '2', Constructor: { name: 'Ferrari', nationality: 'Italian' } },
-            { position: '3', points: '212', wins: '1', Constructor: { name: 'McLaren', nationality: 'British' } },
-            { position: '4', points: '124', wins: '0', Constructor: { name: 'Mercedes', nationality: 'German' } },
-            { position: '5', points: '44', wins: '0', Constructor: { name: 'Aston Martin', nationality: 'British' } }
-          ]
-        });
-
-        // Mock 2024 season calendar
-        const mockRaces = [
-          { round: '1', raceName: 'Bahrain Grand Prix', Circuit: { circuitName: 'Bahrain International Circuit', Location: { country: 'Bahrain' } }, date: '2024-03-02', isCompleted: true, winner: 'Max Verstappen' },
-          { round: '2', raceName: 'Saudi Arabian Grand Prix', Circuit: { circuitName: 'Jeddah Corniche Circuit', Location: { country: 'Saudi Arabia' } }, date: '2024-03-09', isCompleted: true, winner: 'Max Verstappen' },
-          { round: '3', raceName: 'Australian Grand Prix', Circuit: { circuitName: 'Albert Park Circuit', Location: { country: 'Australia' } }, date: '2024-03-24', isCompleted: true, winner: 'Carlos Sainz' },
-          { round: '4', raceName: 'Japanese Grand Prix', Circuit: { circuitName: 'Suzuka International Racing Course', Location: { country: 'Japan' } }, date: '2024-04-07', isCompleted: true, winner: 'Max Verstappen' },
-          { round: '5', raceName: 'Chinese Grand Prix', Circuit: { circuitName: 'Shanghai International Circuit', Location: { country: 'China' } }, date: '2024-04-21', isCompleted: true, winner: 'Lando Norris' },
-          { round: '6', raceName: 'Miami Grand Prix', Circuit: { circuitName: 'Miami International Autodrome', Location: { country: 'USA' } }, date: '2024-05-05', isCompleted: true, winner: 'Lando Norris' },
-          { round: '7', raceName: 'Emilia Romagna Grand Prix', Circuit: { circuitName: 'Autodromo Enzo e Dino Ferrari', Location: { country: 'Italy' } }, date: '2024-05-19', isCompleted: true, winner: 'Max Verstappen' },
-          { round: '8', raceName: 'Monaco Grand Prix', Circuit: { circuitName: 'Circuit de Monaco', Location: { country: 'Monaco' } }, date: '2024-05-26', isCompleted: true, winner: 'Charles Leclerc' },
-          { round: '9', raceName: 'Canadian Grand Prix', Circuit: { circuitName: 'Circuit Gilles Villeneuve', Location: { country: 'Canada' } }, date: '2024-06-09', isCompleted: true, winner: 'Max Verstappen' },
-          { round: '10', raceName: 'Spanish Grand Prix', Circuit: { circuitName: 'Circuit de Barcelona-Catalunya', Location: { country: 'Spain' } }, date: new Date(Date.now() + 4*24*60*60*1000).toISOString().split('T')[0], isCompleted: false, isNext: true }
-        ];
-        setCalendarRaces(mockRaces);
-
-        // Mock Last Race Results
-        setLastRace({
-          raceName: 'Monaco Grand Prix',
-          Circuit: { circuitName: 'Circuit de Monaco' },
-          date: '2024-05-26',
-          Results: [
-            { position: '1', points: '25', laps: '78', status: 'Finished', Driver: { givenName: 'Charles', familyName: 'Leclerc', code: 'LEC' }, Constructor: { name: 'Ferrari' }, Time: { time: '2:23:15.554' } },
-            { position: '2', points: '18', laps: '78', status: 'Finished', Driver: { givenName: 'Oscar', familyName: 'Piastri', code: 'PIA' }, Constructor: { name: 'McLaren' }, Time: { time: '+7.152s' } },
-            { position: '3', points: '15', laps: '78', status: 'Finished', Driver: { givenName: 'Carlos', familyName: 'Sainz', code: 'SAI' }, Constructor: { name: 'Ferrari' }, Time: { time: '+7.585s' } },
-            { position: '4', points: '12', laps: '78', status: 'Finished', Driver: { givenName: 'Lando', familyName: 'Norris', code: 'NOR' }, Constructor: { name: 'McLaren' }, Time: { time: '+8.677s' } },
-            { position: '5', points: '10', laps: '78', status: 'Finished', Driver: { givenName: 'George', familyName: 'Russell', code: 'RUS' }, Constructor: { name: 'Mercedes' }, Time: { time: '+13.309s' } },
-            { position: '6', points: '8', laps: '78', status: 'Finished', Driver: { givenName: 'Max', familyName: 'Verstappen', code: 'VER' }, Constructor: { name: 'Red Bull Racing' }, Time: { time: '+13.853s' } },
-            { position: '7', points: '7', laps: '78', status: 'Finished', Driver: { givenName: 'Lewis', familyName: 'Hamilton', code: 'HAM' }, Constructor: { name: 'Mercedes' }, Time: { time: '+14.908s' }, FastestLap: { rank: '1', Time: { time: '1:14.165' } } }
-          ]
-        });
-
-        // Fallback standings points progression
-        const top5Fallback = mockDrivers.slice(0, 5);
-        const top5Ids = top5Fallback.map(d => d.Driver.driverId);
-        
-        const visibility = {};
-        top5Ids.forEach(id => { visibility[id] = true; });
-        setVisibleDrivers(visibility);
-
-        setProgressionData([
-          { round: 'R1', verstappen: 26, leclerc: 12, norris: 8, sainz: 15, perez: 18 },
-          { round: 'R2', verstappen: 51, leclerc: 28, norris: 12, sainz: 15, perez: 36 },
-          { round: 'R3', verstappen: 51, leclerc: 47, norris: 27, sainz: 40, perez: 46 },
-          { round: 'R4', verstappen: 77, leclerc: 59, norris: 37, sainz: 55, perez: 64 },
-          { round: 'R5', verstappen: 110, leclerc: 76, norris: 58, sainz: 69, perez: 85 },
-          { round: 'R6', verstappen: 136, leclerc: 98, norris: 83, sainz: 83, perez: 103 },
-          { round: 'R7', verstappen: 161, leclerc: 113, norris: 101, sainz: 93, perez: 107 },
-          { round: 'R8', verstappen: 169, leclerc: 138, norris: 113, sainz: 108, perez: 107 }
-        ]);
-      } finally {
-        setLoading(false);
-        if (isRefresh) setCalendarRefreshing(false);
+      const [driversRes, constructorsRes, calendarRes, lastRaceRes] = await Promise.allSettled([
+        getCurrentDriverStandings(isRefresh), getCurrentConstructorStandings(isRefresh),
+        getSeasonRaces('current', isRefresh), getLastRaceResults(isRefresh),
+      ]);
+      if (driversRes.status === 'rejected') throw driversRes.reason;
+      const drivers = driversRes.value;
+      setDriversData(drivers);
+      setSeasonFetchedAt(getCacheInfo('current_driver_standings')?.timestamp);
+      if (constructorsRes.status === 'fulfilled') setConstructorsData(constructorsRes.value);
+      if (lastRaceRes.status === 'fulfilled') setLastRace(lastRaceRes.value);
+      const partial = [constructorsRes, calendarRes, lastRaceRes].some(result => result.status === 'rejected');
+      if (partial) setError('Some feeds are unavailable. Available observations are shown; missing results remain unavailable.');
+      const calendar = calendarRes.status === 'fulfilled' ? calendarRes.value : [];
+      const now = new Date();
+      const completedRounds = Number(drivers.round || 0);
+      const next = calendar.find(race => new Date(`${race.date}T${race.time || '12:00:00Z'}`) > now);
+      setCalendarRaces(calendar.map(race => ({ ...race, isCompleted: Number(race.round) <= completedRounds, isNext: race === next, winner: Number(race.round) <= completedRounds ? 'Result unavailable' : 'TBD' })));
+      const top5Ids = (drivers.DriverStandings || []).slice(0, 5).map(row => row.Driver.driverId);
+      setVisibleDrivers(Object.fromEntries(top5Ids.map(id => [id, true])));
+      setProgressionError(null);
+      setProgressionLoading(true);
+      setLoading(false);
+      const rounds = Array.from({ length: completedRounds }, (_, index) => index + 1);
+      const observations = [];
+      const winnerResponse = await getSeasonWinners(drivers.season, isRefresh).catch(() => []);
+      const resultsByRound = new Map(winnerResponse.map(race => [Number(race.round), race.Results || []]));
+      // Bound concurrency so a full season does not burst dozens of API requests.
+      for (let offset = 0; offset < rounds.length; offset += 3) {
+        if (!seasonAlive.current) return;
+        const batch = await Promise.all(rounds.slice(offset, offset + 3).map(async round => {
+          const standings = await getRoundStandings(drivers.season, round, isRefresh).catch(() => null);
+          return { round, standings };
+        }));
+        observations.push(...batch);
       }
-    };
+      if (observations.some(row => !row.standings)) setProgressionError('Some round standings are unavailable. Gaps in the chart indicate missing data.');
+      setProgressionData(standingsProgression(observations, top5Ids));
+      if (calendarRes.status === 'fulfilled') setCalendarRaces(calendar.map(race => {
+        const result = resultsByRound.get(Number(race.round))?.[0]?.Driver;
+        return { ...race, isCompleted: Number(race.round) <= completedRounds, isNext: race === next, winner: result ? `${result.givenName} ${result.familyName}` : Number(race.round) <= completedRounds ? 'Result unavailable' : 'TBD' };
+      }));
+    } catch (err) {
+      console.error('Season feed unavailable:', err);
+      setError('Championship data could not be refreshed. Any data still shown is from the last successful retrieval.');
+    } finally {
+      setLoading(false);
+      setCalendarRefreshing(false);
+      setProgressionLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetchOpenF1Data();
-    fetchSeasonData();
+    seasonAlive.current = true;
+    void Promise.resolve().then(fetchOpenF1Data);
+    void Promise.resolve().then(fetchSeasonData);
 
     // Auto-refresh OpenF1 data every 15 seconds for reactive feel
     const interval = setInterval(() => {
       fetchOpenF1Data(true);
     }, 15000);
 
-    return () => clearInterval(interval);
+    return () => { seasonAlive.current = false; clearInterval(interval); };
   }, []);
 
   if (loading) {
@@ -850,7 +742,7 @@ function LiveSeason() {
       <div>
         <div className="border-l-2 border-f1-red pl-2 mb-2">
           <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
-            Live Feed Telemetry
+            Season & session data
           </h4>
         </div>
         <h1 className="text-3xl font-extrabold text-f1-light tracking-tight flex items-baseline">
@@ -859,9 +751,10 @@ function LiveSeason() {
             (Points Reset Yearly)
           </span>
         </h1>
-        <p className="text-f1-muted text-xs mt-1">Real-time driver and constructor points standings queried directly from timing database.</p>
+        <p className="text-f1-muted text-xs mt-1">Championship standings from Jolpica, with the latest available session observations from OpenF1.</p>
       </div>
 
+      <DataNote kind="Season data" source={{ label: 'Jolpica', url: 'https://api.jolpi.ca/ergast/f1/' }}>Season {driversData?.season || 'unavailable'} · round {driversData?.round || 'unavailable'}. {seasonFetchedAt && `Standings retrieved ${new Date(seasonFetchedAt).toLocaleString()}.`} Results follow provider publication times. <Link to="/watch" className="underline text-white">New to timing screens? Start here →</Link></DataNote>
       {/* Tab Switcher */}
       <div className="flex gap-2 border-b border-f1-border/40 pb-0 mb-4">
         {[
@@ -888,10 +781,11 @@ function LiveSeason() {
 
       {error && (
         <div className="bg-f1-red/10 border border-f1-red text-f1-light text-xs px-4 py-3 rounded">
-          ⚠️ {error}
+          ⚠️ {error} <button onClick={() => fetchSeasonData(true)} disabled={calendarRefreshing} className="ml-2 underline">Retry season feeds</button>
         </div>
       )}
 
+      {!driversList.length && <p className="text-f1-muted">No championship standings available yet.</p>}
       {/* SECTION 1: Stat Cards */}
       <FadeInSection>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
@@ -919,7 +813,7 @@ function LiveSeason() {
         <StatCard 
           label="Leading Constructor" 
           value={constructorName} 
-          sub="World Constructors Title" 
+          sub="Current team points leader"
           delta={`${constructorPoints} PTS`} 
           onClick={() => setShowLeaderSpotlight(!showLeaderSpotlight)}
         />
@@ -934,6 +828,7 @@ function LiveSeason() {
       {showLeaderSpotlight && <LeaderSpotlight leaderDriver={leaderDriver} />}
         </FadeInSection>
 
+      {snapshotError && <p role="status" className="text-sm text-amber-300">{snapshotError}</p>}
       {/* SECTION: Latest Session Snapshot */}
       <FadeInSection>
         <div className="border-l-2 border-f1-red pl-2 mb-4 mt-8">
@@ -984,7 +879,7 @@ function LiveSeason() {
             </div>
           ) : !openF1Data.session ? (
             <div className="py-8 text-center text-f1-muted text-sm">
-              No active session right now. Data will update before the next race weekend.
+              No session observations are available from the provider. Use Refresh to try again.
             </div>
           ) : (
             <div>
@@ -1021,7 +916,7 @@ function LiveSeason() {
               )}
 
               <div>
-                <h4 className="text-xs font-bold text-f1-muted uppercase tracking-wider mb-3">Live Positions</h4>
+                <h4 className="text-xs font-bold text-f1-muted uppercase tracking-wider mb-3">Latest observed positions</h4>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs text-left relative bg-[#0a0a0f] border border-f1-border rounded">
                     <thead className="bg-[#111116] z-10 outline outline-1 outline-f1-border/40">
@@ -1094,6 +989,7 @@ function LiveSeason() {
         </div>
       </FadeInSection>
 
+      <p className="text-sm text-f1-muted">{progressionLoading ? 'Loading published round totals… ' : ''}Points progression uses published championship totals after each round, including Sprint points. {progressionError} Gaps are left unfilled when a total is unavailable.</p>
       {/* Standings Tables */}
       <FadeInSection>
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -1249,7 +1145,7 @@ function LiveSeason() {
         </div>
 
         {/* Podium Predictor Widget */}
-        <PodiumPredictor nextRaceName={calendarRaces.find(r => r.isNext)?.raceName || 'Hungarian Grand Prix'} />
+        <PodiumPredictor key={`${driversData?.season}_${calendarRaces.find(r => r.isNext)?.round}_${driversList.length}`} drivers={driversList} raceId={`${driversData?.season || 'current'}_${calendarRaces.find(r => r.isNext)?.round || 'none'}`} nextRaceName={calendarRaces.find(r => r.isNext)?.raceName || 'Next race to be confirmed'} />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {calendarRaces.map((race) => (
@@ -1388,7 +1284,7 @@ function LiveSeason() {
                 <h3 className="text-base font-extrabold text-f1-light mb-1 uppercase tracking-wider">
                   ⏱️ Pit Stop Efficiency
                 </h3>
-                <p className="text-[10px] text-f1-muted mb-6 uppercase">Top 5 Teams by Average Pit Stop Duration (Seconds).</p>
+<DataNote kind="Illustration">Fixed example stationary stop durations, not a current team ranking. Total pit-lane time loss is much larger than the tire-change time.</DataNote>
                 
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} className="h-64 w-full">
                   <ResponsiveContainer width="100%" height="100%">
