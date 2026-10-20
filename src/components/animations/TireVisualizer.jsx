@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import RealisticTire from '../RealisticTire';
 
@@ -18,9 +17,9 @@ const TireVisualizer = ({ phase, term }) => {
 
   // Generate random coordinates for marbles/graining effects
   const randomOffsets = Array.from({ length: 30 }).map((_, i) => ({
-    x: Math.random() * 200 - 100,
-    y: Math.random() * 20 - 10,
-    delay: Math.random() * 0.5
+    x: (i * 37) % 200 - 100,
+    y: (i * 13) % 20 - 10,
+    delay: (i % 5) * 0.1
   }));
 
   return (
@@ -35,9 +34,9 @@ const TireVisualizer = ({ phase, term }) => {
           <motion.div 
             key={`speed-${i}`}
             className="absolute h-0.5 bg-white/10"
-            style={{ width: Math.random() * 100 + 50, top: `${Math.random() * 100}%` }}
+            style={{ width: 50 + (i * 31) % 100, top: `${(i * 23) % 100}%` }}
             animate={{ x: ['100vw', '-20vw'] }}
-            transition={{ repeat: Infinity, duration: Math.random() * 0.5 + 0.2, ease: "linear" }}
+            transition={{ repeat: Infinity, duration: (i % 5) * 0.1 + 0.2, ease: "linear" }}
           />
         ))}
       </div>
