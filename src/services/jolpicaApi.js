@@ -1,12 +1,14 @@
 import axios from 'axios';
+import { summariseDriverResults } from '../utils/driverStats';
 import championsData from '../data/champions.json';
 import { cachedFetch } from './cache';
 
 const api = axios.create({
   baseURL: 'https://api.jolpi.ca/ergast/f1',
+  timeout: 15000,
 });
 
-export const getCurrentDriverStandings = async () => {
+export const getCurrentDriverStandings = async (force = false) => {
   return cachedFetch('current_driver_standings', async () => {
     try {
       const response = await api.get('/current/driverStandings.json');
@@ -15,10 +17,10 @@ export const getCurrentDriverStandings = async () => {
       console.error('Error fetching getCurrentDriverStandings:', error);
       throw error;
     }
-  }, 60);
+  }, 5, { force });
 };
 
-export const getCurrentConstructorStandings = async () => {
+export const getCurrentConstructorStandings = async (force = false) => {
   return cachedFetch('current_constructor_standings', async () => {
     try {
       const response = await api.get('/current/constructorStandings.json');
@@ -27,10 +29,10 @@ export const getCurrentConstructorStandings = async () => {
       console.error('Error fetching getCurrentConstructorStandings:', error);
       throw error;
     }
-  }, 60);
+  }, 5, { force });
 };
 
-export const getSeasonRaces = async (year) => {
+export const getSeasonRaces = async (year, force = false) => {
   return cachedFetch(`season_races_${year}`, async () => {
     try {
       const response = await api.get(`/${year}/races.json`);
@@ -39,10 +41,10 @@ export const getSeasonRaces = async (year) => {
       console.error(`Error fetching getSeasonRaces for year ${year}:`, error);
       throw error;
     }
-  }, 360);
+  }, 360, { force });
 };
 
-export const getLastRaceResults = async () => {
+export const getLastRaceResults = async (force = false) => {
   return cachedFetch('last_race_results', async () => {
     try {
       const response = await api.get('/current/last/results.json');
@@ -51,7 +53,7 @@ export const getLastRaceResults = async () => {
       console.error('Error fetching getLastRaceResults:', error);
       throw error;
     }
-  }, 60);
+  }, 5, { force });
 };
 
 export const getAllDrivers = async (limit = 50, offset = 0) => {
@@ -117,12 +119,15 @@ export const getDriverStandings = async (driverId) => {
       
       if (seasons.length === 0) return [];
 
-      // Fetch driver standings for each season concurrently
-      const standingsPromises = seasons.map(s => 
-         api.get(`/${s.season}/drivers/${driverId}/driverStandings.json`).catch(() => null)
-      );
-      
-      const responses = await Promise.all(standingsPromises);
+      // Bound historical requests to avoid bursting an entire career at once.
+      const responses = [];
+      for (let offset = 0; offset < seasons.length; offset += 3) {
+        const batch = await Promise.all(seasons.slice(offset, offset + 3).map(season =>
+          api.get(`/${season.season}/drivers/${encodeURIComponent(driverId)}/driverStandings.json`).catch(() => null)
+        ));
+        responses.push(...batch);
+      }
+      if (responses.some(response => !response)) throw new Error('Some career seasons are unavailable');
       
       const allStandings = [];
       responses.forEach(res => {
@@ -139,7 +144,7 @@ export const getDriverStandings = async (driverId) => {
   }, 360);
 };
 
-export const getRaceResults = async (year, round) => {
+export const getRaceResults = async (year, round, force = false) => {
   return cachedFetch(`race_results_${year}_${round}`, async () => {
     try {
       const response = await api.get(`/${year}/${round}/results.json`);
@@ -148,13 +153,13 @@ export const getRaceResults = async (year, round) => {
       console.error(`Error fetching getRaceResults for ${year} round ${round}:`, error);
       throw error;
     }
-  }, 360);
+  }, 5, { force });
 };
 
 export const getAllTimeChampions = async () => {
-  return cachedFetch('all_time_champions_v5', async () => {
+  return cachedFetch('all_time_champions_v6', async () => {
     try {
-      let lists = [...championsData];
+      let lists = championsData.filter(list => Number(list.season) < new Date().getFullYear());
       const currentYear = new Date().getFullYear();
       
       // Determine the last year present in the json data
@@ -164,7 +169,7 @@ export const getAllTimeChampions = async () => {
         
       // Reactive and updatable: dynamically fetch new champions for missing years
       const missingYears = [];
-      for (let year = lastRecordedYear + 1; year <= currentYear; year++) {
+      for (let year = lastRecordedYear + 1; year < currentYear; year++) {
         missingYears.push(year);
       }
 
@@ -192,3 +197,37 @@ export const getAllTimeChampions = async () => {
     }
   }, 720); // cache for 12 hours
 };
+
+// Circuit identity is stable even when the calendar round changes between seasons.
+export const getCircuitResults = (year, circuitId) => cachedFetch(`circuit_results_${year}_${circuitId}`, async () => {
+  const response = await api.get(`/${year}/circuits/${encodeURIComponent(circuitId)}/results.json?limit=100`);
+  return response.data?.MRData?.RaceTable?.Races || [];
+}, 720);
+
+export const getRoundStandings = (year, round, force = false) => cachedFetch(`round_standings_${year}_${round}`, async () => {
+  const response = await api.get(`/${year}/${round}/driverStandings.json?limit=100`);
+  return response.data?.MRData?.StandingsTable?.StandingsLists?.[0]?.DriverStandings || null;
+}, 5, { force });
+
+export const getDriverCareerStats = driverId => cachedFetch(`driver_career_stats_${driverId}`, async () => {
+  const races = [];
+  let offset = 0;
+  let total = Infinity;
+  while (offset < total) {
+    const response = await api.get(`/drivers/${encodeURIComponent(driverId)}/results.json?limit=100&offset=${offset}`);
+    const page = response.data?.MRData;
+    if (!page?.RaceTable || !Number.isFinite(Number(page.total))) throw new Error('Invalid career data');
+    total = Number(page.total);
+    const batch = page.RaceTable.Races || [];
+    races.push(...batch);
+    if (!batch.length && offset < total) throw new Error('Incomplete career results');
+    offset += 100;
+  }
+  const standings = await getDriverStandings(driverId);
+  return summariseDriverResults(races, standings);
+}, 360);
+
+export const getSeasonWinners = (year, force = false) => cachedFetch(`season_winners_${year}`, async () => {
+  const response = await api.get(`/${year}/results/1.json?limit=100`);
+  return response.data?.MRData?.RaceTable?.Races || [];
+}, 5, { force });
