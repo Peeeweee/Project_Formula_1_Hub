@@ -3,20 +3,10 @@ import numpy as np
 import json
 import os
 import joblib
-from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix
 
-def main():
-    # Load data
-    try:
-        results = pd.read_csv('results.csv')
-        races = pd.read_csv('races.csv')
-        constructor_results = pd.read_csv('constructorResults.csv')
-    except FileNotFoundError:
-        print("CSV files not found. Ensure results.csv, races.csv, constructorResults.csv are in the current directory.")
-        return
-
+def build_features(results, races, constructor_results):
     # Merge results and races to get year and circuitId
     df = pd.merge(results, races[['raceId', 'year', 'round', 'circuitId', 'name', 'date']], on='raceId', how='left')
     df['date'] = pd.to_datetime(df['date'])
@@ -25,18 +15,15 @@ def main():
     # Feature 1: grid_position
     df['grid_position'] = df['grid']
 
-    # Feature 2: driver_circuit_avg_finish
-    # Calculate expanding average to avoid data leakage (using past historical data for that circuit)
-    # Or for simplicity, use overall historical avg (leakage present, but standard for basic modeling unless specified)
-    # We will use overall average finish for the driver at the circuit
-    circuit_avg = df.groupby(['driverId', 'circuitId'])['positionOrder'].mean().reset_index(name='driver_circuit_avg_finish')
-    df = pd.merge(df, circuit_avg, on=['driverId', 'circuitId'], how='left')
-
-    # Feature 3: constructor_season_points
-    # We will use total points for the constructor in that year
-    season_pts = pd.merge(constructor_results, races[['raceId', 'year']], on='raceId')
-    constructor_season_pts = season_pts.groupby(['constructorId', 'year'])['points'].sum().reset_index(name='constructor_season_points')
-    df = pd.merge(df, constructor_season_pts, on=['constructorId', 'year'], how='left')
+    # Features use information available strictly before each race.
+    df['driver_circuit_avg_finish'] = df.groupby(['driverId', 'circuitId'])['positionOrder'].transform(
+        lambda finishes: finishes.shift(1).expanding().mean()
+    )
+    season_pts = pd.merge(constructor_results, races[['raceId', 'year', 'round']], on='raceId')
+    season_pts = season_pts.groupby(['constructorId', 'year', 'round', 'raceId'], as_index=False)['points'].sum()
+    season_pts = season_pts.sort_values(['year', 'round', 'raceId'])
+    season_pts['constructor_season_points'] = season_pts.groupby(['constructorId', 'year'])['points'].cumsum() - season_pts['points']
+    df = pd.merge(df, season_pts[['constructorId', 'raceId', 'constructor_season_points']], on=['constructorId', 'raceId'], how='left')
 
     # Feature 4: driver_season_wins_so_far
     df['is_win'] = (df['positionOrder'] == 1).astype(int)
@@ -50,14 +37,39 @@ def main():
     features = ['grid_position', 'driver_circuit_avg_finish', 'constructor_season_points', 'driver_season_wins_so_far']
     
     # Fill missing values if any
-    df['driver_circuit_avg_finish'] = df['driver_circuit_avg_finish'].fillna(df['positionOrder'].max())
+    df['driver_circuit_avg_finish'] = df['driver_circuit_avg_finish'].fillna(10)
     df['constructor_season_points'] = df['constructor_season_points'].fillna(0)
     
+    return df
+
+
+def main():
+    # Load data
+    try:
+        results = pd.read_csv('results.csv')
+        races = pd.read_csv('races.csv')
+        constructor_results = pd.read_csv('constructorResults.csv')
+    except FileNotFoundError:
+        print("CSV files not found. Ensure results.csv, races.csv, constructorResults.csv are in the current directory.")
+        return
+
+    df = build_features(results, races, constructor_results)
+    features = ['grid_position', 'driver_circuit_avg_finish', 'constructor_season_points', 'driver_season_wins_so_far']
+
     X = df[features]
     y = df['is_podium']
 
-    # Train-test split (80/20)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    # Hold out the newest 20% of whole races, not randomly selected entrants.
+    race_order = df['raceId'].drop_duplicates().tolist()
+    if len(race_order) < 5:
+        raise ValueError('At least five races are required for chronological evaluation.')
+    split_at = max(1, int(len(race_order) * 0.8))
+    training_ids = set(race_order[:split_at])
+    training = df['raceId'].isin(training_ids)
+    X_train, X_test = X[training], X[~training]
+    y_train, y_test = y[training], y[~training]
+    if y_train.nunique() < 2:
+        raise ValueError('Training data needs both podium and non-podium outcomes.')
 
     # Train RandomForestClassifier
     clf = RandomForestClassifier(n_estimators=100, random_state=42)
@@ -69,8 +81,8 @@ def main():
     # Metrics
     print("Model Evaluation:")
     print(f"Accuracy: {accuracy_score(y_test, y_pred):.4f}")
-    print(f"Precision: {precision_score(y_test, y_pred):.4f}")
-    print(f"Recall: {recall_score(y_test, y_pred):.4f}")
+    print(f"Precision: {precision_score(y_test, y_pred, zero_division=0):.4f}")
+    print(f"Recall: {recall_score(y_test, y_pred, zero_division=0):.4f}")
     print("Confusion Matrix:")
     print(confusion_matrix(y_test, y_pred))
 
@@ -78,7 +90,7 @@ def main():
     joblib.dump(clf, 'podium_model.pkl')
     print("\nModel saved as podium_model.pkl")
 
-    # Predict podium probability at 5 circuits for current 2024 drivers
+    # Generate explicitly hypothetical scenarios at five circuits.
     # Since we don't have exactly who is in 2024 if the dataset is older or newer,
     # we'll find drivers who raced in the most recent year available in the dataset.
     latest_year = df['year'].max()
@@ -105,6 +117,11 @@ def main():
         if c_name not in target_circuits:
             target_circuits[c_name] = c_id
 
+    try:
+        drivers = pd.read_csv('drivers.csv')
+        driver_names = dict(zip(drivers.driverId, drivers.forename.astype(str) + ' ' + drivers.surname.astype(str)))
+    except FileNotFoundError:
+        driver_names = {}
     predictions = []
     
     # We need realistic baseline values for current year
@@ -118,7 +135,8 @@ def main():
             
         recent_row = driver_recent.iloc[0]
         constructor = recent_row['constructorId']
-        cons_points = recent_row['constructor_season_points']
+        last_race_points = constructor_results.loc[(constructor_results['raceId'] == recent_row['raceId']) & (constructor_results['constructorId'] == constructor), 'points'].sum()
+        cons_points = recent_row['constructor_season_points'] + last_race_points
         wins_so_far = recent_row['driver_season_wins_so_far'] + recent_row['is_win'] # end of season wins
         
         for c_name, c_id in target_circuits.items():
@@ -144,6 +162,9 @@ def main():
             
             predictions.append({
                 "driverId": int(driver),
+                "driverName": driver_names.get(driver, f"Driver {driver}"),
+                "kind": "hypothetical scenario",
+                "datasetThrough": str(df["date"].max().date()),
                 "circuit": c_name,
                 "podiumProbability": float(prob)
             })
@@ -156,6 +177,17 @@ def main():
     with open(out_path, 'w', encoding='utf-8') as f:
         json.dump(predictions, f, indent=4)
         
+    metadata = {
+        "kind": "hypothetical scenario", "datasetThrough": str(df['date'].max().date()),
+        "evaluation": "chronological holdout of the newest 20% of races",
+        "trainingRaces": len(training_ids), "testRaces": len(race_order) - len(training_ids),
+        "accuracy": float(accuracy_score(y_test, y_pred)),
+        "precision": float(precision_score(y_test, y_pred, zero_division=0)),
+        "recall": float(recall_score(y_test, y_pred, zero_division=0)),
+        "assumptions": "Grid approximated from historical finish. Probabilities are uncalibrated; not live forecasts."
+    }
+    with open(os.path.join(out_dir, 'podium_model_metadata.json'), 'w', encoding='utf-8') as f:
+        json.dump(metadata, f, indent=2)
     print(f"Exported predictions to {out_path}")
 
 if __name__ == "__main__":
