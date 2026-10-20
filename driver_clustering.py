@@ -31,7 +31,7 @@ def main():
     results['is_win'] = (results['positionOrder'] == 1).astype(int)
     
     # DNF: position is '\N'
-    results['is_dnf'] = (results['position'] == '\\N').astype(int)
+    results['is_dnf'] = results['position'].astype(str).eq(chr(92) + 'N').astype(int)
     
     driver_stats = results.groupby('driverId').agg(
         podiums=('is_podium', 'sum'),
@@ -101,13 +101,13 @@ def main():
     
     # 2. Consistent Scorer: Top win/podium not already assigned
     for c in sorted_by_win:
-        if c not in labels_assigned.values() and c not in labels_assigned:
+        if c not in labels_assigned:
             labels_assigned[c] = "Consistent Scorer"
             break
             
     # 3. Race Day Warrior: Highest avg_position_gain not assigned
     for c in sorted_by_gain:
-        if c not in labels_assigned.values() and c not in labels_assigned:
+        if c not in labels_assigned:
             labels_assigned[c] = "Race Day Warrior"
             break
             
