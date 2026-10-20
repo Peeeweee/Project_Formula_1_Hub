@@ -1,0 +1,37 @@
+Wheel-gun operators: Pit Crew Member - OpenRC F1 (low-resolution mesh)
+Creator: 3D Print Tech Design
+Source: https://pinshape.com/items/20376-pit-crew-member-openrc-f1-110-isch
+License: Creative Commons Attribution 4.0 International
+https://creativecommons.org/licenses/by/4.0/
+Changes: converted STL Z-up to glTF Y-up; normalized scale; welded vertices;
+smoothed normals; added suit/helmet/visor/equipment materials; GLB export;
+animated instance transforms. Source is a fixed pose, not a skeletal rig.
+No endorsement by the original creator is implied.
+
+Crew prototype uses the Michelle rig distributed with the official Three.js examples.
+Source: https://github.com/mrdoob/three.js/blob/dev/examples/models/gltf/Michelle.glb
+Three.js repository license: MIT, copyright 2010-2026 Three.js authors.
+A copy is included as pit-crew-human-LICENSE.txt.
+Model/animation origin: Mixamo. Adobe project-use FAQ:
+https://helpx.adobe.com/creative-cloud/faq/mixamo-faq.html
+Modified for this application: removed unused textures and animation clips, neutral suit shading, fitted
+original helmet geometry, normalized scale, procedural limb retargeting,
+and pit-stop tool attachments.
+This is an adapted generic human rig, not an authentic Mercedes crew scan.
+The generic rig's fallback helmet geometry is original application code.
+
+Detailed helmet appearance: Pit Crew Helmet PL, Pierre-Louis Baril.
+https://www.blendkit.com/asset-gallery-detail/cc329482-f2d1-49ff-82bc-8407f455cdc2/
+License: Blendkit Royalty Free.
+https://www.blendkit.com/docs/licenses/
+https://www.blendkit.com/docs/licenses/licensing-faq/
+Changes: neutral graphite/turquoise materials, removed Ferrari-specific graphics,
+rendered 16 transparent directional views for camera-facing helmet displays.
+The original mesh and .blend are not distributed in the website.
+Only rendered views are included; live crew bodies remain separate 3D models.
+
+Outdoor lighting: Urban Courtyard, Poly Haven (CC0).
+https://polyhaven.com/a/urban_courtyard
+Surface: Asphalt 02, Poly Haven (CC0), 1K diffuse/OpenGL normal/roughness.
+https://polyhaven.com/a/asphalt_02
+License: https://polyhaven.com/license
