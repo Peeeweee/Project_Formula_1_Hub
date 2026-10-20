@@ -1,3 +1,4 @@
+import useDialogAccessibility from '../hooks/useDialogAccessibility';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useMotionValue, animate, AnimatePresence, useTransform } from 'framer-motion';
 import { 
@@ -17,10 +18,10 @@ import {
 } from 'recharts';
 import erasData from '../data/eras.json';
 import constructorsData from '../data/constructors.json';
+import DataNote from '../components/DataNote';
 import FadeInSection from '../components/FadeInSection';
 import getWikipediaImage from '../utils/getWikipediaImage';
 import carVault from '../data/carVault.json';
-import CarViewer3D from '../components/CarViewer3D';
 import CarViewer2D from '../components/CarViewer2D';
 import CarVaultFilters from '../components/CarVaultFilters';
 import { PlotlyTooltip } from '../components';
@@ -102,8 +103,7 @@ const CarCard = ({ car, onClick, imageCache = {}, setImageCache = () => {} }) =>
   
   useEffect(() => {
     if (imageCache[car.carId]) {
-      setImgUrl(imageCache[car.carId]);
-      setLoading(false);
+      Promise.resolve().then(() => { setImgUrl(imageCache[car.carId]); setLoading(false); });
       return;
     }
     let isMounted = true;
@@ -242,25 +242,11 @@ const EraCard = ({ era, onClick }) => {
 };
 
 const CARS_DATA = [
-  { id: 'ferrari', name: 'Ferrari SF-26', powerUnit: 'Ferrari 069/3', chassis: 'Carbon-fibre composite honeycomb', weight: '798kg', aeroEfficiency: 'High-downforce wing profile', maxRpm: '15,000 RPM' },
-  { id: 'redbull', name: 'Red Bull RB22', powerUnit: 'Honda RBPTH002', chassis: 'Carbon-composite monocoque', weight: '798kg', aeroEfficiency: 'Ground-effect Venturi tunnels', maxRpm: '15,000 RPM' },
+  { id: 'ferrari', name: 'Ferrari · 2026 era', powerUnit: 'Ferrari turbo-hybrid V6', chassis: 'Carbon-fibre composite honeycomb', weight: '2026 session-dependent limits', aeroEfficiency: 'Active front and rear wings', maxRpm: '15,000 RPM' },
+  { id: 'redbull', name: 'Red Bull · 2026 era', powerUnit: 'Red Bull Ford Powertrains', chassis: 'Carbon-composite monocoque', weight: '2026 session-dependent limits', aeroEfficiency: 'Active aero with revised floor rules', maxRpm: '15,000 RPM' },
   { id: 'mclaren', name: 'McLaren MCL38', powerUnit: 'Mercedes-AMG M15', chassis: 'Carbon-synthetic structure', weight: '798kg', aeroEfficiency: 'Outwash aerodynamics config', maxRpm: '15,000 RPM' }
 ];
 
-const ICONIC_CARS_DATA = [
-  { id: 'alfetta', name: 'Alfa Romeo Alfetta 159', year: 1951, team: 'Alfa Romeo', engineType: '1.5L Supercharged L8', horsepowerEst: 425, weightKg: 710, topSpeedKmh: 290, downforceLevel: 1, reliabilityScore: 6, handling: 4 },
-  { id: 'w196', name: 'Mercedes-Benz W196', year: 1954, team: 'Mercedes-Benz', engineType: '2.5L Naturally Aspirated L8', horsepowerEst: 257, weightKg: 720, topSpeedKmh: 280, downforceLevel: 1, reliabilityScore: 8, handling: 5 },
-  { id: 'lotus25', name: 'Lotus 25', year: 1962, team: 'Lotus', engineType: '1.5L Naturally Aspirated V8', horsepowerEst: 195, weightKg: 450, topSpeedKmh: 260, downforceLevel: 2, reliabilityScore: 7, handling: 8 },
-  { id: 'lotus72', name: 'Lotus 72', year: 1970, team: 'Lotus', engineType: '3.0L Naturally Aspirated V8', horsepowerEst: 440, weightKg: 530, topSpeedKmh: 310, downforceLevel: 5, reliabilityScore: 7, handling: 7 },
-  { id: 'mp4_4', name: 'McLaren MP4/4', year: 1988, team: 'McLaren', engineType: '1.5L Turbocharged V6', horsepowerEst: 650, weightKg: 540, topSpeedKmh: 333, downforceLevel: 7, reliabilityScore: 9, handling: 9 },
-  { id: 'fw14b', name: 'Williams FW14B', year: 1992, team: 'Williams', engineType: '3.5L Naturally Aspirated V10', horsepowerEst: 760, weightKg: 505, topSpeedKmh: 340, downforceLevel: 8, reliabilityScore: 8, handling: 9 },
-  { id: 'f2004', name: 'Ferrari F2004', year: 2004, team: 'Ferrari', engineType: '3.0L Naturally Aspirated V10', horsepowerEst: 950, weightKg: 605, topSpeedKmh: 360, downforceLevel: 9, reliabilityScore: 10, handling: 10 },
-  { id: 'rb9', name: 'Red Bull RB9', year: 2013, team: 'Red Bull', engineType: '2.4L Naturally Aspirated V8', horsepowerEst: 750, weightKg: 642, topSpeedKmh: 340, downforceLevel: 9, reliabilityScore: 9, handling: 10 },
-  { id: 'w11', name: 'Mercedes-AMG W11', year: 2020, team: 'Mercedes', engineType: '1.6L Turbocharged Hybrid V6', horsepowerEst: 1020, weightKg: 746, topSpeedKmh: 360, downforceLevel: 10, reliabilityScore: 10, handling: 10 },
-  { id: 'rb19', name: 'Red Bull RB19', year: 2023, team: 'Red Bull', engineType: '1.6L Turbocharged Hybrid V6', horsepowerEst: 1000, weightKg: 798, topSpeedKmh: 350, downforceLevel: 9, reliabilityScore: 10, handling: 9 },
-  { id: 'bt46b', name: 'Brabham BT46B', year: 1978, team: 'Brabham', engineType: '3.0L Naturally Aspirated H12', horsepowerEst: 520, weightKg: 575, topSpeedKmh: 300, downforceLevel: 8, reliabilityScore: 5, handling: 8 },
-  { id: 'bgp001', name: 'Brawn BGP 001', year: 2009, team: 'Brawn GP', engineType: '2.4L Naturally Aspirated V8', horsepowerEst: 740, weightKg: 605, topSpeedKmh: 335, downforceLevel: 8, reliabilityScore: 9, handling: 9 }
-];
 
 const ERA_IMAGES = {
   early_years: 'https://images.unsplash.com/photo-1544829728-e5cb9eedc20e?auto=format&fit=crop&q=80&w=800',
@@ -606,7 +592,9 @@ const ANATOMY_PARTS = [
 function Cars() {
   const [selectedCar, setSelectedCar] = useState(CARS_DATA[0]);
   const [selectedEra, setSelectedEra] = useState(null);
+  const eraDialogRef = useDialogAccessibility(Boolean(selectedEra), () => setSelectedEra(null));
   const [selectedConstructor, setSelectedConstructor] = useState(null);
+  const constructorDialogRef = useDialogAccessibility(Boolean(selectedConstructor), () => setSelectedConstructor(null));
   const [hoveredPart, setHoveredPart] = useState(null);
 
 
@@ -716,12 +704,9 @@ function Cars() {
     }
   ];
 
-  const eraMap = React.useMemo(() => {
-    return Object.fromEntries(carVault.map(e => [e.eraId, e]));
-  }, []);
-
   const [filteredCars, setFilteredCars] = useState(allCars);
   const [vaultSelectedCar, setVaultSelectedCar] = useState(null);
+  const vaultDialogRef = useDialogAccessibility(Boolean(vaultSelectedCar), () => setVaultSelectedCar(null));
   const [selectedCarIndex, setSelectedCarIndex] = useState(0);
   const [isGroupedView, setIsGroupedView] = useState(false);
   const [imageCache, setImageCache] = useState({});
@@ -824,7 +809,7 @@ function Cars() {
             <motion.div
               key={team.id}
               whileHover={{ scale: 1.02 }}
-              onClick={() => setSelectedConstructor(team)}
+              role="button" tabIndex={0} onKeyDown={event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setSelectedConstructor(team); } } } onClick={() => setSelectedConstructor(team)}
               className="bg-f1-panel border border-f1-border rounded-lg overflow-hidden cursor-pointer hover:border-f1-red/60 transition duration-300 relative flex flex-col"
             >
               <div 
@@ -968,7 +953,8 @@ function Cars() {
               animate={{ opacity: 1 }} 
               exit={{ opacity: 0 }} 
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/92 z-[100] flex items-center justify-center p-2 sm:p-4"
+              ref={vaultDialogRef} role="dialog" aria-modal="true" aria-label="Car details" tabIndex={-1}
+            className="fixed inset-0 bg-black/92 z-[100] flex items-center justify-center p-2 sm:p-4"
             >
               <LocalErrorBoundary>
               <div className="w-full max-w-[1000px] max-h-[90vh] bg-[#0f0f18] border border-[#2a2a2a] rounded-xl flex flex-col relative overflow-hidden shadow-2xl">
@@ -1031,7 +1017,7 @@ function Cars() {
                     >
                       <div className="w-full md:w-[55%] flex flex-col gap-6">
                         <div className="h-[300px] md:h-[360px] bg-[#0a0a0f] rounded-lg border border-[#2a2a2a] overflow-hidden flex items-center justify-center shadow-inner relative">
-                          <CarViewer2D car={vaultSelectedCar} />
+                          <CarViewer2D key={vaultSelectedCar.carId} car={vaultSelectedCar} />
                         </div>
                         {imageCache[vaultSelectedCar.carId] && (
                           <div>
@@ -1133,11 +1119,12 @@ function Cars() {
       <FadeInSection>
         <div className="border-l-2 border-f1-red pl-2 mb-4">
           <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
-            Benchmark Telemetry
+            Historical specifications
           </h4>
         </div>
         <div className="mb-6">
           <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light tracking-tight">Car Spec Comparator</h2>
+          <DataNote kind="Historical estimates">Power and top-speed figures depend on setup and conditions. Radar scores are illustrative normalisations; handling is a heuristic, not a measured rating. Comparisons across eras do not establish which car would win a race.</DataNote>
           <p className="text-f1-muted text-xs mt-1">Select and benchmark two historical or modern F1 cars to compare their performance parameters.</p>
         </div>
 
@@ -1595,7 +1582,7 @@ function Cars() {
                 key={car.id}
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
-                onClick={() => setSelectedCar(car)}
+                role="button" tabIndex={0} onKeyDown={event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setSelectedCar(car); } } } onClick={() => setSelectedCar(car)}
                 className={`p-5 rounded-lg border text-left flex justify-between items-center transition duration-300 ${
                   selectedCar.id === car.id
                     ? 'bg-f1-panel border-f1-red text-f1-light shadow-lg'
@@ -1669,6 +1656,7 @@ function Cars() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedEra(null)}
+            ref={eraDialogRef} role="dialog" aria-modal="true" aria-label="F1 era" tabIndex={-1}
             className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
           >
             <motion.div
@@ -1741,6 +1729,7 @@ function Cars() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedConstructor(null)}
+            ref={constructorDialogRef} role="dialog" aria-modal="true" aria-label="Constructor details" tabIndex={-1}
             className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
           >
             <motion.div
