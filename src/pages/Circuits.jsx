@@ -83,7 +83,7 @@ export default function Circuits() {
               🏁 F1 Circuit Directory
             </h1>
             <p className="text-f1-muted text-xs sm:text-sm mt-1 max-w-2xl">
-              Explore calendar venues with illustrative track outlines and bundled reference specifications. Lap records and overtaking-zone counts may reflect older seasons.
+              Explore calendar venues with venue-matched geographic track outlines and bundled reference specifications. Layouts are reference versions; lap records and overtaking-zone counts may reflect older seasons.
             </p>
           </div>
 
