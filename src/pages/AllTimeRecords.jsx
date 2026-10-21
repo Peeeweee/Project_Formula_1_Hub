@@ -1,248 +1,38 @@
-import useDialogAccessibility from '../hooks/useDialogAccessibility';
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import driverRows from '../data/champions.json';
+import constructorRows from '../data/constructorChampions.json';
 import { getAllTimeChampions } from '../services/jolpicaApi';
-import FadeInSection from '../components/FadeInSection';
+import { championshipArchive } from '../utils/championshipArchive';
+import useDialogAccessibility from '../hooks/useDialogAccessibility';
 import getWikipediaImage from '../utils/getWikipediaImage';
-import { AnimatePresence } from 'framer-motion';
 
-const ChampionModal = ({ champ, onClose }) => {
-  const dialogRef = useDialogAccessibility(true, onClose);
-  const [imgUrl, setImgUrl] = useState(null);
-
-  useEffect(() => {
-    let isMounted = true;
-    const fetchId = champ.driver.url || `${champ.driver.givenName} ${champ.driver.familyName}`;
-    getWikipediaImage(fetchId).then(url => {
-      if (isMounted && url) {
-        setImgUrl(url);
-      }
-    });
-    return () => { isMounted = false; };
-  }, [champ]);
-
-  return (
-    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Champion details" tabIndex={-1} className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-[#000000cc] backdrop-blur-sm" onClick={onClose}>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        onClick={(e) => e.stopPropagation()}
-        className="bg-f1-panel border border-f1-border rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl relative flex flex-col md:flex-row"
-      >
-        <button 
-          onClick={onClose}
-          className="absolute top-4 right-4 z-20 w-8 h-8 flex items-center justify-center bg-[#111116] text-white rounded-full hover:bg-f1-red transition shadow"
-        >
-          ✕
-        </button>
-        
-        <div className="w-full md:w-2/5 h-64 md:h-auto bg-[#111116] relative">
-          {imgUrl ? (
-            <img 
-              src={imgUrl} 
-              alt={`${champ.driver.givenName} ${champ.driver.familyName}`} 
-              className="w-full h-full object-cover object-top" 
-            />
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-f1-muted/30">
-              <span className="text-6xl mb-2">👤</span>
-              <span className="text-xs tracking-widest uppercase">No Photo</span>
-            </div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-f1-panel via-transparent to-transparent md:bg-gradient-to-r md:from-transparent md:via-transparent md:to-f1-panel" />
-        </div>
-        
-        <div className="p-8 md:p-10 w-full md:w-3/5 flex flex-col justify-center">
-          <div className="mb-6">
-            <h2 className="text-3xl font-black text-f1-light uppercase tracking-tight leading-none mb-2">
-              {champ.driver.givenName} <br className="hidden md:block"/>
-              <span className="text-f1-red">{champ.driver.familyName}</span>
-            </h2>
-            <div className="text-xs text-f1-muted uppercase tracking-widest font-bold">
-              {champ.driver.nationality}
-            </div>
-          </div>
-          
-          <div className="flex gap-4 mb-6">
-            <div className="bg-[#111116] border border-f1-border rounded-md p-4 text-center flex-1">
-              <div className="text-3xl font-black text-white">{champ.count}</div>
-              <div className="text-[10px] text-f1-muted uppercase font-bold tracking-wider">Titles</div>
-            </div>
-          </div>
-          
-          <div>
-            <h4 className="text-[11px] text-f1-muted uppercase font-black tracking-widest border-b border-f1-border/40 pb-2 mb-3">
-              Championship Years
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {[...champ.years].sort((a, b) => b - a).map(year => (
-                <span key={year} className="bg-f1-red/10 border border-f1-red/20 text-f1-light text-xs font-mono font-bold px-2 py-1 rounded">
-                  {year}
-                </span>
-              ))}
-            </div>
-          </div>
-          
-          {champ.driver.url && (
-            <div className="mt-8 pt-4 border-t border-f1-border/40">
-               <a 
-                  href={champ.driver.url} 
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="text-[11px] font-bold text-f1-red uppercase hover:text-white transition tracking-widest flex items-center gap-2"
-               >
-                  Read Wikipedia Article <span>→</span>
-               </a>
-            </div>
-          )}
-        </div>
-      </motion.div>
-    </div>
-  );
-};
-
-const ChampionCard = ({ champ, rank, onClick }) => {
-  const [imgUrl, setImgUrl] = useState(null);
-
-  useEffect(() => {
-    let isMounted = true;
-    const fetchId = champ.driver.url || `${champ.driver.givenName} ${champ.driver.familyName}`;
-    getWikipediaImage(fetchId).then(url => {
-      if (isMounted && url) {
-        setImgUrl(url);
-      }
-    });
-    return () => { isMounted = false; };
-  }, [champ]);
-
-  const yearsString = champ.years ? [...champ.years].sort((a, b) => b - a).join(', ') : '';
-
-  return (
-    <motion.div 
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: (rank % 10) * 0.05, duration: 0.4 }}
-      onClick={() => onClick(champ)}
-      className="bg-[#1a1a24] rounded border border-f1-border flex flex-col hover:border-f1-red/50 transition duration-300 overflow-hidden relative group shadow-lg cursor-pointer"
-    >
-      <div className="h-48 w-full bg-[#111116] relative overflow-hidden">
-         {imgUrl ? (
-           <img 
-             src={imgUrl} 
-             alt={`${champ.driver.givenName} ${champ.driver.familyName}`} 
-             className="w-full h-full object-cover object-top opacity-60 group-hover:opacity-100 group-hover:scale-105 transition duration-500" 
-             loading="lazy"
-           />
-         ) : (
-           <div className="w-full h-full flex flex-col items-center justify-center text-f1-muted/30">
-             <span className="text-4xl mb-2">👤</span>
-             <span className="text-xs tracking-widest uppercase">No Photo</span>
-           </div>
-         )}
-         <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a24] via-[#1a1a24]/40 to-transparent" />
-         <div className="absolute top-2 left-3 text-white font-black text-3xl opacity-20 drop-shadow-md">#{rank}</div>
-         <div className="absolute bottom-3 right-3 bg-f1-red text-f1-light text-[10px] font-black px-2.5 py-1 rounded-sm shadow-[0_0_10px_rgba(225,6,0,0.4)] tracking-wider">
-           {champ.count} {champ.count > 1 ? 'TITLES' : 'TITLE'}
-         </div>
-      </div>
-      
-      <div className="p-5 flex-1 flex flex-col z-10 -mt-8">
-        <h3 className="text-xl font-extrabold text-white mb-1 drop-shadow-md">
-          {champ.driver.givenName} {champ.driver.familyName}
-        </h3>
-        <p className="text-[10px] text-f1-muted uppercase tracking-wider font-bold">
-          {champ.driver.nationality}
-        </p>
-        
-        <div className="mt-4 pt-3 border-t border-f1-border/50 text-[10px] text-f1-muted leading-relaxed">
-          <span className="block mb-1 text-white font-bold tracking-wider">WINNING YEARS</span> 
-          <span className="line-clamp-2" title={yearsString}>{yearsString || 'N/A'}</span>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
-
-function AllTimeRecords() {
-  const [champions, setChampions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedChampion, setSelectedChampion] = useState(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const lists = await getAllTimeChampions();
-        
-        // Count championships
-        const counts = {};
-        lists.forEach(seasonList => {
-          const winner = seasonList.DriverStandings?.[0]?.Driver;
-          if (winner) {
-            if (!counts[winner.driverId]) {
-              counts[winner.driverId] = {
-                driver: winner,
-                count: 0,
-                years: []
-              };
-            }
-            counts[winner.driverId].count += 1;
-            counts[winner.driverId].years.push(seasonList.season);
-          }
-        });
-
-        const sorted = Object.values(counts).sort((a, b) => b.count - a.count);
-        setChampions(sorted);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  return (
-    <div className="pt-24 pb-12 px-6 max-w-7xl mx-auto space-y-16">
-      <div>
-        <div className="border-l-2 border-f1-red pl-2 mb-2">
-          <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
-            F1 History
-          </h4>
-        </div>
-        <h1 className="text-3xl font-extrabold text-f1-light tracking-tight flex items-baseline">
-          🏆 All-Time Records
-        </h1>
-        <p className="text-f1-muted text-xs mt-1">Hall of fame spanning decades of Formula 1 World Championships.</p>
-      </div>
-
-      {loading ? (
-        <div className="py-20 text-center text-f1-muted text-sm font-bold uppercase tracking-widest">
-          Loading Historical Archives...
-        </div>
-      ) : (
-        <FadeInSection>
-          <div className="bg-f1-panel border border-f1-border rounded-lg p-6 shadow-xl">
-            <h2 className="text-xl font-black text-f1-light mb-6 uppercase tracking-wider border-b border-f1-border/40 pb-3">
-              World Champions Hall of Fame
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
-              {champions.map((champ, i) => (
-                <ChampionCard key={champ.driver.driverId} champ={champ} rank={i + 1} onClick={setSelectedChampion} />
-              ))}
-            </div>
-          </div>
-        </FadeInSection>
-      )}
-
-      <AnimatePresence>
-        {selectedChampion && (
-          <ChampionModal champ={selectedChampion} onClose={() => setSelectedChampion(null)} />
-        )}
-      </AnimatePresence>
-    </div>
-  );
+const nameOf=entity=>entity.name || `${entity.givenName} ${entity.familyName}`;
+function Portrait({entity}) {
+ const [image,setImage]=useState(null);
+ useEffect(()=>{let active=true;getWikipediaImage(entity.url || nameOf(entity)).then(url=>{if(active)setImage(url);});return()=>{active=false;};},[entity]);
+ return <div className="archive-portrait">{image?<img src={image} alt={nameOf(entity)} loading="lazy" onError={()=>setImage(null)}/>:<span aria-label={`Portrait unavailable for ${nameOf(entity)}`}>{nameOf(entity).split(' ').map(part=>part[0]).slice(0,2).join('')}</span>}</div>;
 }
-
-export default AllTimeRecords;
+function ChampionDetail({champion,kind,onClose}) {
+ const ref=useDialogAccessibility(true,onClose);
+ return <div className="archive-dialog-backdrop" onClick={onClose}><motion.section ref={ref} role="dialog" aria-modal="true" aria-label={`${nameOf(champion.entity)} championship record`} tabIndex={-1} initial={{opacity:0,y:15}} animate={{opacity:1,y:0}} className="archive-dialog" onClick={event=>event.stopPropagation()}><button className="archive-close" aria-label="Close championship record" onClick={onClose}>✕</button><span className="learning-eyebrow">{kind==='driver'?'WORLD DRIVERS’':'WORLD CONSTRUCTORS’'} CHAMPIONSHIP</span><h2>{nameOf(champion.entity)}</h2><p>{champion.entity.nationality} / {champion.count} {champion.count===1?'title':'titles'} / first title {champion.years.at(-1)}</p><h3>Every championship season</h3><div className="archive-season-table"><table><thead><tr><th>Year</th>{kind==='driver'&&<th>Team(s) listed</th>}{kind==='driver'&&<><th>Season points</th><th>Season wins</th></>}</tr></thead><tbody>{champion.seasons.map(row=><tr key={row.season}><th>{row.season}</th>{kind==='driver'&&<td>{row.standing.Constructors?.map(team=>team.name).join(', ') || 'Not provided'}</td>}{kind==='driver'&&<><td>{row.standing.points ?? 'Not provided'}</td><td>{row.standing.wins ?? 'Not provided'}</td></>}</tr>)}</tbody></table></div><p className="learning-footnote">These wins and points belong to title-winning seasons, not career totals. Points systems and calendar sizes changed across eras. Constructors are grouped by the title-winning team name; predecessor teams are not merged.</p>{champion.entity.url&&<a href={champion.entity.url} target="_blank" rel="noreferrer" className="learning-source">Biographical reference ↗</a>}</motion.section></div>;
+}
+function SeasonRoll({archive,kind,onSelect}) {
+ const [period,setPeriod]=useState('recent');
+ const decades=[...new Set(archive.seasons.map(row=>Math.floor(row.season/10)*10))];
+ const visible=period==='recent'?archive.seasons.slice(0,12):period==='all'?archive.seasons:archive.seasons.filter(row=>Math.floor(row.season/10)*10===Number(period));
+ return <section className="archive-roll"><header><div><span className="learning-eyebrow">THE CHAMPIONSHIP CHRONICLE</span><h2>Season-by-season roll of honour</h2><p>Explore the people and teams behind every title. Select a season to open the champion’s full record.</p></div><div className="archive-roll-count"><strong>{archive.seasons.length}</strong><span>SEASONS / {archive.firstYear}–{archive.throughYear}</span></div></header>
+ <div className="archive-periods" role="group" aria-label="Season history period">{[['recent','Latest 12'],...decades.map(year=>[String(year),`${year}s`]),['all','All seasons']].map(([value,label])=><button key={value} aria-pressed={period===value} onClick={()=>setPeriod(value)}>{label}</button>)}</div>
+ <p className="archive-roll-caption">{visible.length} seasons · {kind==='driver'?'World Drivers’ Championship':'World Constructors’ Championship'}</p><div className="archive-season-cards">{visible.map(row=>{const id=row.entity[kind==='driver'?'driverId':'constructorId'],champion=archive.champions.find(item=>item.id===id),titleNumber=champion.years.filter(year=>year<=row.season).length;return <button key={row.season} className="archive-season-entry" onClick={()=>onSelect(champion)} aria-label={`Explore ${row.season} champion ${nameOf(row.entity)}`}><div className="archive-season-year"><span>SEASON</span><strong>{row.season}</strong></div><div className="archive-season-winner"><span>WORLD CHAMPION · TITLE {titleNumber}</span><h3>{nameOf(row.entity)}</h3><p>{kind==='driver'?row.standing.Constructors?.map(team=>team.name).join(' / ') || row.entity.nationality:row.entity.nationality}</p></div><div className="archive-season-stats">{kind==='driver'?<><span><strong>{row.standing.points ?? '—'}</strong> PTS</span><span><strong>{row.standing.wins ?? '—'}</strong> WINS</span></>:<span><strong>{champion.count}</strong> TOTAL TITLES</span>}<span className="archive-entry-arrow" aria-hidden="true">↗</span></div></button>;})}</div><p className="learning-footnote">Points and wins refer to that season. Scoring systems and calendar sizes differ across eras.</p></section>;
+}
+export default function AllTimeRecords() {
+ const [kind,setKind]=useState('driver'),[rows,setRows]=useState(driverRows),[query,setQuery]=useState(''),[minimum,setMinimum]=useState(1),[selected,setSelected]=useState(null),[notice,setNotice]=useState('');
+ const through=new Date().getFullYear()-1, archive=championshipArchive(kind==='driver'?rows:constructorRows,through,kind);
+ useEffect(()=>{let active=true;getAllTimeChampions().then(value=>{if(active)setRows(value);}).catch(()=>{if(active)setNotice('Live archive refresh unavailable. Showing the bundled completed-season reference.');});return()=>{active=false;};},[]);
+ const filtered=archive.champions.filter(champ=>champ.count>=minimum&&(`${nameOf(champ.entity)} ${champ.entity.nationality} ${champ.years.join(' ')}`).toLowerCase().includes(query.toLowerCase()));
+ return <div className="records-page pt-24 pb-16 px-6 max-w-7xl mx-auto"><header><span className="learning-eyebrow">F1 HISTORY / VERIFIED SCOPE</span><h1>Championship records.</h1><p>Every completed World Championship season in the archive, with title years, teams and season statistics. The ongoing {through+1} season is excluded.</p></header><div className="archive-summary"><div><strong>{archive.seasons.length}</strong><span>Completed seasons</span></div><div><strong>{archive.champions.length}</strong><span>Different champions</span></div><div><strong>{archive.firstYear}–{archive.throughYear}</strong><span>Archive coverage</span></div></div>
+ {notice&&<p role="status" className="learning-footnote">{notice}</p>}{archive.missing.length>0&&<p role="status" className="archive-warning">Incomplete coverage: missing {archive.missing.join(', ')}. These seasons are not counted.</p>}
+ <div className="learning-toolbar"><div role="group" aria-label="Championship category">{['driver','constructor'].map(value=><button key={value} aria-pressed={kind===value} onClick={()=>{setKind(value);setSelected(null);}}>{value==='driver'?'Drivers':'Constructors'}</button>)}</div><label>Find a champion <input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Name, country or title year"/></label><label>Titles <select value={minimum} onChange={event=>setMinimum(Number(event.target.value))}><option value="1">All champions</option><option value="2">Multiple champions</option><option value="3">3+ titles</option></select></label></div>
+ <p className="learning-footnote">Shared title totals share a rank. Select a card for all its championship seasons. Portraits are optional; a missing image never replaces a person with an unrelated photo.</p><div className="archive-grid">{filtered.map(champ=><button key={champ.id} className="archive-card" onClick={()=>setSelected(champ)}>{kind==='driver'?<Portrait entity={champ.entity}/>:<div className="archive-team-mark">{nameOf(champ.entity).slice(0,3).toUpperCase()}</div>}<div className="archive-card-copy"><span>#{champ.rank} / {champ.count} {champ.count===1?'TITLE':'TITLES'}</span><h2>{nameOf(champ.entity)}</h2><p>{champ.entity.nationality}</p><div className="archive-title-years"><small>CHAMPIONSHIP YEARS</small><div>{champ.years.map(year=><span key={year}>{year}</span>)}</div></div><footer>View championship record <span aria-hidden="true">↗</span></footer></div></button>)}</div>{!filtered.length&&<p>No champions match these filters.</p>}
+ <SeasonRoll archive={archive} kind={kind} onSelect={setSelected}/><p className="learning-footnote">Coverage is checked year by year. This section covers championship records, not a complete race-wins, poles or lap-record database.</p><div className="archive-sources"><a href="https://www.formula1.com/en/latest/article/the-beginners-guide-to-the-f1-constructors-championship.66nTfWSqrUYv3bnbosPkHV" target="_blank" rel="noreferrer">Constructors’ championship reference ↗</a><a href="https://www.formula1.com/en/drivers/hall-of-fame" target="_blank" rel="noreferrer">Formula 1 Hall of Fame ↗</a><a href="https://api.jolpi.ca/ergast/f1/driverStandings/1/" target="_blank" rel="noreferrer">Jolpica results source ↗</a></div><AnimatePresence>{selected&&<ChampionDetail key={selected.id} champion={selected} kind={kind} onClose={()=>setSelected(null)}/>}</AnimatePresence></div>;
+}
