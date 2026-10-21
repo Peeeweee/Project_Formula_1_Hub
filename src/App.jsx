@@ -1,3 +1,4 @@
+import './styles/learning-upgrades.css';
 import { lazy, Suspense, useState, useEffect, useCallback } from 'react';
 import { HashRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
@@ -35,9 +36,9 @@ const navLinks = [
   { path: '/garage', label: '3D Garage' },
 ];
 
-const PageWrapper = ({ children }) => <div className="w-full"><ErrorBoundary><Suspense fallback={<div role="status" className="pt-28 pb-12 text-center text-f1-muted">Loading page…</div>}>{children}</Suspense></ErrorBoundary></div>;
+const PageWrapper = ({ children }) => <div className="w-full ambient-page-surface"><ErrorBoundary><Suspense fallback={<div role="status" className="pt-28 pb-12 text-center text-f1-muted">Loading page…</div>}>{children}</Suspense></ErrorBoundary></div>;
 
-function MainApp() {
+function MainApp({ introPlaying }) {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -84,7 +85,7 @@ function MainApp() {
     <div className="min-h-screen bg-f1-dark text-f1-light overflow-x-hidden flex flex-col">
       <a href="#main-content" onClick={event => { event.preventDefault(); document.getElementById('main-content')?.focus(); }} className="skip-link">Skip to content</a>
       {isSearchOpen && <Suspense fallback={null}><GlobalSearch isOpen onClose={() => setIsSearchOpen(false)} /></Suspense>}
-      <AnimatedBackground isStartHere={location.pathname === '/'} />
+      <AnimatedBackground path={location.pathname} enabled={!introPlaying} />
       <div className="relative z-10 flex-1 flex flex-col w-full">
       {/* Fixed Navigation Bar */}
       <nav className="fixed top-0 left-0 w-full z-50 bg-[#0a0a0f] border-b-2 border-f1-red h-16 flex items-center px-4 md:px-12 justify-between">
@@ -259,7 +260,7 @@ function App() {
     requestAnimationFrame(() => document.getElementById('main-content')?.focus({ preventScroll: true }));
   }, []);
   return <MotionConfig reducedMotion="user"><Router>
-    <div inert={introPlaying} aria-hidden={introPlaying || undefined}><MainApp /></div>
+    <div inert={introPlaying} aria-hidden={introPlaying || undefined}><MainApp introPlaying={introPlaying} /></div>
     {introPlaying && <IntroScreen onComplete={finishIntro} />}
   </Router></MotionConfig>;
 }
