@@ -1,3 +1,4 @@
+import { DICTIONARY_FILMS } from './dictionaryFilms.js';
 const TERMS = [
   {
     term: 'DRS',
@@ -5,15 +6,15 @@ const TERMS = [
     engine: 'car_physics',
     action: 'The driver presses a button, opening the rear wing flap.',
     demonstration: 'Air drag lines immediately straighten out, showing less wind resistance.',
-    result: 'The car rapidly accelerates to a higher top speed to overtake.'
+    result: 'Reduced drag can improve straight-line speed; an overtake is not guaranteed.'
   },
   {
     term: 'ERS',
     definition: 'Energy Recovery System. It saves energy when you brake and lets you use it later as an electric boost.',
     engine: 'car_physics',
-    action: 'The car brakes heavily into a corner, glowing the brakes.',
+    action: 'The driver brakes into a corner. Some of the car’s kinetic energy can be recovered through the drivetrain.',
     demonstration: 'A battery gauge fills up with harvested kinetic energy.',
-    result: 'The driver deploys the energy on the straight for a massive speed boost.'
+    result: 'The driver deploys the energy on the straight to help accelerate; deployment depends on the applicable rules.'
   },
   {
     term: 'Undercut',
@@ -45,7 +46,7 @@ const TERMS = [
     engine: 'race_control',
     action: 'A severe crash happens. The physical Safety Car is deployed.',
     demonstration: 'The safety car drives slowly, forcing the leader to follow it.',
-    result: 'The entire field bunches up into a tight line, erasing all time gaps.'
+    result: 'The entire field bunches up into a tight line, reducing the physical gaps between cars.'
   },
   {
     term: 'Parc Fermé',
@@ -60,8 +61,8 @@ const TERMS = [
     definition: 'The message teams say on the radio when they want you to drive into the pit lane for new tires.',
     engine: 'strategy',
     action: 'The race engineer radios "Box, Box" to the driver.',
-    demonstration: 'The driver swerves into the pit lane entry at the final corner.',
-    result: 'The pit crew changes all four tires in under 3 seconds.'
+    demonstration: 'The driver follows the designated pit entry and obeys the pit-lane speed limit.',
+    result: 'The crew services the car and releases it when safe; stop times vary.'
   },
   {
     term: 'DNF',
@@ -140,8 +141,8 @@ const TERMS = [
     definition: 'A historical nickname for aggressive qualifying power settings. Engine-mode rules and electrical deployment vary by era; it is not a universal current one-lap engine switch.',
     engine: 'car_physics',
     action: 'The driver switches the steering wheel dial to "Engine Mode 1".',
-    demonstration: 'The internal combustion engine runs at extreme limits, draining the battery fully.',
-    result: 'The car achieves absolute maximum speed for one magical qualifying lap.'
+    demonstration: 'Teams choose permitted engine settings and electrical deployment for the lap; the available modes depend on the era.',
+    result: 'Lap-time benefit depends on the setup, tires and era-specific power-unit rules.'
   },
   {
     term: 'Push Lap',
@@ -204,6 +205,6 @@ const TERMS = [
 
 TERMS.unshift(
   { term: 'Active Aero', definition: '2026: front and rear wings change configuration in designated zones to balance cornering downforce with lower drag on straights.', action: 'The car reaches an enabled straight-line zone.', demonstration: 'The wings change to a lower-drag configuration.', result: 'Drag is reduced on the straight; corner configuration is restored for braking and cornering.' },
-  { term: 'Overtake Mode', definition: '2026: an electrical overtaking assist for eligible drivers close to the car ahead. It is separate from active aero.', action: 'A driver meets the eligibility conditions at the detection point.', demonstration: 'Additional electrical deployment is made available under the rules.', result: 'The driver has an extra tool to attempt an overtake, but passing is not guaranteed.' }
+  { term: 'Overtake Mode', definition: '2026: an electrical overtaking assist for eligible drivers close to the car ahead. It is separate from active aero.', action: 'Car A follows Car B. In this example, the attacker meets the eligibility conditions for additional electrical deployment.', demonstration: 'Car A pulls into a separate lane and draws alongside Car B while deploying additional electrical energy.', result: 'In this successful example, Car A clears Car B and returns to the racing line. Overtake Mode helps an attempt; it never guarantees a pass.' }
 );
-export const GLOSSARY = TERMS.map(term => ({ ...term, era: ['DRS', 'MGUH', 'Quali Mode'].includes(term.term) ? 'Historical / era-dependent' : ['Active Aero', 'Overtake Mode'].includes(term.term) ? '2026 regulations' : 'General concept · rules vary by season' }));
+export const GLOSSARY = TERMS.map(term => ({ ...term, definition:DICTIONARY_FILMS[term.term].definition, action:DICTIONARY_FILMS[term.term].chapters[0].text, demonstration:DICTIONARY_FILMS[term.term].chapters[1].text, result:DICTIONARY_FILMS[term.term].chapters[3].text, era: ['DRS', 'MGUH', 'Quali Mode'].includes(term.term) ? 'Historical / era-dependent' : ['Active Aero', 'Overtake Mode'].includes(term.term) ? '2026 regulations' : 'General concept · rules vary by season' }));
