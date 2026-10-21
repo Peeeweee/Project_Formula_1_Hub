@@ -10,7 +10,7 @@
     "turns": 15,
     "drsZones": 3,
     "lapRecord": "1:30.252 - Michael Schumacher (2004)",
-    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b1/Vip-tower-f1-bahrain.jpg"
+    "imageUrl": "/assets/circuits/bahrain.svg"
   },
   {
     "id": "jeddah",
@@ -19,11 +19,11 @@
     "city": "Jeddah",
     "lat": 21.6319,
     "lng": 39.1044,
-    "lapLength": 6.174,
+    "lapLength": 6.175,
     "turns": 27,
     "drsZones": 3,
     "lapRecord": "1:30.734 - Lewis Hamilton (2021)",
-    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/1/15/Jeddah_Corniche_36.jpg"
+    "imageUrl": "/assets/circuits/jeddah.svg"
   },
   {
     "id": "albert_park",
@@ -36,7 +36,7 @@
     "turns": 14,
     "drsZones": 4,
     "lapRecord": "1:19.813 - Charles Leclerc (2024)",
-    "imageUrl": "https://images.unsplash.com/photo-1514395462725-fb4566210144?q=80&w=1600"
+    "imageUrl": "/assets/circuits/albert_park.svg"
   },
   {
     "id": "suzuka",
@@ -49,7 +49,7 @@
     "turns": 18,
     "drsZones": 1,
     "lapRecord": "1:30.983 - Lewis Hamilton (2019)",
-    "imageUrl": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1600"
+    "imageUrl": "/assets/circuits/suzuka.svg"
   },
   {
     "id": "shanghai",
@@ -62,7 +62,7 @@
     "turns": 16,
     "drsZones": 2,
     "lapRecord": "1:32.238 - Michael Schumacher (2004)",
-    "imageUrl": "https://images.unsplash.com/photo-1505322022379-7c3353ee6291?q=80&w=1600"
+    "imageUrl": "/assets/circuits/shanghai.svg"
   },
   {
     "id": "miami",
@@ -75,7 +75,7 @@
     "turns": 19,
     "drsZones": 3,
     "lapRecord": "1:29.708 - Max Verstappen (2023)",
-    "imageUrl": "https://images.unsplash.com/photo-1533106497176-45ae19e68ba2?q=80&w=1600"
+    "imageUrl": "/assets/circuits/miami.svg"
   },
   {
     "id": "imola",
@@ -88,7 +88,7 @@
     "turns": 19,
     "drsZones": 1,
     "lapRecord": "1:15.484 - Lewis Hamilton (2020)",
-    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fc/Autodromo_aerea_poster.jpg"
+    "imageUrl": "/assets/circuits/imola.svg"
   },
   {
     "id": "monaco",
@@ -101,7 +101,7 @@
     "turns": 19,
     "drsZones": 1,
     "lapRecord": "1:12.909 - Lewis Hamilton (2021)",
-    "imageUrl": "https://images.unsplash.com/photo-1534008897995-27a23e859048?q=80&w=1600"
+    "imageUrl": "/assets/circuits/monaco.svg"
   },
   {
     "id": "villeneuve",
@@ -114,7 +114,7 @@
     "turns": 14,
     "drsZones": 3,
     "lapRecord": "1:13.078 - Valtteri Bottas (2019)",
-    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/8/87/Montreal_Skyline_from_Mont_Royal.jpg"
+    "imageUrl": "/assets/circuits/villeneuve.svg"
   },
   {
     "id": "catalunya",
@@ -123,11 +123,11 @@
     "city": "Montmeló",
     "lat": 41.57,
     "lng": 2.2611,
-    "lapLength": 4.657,
+    "lapLength": 4.655,
     "turns": 14,
     "drsZones": 2,
     "lapRecord": "1:16.330 - Max Verstappen (2023)",
-    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b5/Sagrada_Familia_01.jpg"
+    "imageUrl": "/assets/circuits/catalunya.svg"
   },
   {
     "id": "red_bull_ring",
@@ -140,7 +140,7 @@
     "turns": 10,
     "drsZones": 3,
     "lapRecord": "1:05.619 - Carlos Sainz (2020)",
-    "imageUrl": "https://images.unsplash.com/photo-1516214104703-d870798883c5?q=80&w=1600"
+    "imageUrl": "/assets/circuits/red_bull_ring.svg"
   },
   {
     "id": "silverstone",
@@ -153,7 +153,7 @@
     "turns": 18,
     "drsZones": 2,
     "lapRecord": "1:27.097 - Max Verstappen (2020)",
-    "imageUrl": "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=1600"
+    "imageUrl": "/assets/circuits/silverstone.svg"
   },
   {
     "id": "hungaroring",
@@ -166,7 +166,7 @@
     "turns": 14,
     "drsZones": 2,
     "lapRecord": "1:16.627 - Lewis Hamilton (2020)",
-    "imageUrl": "https://images.unsplash.com/photo-1515091943-9d5c0ad475af?q=80&w=1600"
+    "imageUrl": "/assets/circuits/hungaroring.svg"
   },
   {
     "id": "spa",
@@ -179,7 +179,7 @@
     "turns": 19,
     "drsZones": 2,
     "lapRecord": "1:46.286 - Valtteri Bottas (2018)",
-    "imageUrl": "https://images.unsplash.com/photo-1476231682828-37e571bc172f?q=80&w=1600"
+    "imageUrl": "/assets/circuits/spa.svg"
   },
   {
     "id": "zandvoort",
@@ -192,7 +192,7 @@
     "turns": 14,
     "drsZones": 2,
     "lapRecord": "1:11.097 - Lewis Hamilton (2021)",
-    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4d/Aerial_view_of_the_North_Sea%2C_Zandvoort%2C_the_Netherlands_%2847980173173%29.jpg"
+    "imageUrl": "/assets/circuits/zandvoort.svg"
   },
   {
     "id": "monza",
@@ -205,7 +205,7 @@
     "turns": 11,
     "drsZones": 2,
     "lapRecord": "1:21.046 - Rubens Barrichello (2004)",
-    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f5/Royal_Villa_of_Monza_10.jpg"
+    "imageUrl": "/assets/circuits/monza.svg"
   },
   {
     "id": "baku",
@@ -218,7 +218,7 @@
     "turns": 20,
     "drsZones": 2,
     "lapRecord": "1:43.009 - Charles Leclerc (2019)",
-    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fb/Baku_Flame_Towers.jpg"
+    "imageUrl": "/assets/circuits/baku.svg"
   },
   {
     "id": "marina_bay",
@@ -227,11 +227,11 @@
     "city": "Singapore",
     "lat": 1.2914,
     "lng": 103.864,
-    "lapLength": 4.94,
+    "lapLength": 4.928,
     "turns": 19,
     "drsZones": 3,
     "lapRecord": "1:35.867 - Lewis Hamilton (2023)",
-    "imageUrl": "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?q=80&w=1600"
+    "imageUrl": "/assets/circuits/marina_bay.svg"
   },
   {
     "id": "americas",
@@ -240,11 +240,11 @@
     "city": "Austin",
     "lat": 30.1328,
     "lng": -97.6411,
-    "lapLength": 5.513,
+    "lapLength": 5.514,
     "turns": 20,
     "drsZones": 2,
     "lapRecord": "1:36.169 - Charles Leclerc (2019)",
-    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fe/2012_USA_GP_circuit_panorama.jpg"
+    "imageUrl": "/assets/circuits/americas.svg"
   },
   {
     "id": "rodriguez",
@@ -257,7 +257,7 @@
     "turns": 17,
     "drsZones": 3,
     "lapRecord": "1:17.774 - Valtteri Bottas (2021)",
-    "imageUrl": "https://images.unsplash.com/photo-1585464231875-d9ef1f5ad396?q=80&w=1600"
+    "imageUrl": "/assets/circuits/rodriguez.svg"
   },
   {
     "id": "interlagos",
@@ -270,7 +270,7 @@
     "turns": 15,
     "drsZones": 2,
     "lapRecord": "1:10.540 - Valtteri Bottas (2018)",
-    "imageUrl": "https://images.unsplash.com/photo-1543083477-4f785aeafaa9?q=80&w=1600"
+    "imageUrl": "/assets/circuits/interlagos.svg"
   },
   {
     "id": "las_vegas",
@@ -283,7 +283,7 @@
     "turns": 17,
     "drsZones": 3,
     "lapRecord": "1:35.490 - Oscar Piastri (2023)",
-    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/58/11_The_Venetian_Las_Vegas_-_luxury_hotel_and_casino_in_Las_Vegas_Strip.jpg"
+    "imageUrl": "/assets/circuits/las_vegas.svg"
   },
   {
     "id": "losail",
@@ -292,11 +292,11 @@
     "city": "Lusail",
     "lat": 25.49,
     "lng": 51.4542,
-    "lapLength": 5.419,
+    "lapLength": 5.38,
     "turns": 16,
     "drsZones": 1,
     "lapRecord": "1:24.319 - Max Verstappen (2023)",
-    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Al_Wahda_Arches_Qatar_Architect_Erik_Behrens_Aerial_Photo.jpg"
+    "imageUrl": "/assets/circuits/losail.svg"
   },
   {
     "id": "yas_marina",
@@ -309,6 +309,6 @@
     "turns": 16,
     "drsZones": 2,
     "lapRecord": "1:26.103 - Max Verstappen (2021)",
-    "imageUrl": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=1600"
+    "imageUrl": "/assets/circuits/yas_marina.svg"
   }
 ]
