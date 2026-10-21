@@ -1,76 +1,15 @@
 import { lazy, Suspense, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as ChartTooltip,
-  ResponsiveContainer,
-  Cell
-} from 'recharts';
 import circuitsData from '../data/circuits.json';
 import FadeInSection from '../components/FadeInSection';
-import PlotlyTooltip from '../components/PlotlyTooltip';
+import WeekendGuide from '../components/WeekendGuide';
+import PointsExplorer from '../components/PointsExplorer';
+import CircuitVenueMedia from '../components/CircuitVenueMedia';
 import RealisticTire from '../components/RealisticTire';
 import useDialogAccessibility from '../hooks/useDialogAccessibility';
 const GlossaryModal = lazy(() => import('../components/GlossaryModal'));
 import { GLOSSARY } from '../data/glossary';
-
-const TIMELINE_STEPS = [
-  {
-    number: '01',
-    name: 'Practice 1',
-    desc: "Teams test their cars to see how they handle the track. Drivers practice driving and check if the car feels right.",
-    details: "Teams sometimes put metal cages with sensors on the cars to check the air flow. They also test driving with heavy fuel to see how the engine performs."
-  },
-  {
-    number: '02',
-    name: 'Practice 2',
-    desc: "Engineers focus on how the tires wear out over time. This is the most important session for planning Sunday's race.",
-    details: "One driver might test soft, fast tires while the other tests medium, longer-lasting tires. This helps them decide when to pit during the race."
-  },
-  {
-    number: '03',
-    name: 'Practice 3',
-    desc: "A short final practice for going as fast as possible for one single lap. Teams get ready for the all-important qualifying session.",
-    details: "Drivers push hard to find the perfect speed and braking points. A crash here is bad, as it might stop you from entering qualifying."
-  },
-  {
-    number: '04',
-    name: 'Qualifying',
-    desc: "Qualifying is a timed session: drivers share the track but compete to set their own fastest lap. The fastest driver gets to start Sunday's race at the very front.",
-    details: "It happens in three parts, and the slowest cars get knocked out each round. The final ten cars fight for the number one spot, called pole position."
-  },
-  {
-    number: '05',
-    name: 'Sprint (Optional)',
-    desc: "A short, fast race on Saturday where you don't have to stop for new tires. The top eight drivers get extra championship points.",
-    details: "The Sprint has its own qualifying session and does not set the Grand Prix grid. You have to race hard but be careful not to crash. If you break the car, it ruins your starting spot for the main race on Sunday."
-  },
-  {
-    number: '06',
-    name: 'Race',
-    desc: "The main event where drivers compete over a full race distance for championship points. You need a fast car, smart pit stops, and great driving to win.",
-    details: "Drivers must manage their tires and make clean pit stops. The top ten drivers earn points, and the winner gets the most."
-  }
-];
-
-const POINTS_SYSTEM = [
-  { position: 'P1', points: 25, label: 'Winner' },
-  { position: 'P2', points: 18, label: '2nd Place' },
-  { position: 'P3', points: 15, label: '3rd Place' },
-  { position: 'P4', points: 12, label: '4th Place' },
-  { position: 'P5', points: 10, label: '5th Place' },
-  { position: 'P6', points: 8, label: '6th Place' },
-  { position: 'P7', points: 6, label: '7th Place' },
-  { position: 'P8', points: 4, label: '8th Place' },
-  { position: 'P9', points: 2, label: '9th Place' },
-  { position: 'P10', points: 1, label: '10th Place' },
-
-];
 
 const TIRES = [
   {
@@ -136,29 +75,6 @@ const COUNTRY_FLAGS = {
 
 // GLOSSARY array imported from data file
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 30 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      type: 'spring',
-      stiffness: 80,
-      damping: 15
-    }
-  }
-};
-
 const headingVariants = {
   hidden: { opacity: 0, x: -20 },
   show: { opacity: 1, x: 0, transition: { duration: 0.5 } }
@@ -169,7 +85,6 @@ function AnimatedCounter({ end, label }) {
 }
 
 function StartHere() {
-  const [expandedIndex, setExpandedIndex] = useState(null);
   const [hoveredCircuit, setHoveredCircuit] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTire, setSelectedTire] = useState(null);
@@ -183,10 +98,6 @@ function StartHere() {
     document.getElementById(name === 'timeline' ? 'weekend' : name)?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   };
 
-  const toggleExpand = (index) => {
-    setExpandedIndex(expandedIndex === index ? null : index);
-  };
-
   const filteredGlossary = GLOSSARY.filter(item => 
     item.term.toLowerCase().includes(searchQuery.toLowerCase()) || 
     item.definition.toLowerCase().includes(searchQuery.toLowerCase())
@@ -196,7 +107,7 @@ function StartHere() {
   const headingWords = headingText.split(' ');
 
   return (
-    <div className="pt-16 pb-12 w-full">
+    <div className="learn-page pt-16 pb-12 w-full">
       {/* Animated Hero Section */}
       <div className="w-full bg-[#0a0a0f] h-[220px] flex flex-col justify-center px-6 relative overflow-hidden">
         <div className="max-w-7xl mx-auto w-full flex flex-col md:flex-row items-start md:items-center justify-between z-10">
@@ -267,62 +178,7 @@ function StartHere() {
             What happens during a race weekend?
           </h2>
 
-          <motion.div 
-            variants={containerVariants}
-            initial={false}
-            animate="show"
-            className="grid grid-cols-1 md:grid-cols-6 gap-4"
-          >
-            {TIMELINE_STEPS.map((step, index) => {
-              const isExpanded = expandedIndex === index;
-              return (
-                <motion.div
-                  key={step.number}
-                  variants={itemVariants}
-                  role="button" tabIndex={0} aria-expanded={isExpanded}
-                  onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); toggleExpand(index); } }}
-                  onClick={() => toggleExpand(index)}
-                  className={`bg-f1-panel border cursor-pointer p-5 rounded-lg transition-all duration-300 flex flex-col justify-between select-none ${
-                    isExpanded 
-                      ? 'border-f1-red ring-1 ring-f1-red md:col-span-2' 
-                      : 'border-f1-border hover:border-f1-red/50'
-                  }`}
-                  layout
-                >
-                  <div>
-                    <span className="text-[10px] font-black text-f1-red tracking-widest block mb-1">
-                      PART {step.number}
-                    </span>
-                    <h3 className="font-extrabold text-f1-light text-lg mb-2">
-                      {step.name}
-                    </h3>
-                    <p className="text-xs text-f1-muted leading-relaxed">
-                      {step.desc}
-                    </p>
-                  </div>
-
-                  <AnimatePresence mode="wait">
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="mt-4 pt-4 border-t border-f1-border text-xs text-f1-light leading-relaxed overflow-hidden"
-                      >
-                        {step.details}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  <div className="mt-5 text-[10px] text-f1-muted font-bold uppercase flex justify-between items-center">
-                    <span>{isExpanded ? 'Click to hide' : 'Click to read more'}</span>
-                    <span className="text-f1-red font-black">{isExpanded ? '▲' : '▼'}</span>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </motion.div>
+          <WeekendGuide />
         </FadeInSection>
 
         {/* 2. Points System Section */}
@@ -336,66 +192,7 @@ function StartHere() {
             How do you score points?
           </h2>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {POINTS_SYSTEM.map((p) => {
-                const isP1 = p.position === 'P1';
-                return (
-                  <motion.div 
-                    whileHover={{ scale: 1.02, transition: { duration: 0.15 } }}
-                    key={p.position}
-                    className={`border rounded-lg p-4 flex flex-col justify-between transition duration-300 ${
-                      isP1 
-                        ? 'col-span-2 bg-f1-red/10 border-f1-red shadow-lg shadow-f1-red/5' 
-                        : 'bg-f1-panel border-f1-border hover:border-f1-muted'
-                    }`}
-                  >
-                    <div>
-                      <span className={`text-2xl font-black block ${isP1 ? 'text-f1-red' : 'text-f1-light'}`}>
-                        {p.position}
-                      </span>
-                      <span className="text-[10px] text-f1-muted font-bold uppercase tracking-wider">
-                        {p.label}
-                      </span>
-                    </div>
-                    <div className="mt-3 text-right">
-                      <span className={`text-3xl font-black ${isP1 ? 'text-f1-red' : 'text-f1-light'}`}>
-                        {p.points}
-                      </span>
-                      <span className="text-[10px] text-f1-muted ml-1 font-bold uppercase">pts</span>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-
-            <div className="bg-f1-panel border border-f1-border p-6 rounded-lg shadow-xl flex flex-col">
-              <div>
-                <h3 className="text-lg font-bold text-f1-light mb-2">Points Chart</h3>
-                <p className="text-xs text-f1-muted mb-4">The winner gets 25 points, but the 10th place driver only gets 1. You want to finish as high as possible.</p>
-              </div>
-              <motion.div initial={false} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} className="flex-1 min-h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={POINTS_SYSTEM} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1a1a24" opacity={0.6} />
-                    <XAxis dataKey="position" stroke="#666666" fontSize={11} tickLine={false} />
-                    <YAxis stroke="#666666" fontSize={12} tickLine={false} />
-                    <ChartTooltip content={<PlotlyTooltip xKey="position" />} />
-                    <Bar dataKey="points">
-                      {POINTS_SYSTEM.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={entry.position === 'P1' ? '#e10600' : '#1a1a24'} 
-                          stroke={entry.position === 'P1' ? '#e10600' : '#666666'}
-                          strokeWidth={1}
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </motion.div>
-            </div>
-          </div>
+          <PointsExplorer />
         </FadeInSection>
 
         {/* 3. Tire Compound Guide Section */}
@@ -473,7 +270,7 @@ function StartHere() {
             </h4>
           </div>
           <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light mb-6 tracking-tight flex justify-between items-center">
-            <span>World Map of Races</span>
+            <span>World Map of Circuits</span>
             {hoveredCircuit && (
               <span className="text-xs text-f1-red font-bold uppercase tracking-wider hidden sm:inline animate-pulse">
                 Looking at: {hoveredCircuit.name}
@@ -481,6 +278,8 @@ function StartHere() {
             )}
           </h2>
 
+          <p className="learning-footnote">A reference atlas of recent F1 venues, not the live season calendar. Select a circuit to explore photographs of the venue and its geographic layout.</p>
+          <label className="circuit-picker">Find a circuit <select value={selectedCircuit?.id || ''} onChange={event=>setSelectedCircuit(circuitsData.find(c=>c.id===event.target.value) || null)}><option value="">Select a venue</option>{circuitsData.map(c=><option key={c.id} value={c.id}>{c.name} / {c.country}</option>)}</select></label>
           <div className="relative w-full aspect-[2/1] bg-f1-panel border border-f1-border rounded-lg overflow-hidden flex items-center justify-center">
             {/* Base SVG Map */}
             <img 
@@ -665,14 +464,10 @@ function StartHere() {
                 ✕
               </button>
 
-              <div className="w-full h-64 md:h-96 relative">
+              <div className="w-full h-72 md:h-96 relative shrink-0">
                 {/* Gran Turismo Track Photo */}
-                <img 
-                  src={selectedCircuit.imageUrl} 
-                  alt={selectedCircuit.name} 
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-f1-panel to-transparent" />
+                <CircuitVenueMedia key={selectedCircuit.id} circuit={selectedCircuit} />
+
                 
                 {/* Close Button Mobile */}
                 <button 
@@ -683,7 +478,7 @@ function StartHere() {
                 </button>
               </div>
               
-              <div className="p-8 md:p-12 relative z-10 -mt-20 md:-mt-32">
+              <div className="p-6 md:p-8 relative z-10 overflow-y-auto">
                 <div className="flex items-end gap-4 mb-8">
                   <div className="text-6xl md:text-8xl drop-shadow-lg">
                     {COUNTRY_FLAGS[selectedCircuit.country] || '🏁'}
@@ -712,8 +507,8 @@ function StartHere() {
                     <span className="text-xl md:text-2xl font-black text-f1-light">{selectedCircuit.drsZones} <span className="text-sm font-bold text-f1-muted">DRS</span></span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-f1-muted font-bold uppercase tracking-wider block mb-1">Reference Lap Record</span>
-                    <span className="text-sm md:text-base font-bold text-f1-red">{selectedCircuit.lapRecord}</span>
+                    <span className="text-[10px] text-f1-muted font-bold uppercase tracking-wider block mb-1">Layout source</span>
+                    <span className="text-sm md:text-base font-bold text-f1-red">Open circuit geodata / reference layout</span>
                   </div>
                 </div>
               </div>
