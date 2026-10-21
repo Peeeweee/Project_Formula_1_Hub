@@ -1,3 +1,4 @@
+import circuitGeometry from './circuitGeometry.json';
 // Precise Vector Paths & Specs for all 24 Formula 1 Circuits (No Generic Cars)
 
 export const TRACK_SPECS = {
@@ -315,29 +316,11 @@ export const TRACK_SPECS = {
   }
 };
 
+const aliases = { madring: 'es-2026', madrid: 'es-2026' };
 export const getTrackSpecs = (circuitId, circuitName = '') => {
-  if (!circuitId && !circuitName) return TRACK_SPECS.bahrain;
-  
-  const idLower = (circuitId || '').toLowerCase();
-  const nameLower = (circuitName || '').toLowerCase();
-
-  for (const key of Object.keys(TRACK_SPECS)) {
-    if (idLower.includes(key) || nameLower.includes(key)) {
-      return TRACK_SPECS[key];
-    }
-  }
-
-  if (nameLower.includes('monaco')) return TRACK_SPECS.monaco;
-  if (nameLower.includes('silverstone')) return TRACK_SPECS.silverstone;
-  if (nameLower.includes('spa')) return TRACK_SPECS.spa;
-  if (nameLower.includes('monza')) return TRACK_SPECS.monza;
-  if (nameLower.includes('albert park') || nameLower.includes('australia')) return TRACK_SPECS.albert_park;
-  if (nameLower.includes('suzuka') || nameLower.includes('japan')) return TRACK_SPECS.suzuka;
-  if (nameLower.includes('interlagos') || nameLower.includes('brazil')) return TRACK_SPECS.interlagos;
-  if (nameLower.includes('miami')) return TRACK_SPECS.miami;
-  if (nameLower.includes('las vegas')) return TRACK_SPECS.las_vegas;
-  if (nameLower.includes('baku')) return TRACK_SPECS.baku;
-  if (nameLower.includes('singapore') || nameLower.includes('marina bay')) return TRACK_SPECS.marina_bay;
-
-  return TRACK_SPECS.bahrain;
+ const id = aliases[circuitId] || circuitId;
+ const accurate = circuitGeometry[id] || Object.values(circuitGeometry).find(item => item.name.toLowerCase() === circuitName.toLowerCase());
+ const reference = TRACK_SPECS[circuitId] || {};
+ if (!accurate) return { ...reference, name:circuitName || 'Circuit', locality:reference.locality || '', country:reference.country || '', path:'', viewBox:'0 0 500 320', length:reference.length || 'Unavailable', turns:reference.turns || 'Unavailable', lapRecord:'Unverified', drsZones:'Era-dependent', firstGP:reference.firstGP || 'Unavailable' };
+ return { ...reference, ...accurate, length:`${accurate.length.toFixed(3)} km`, locality:reference.locality || '', country:reference.country || '', lapRecord:reference.lapRecord || 'Unverified', turns:reference.turns || 'Unavailable', drsZones:reference.drsZones || 'Era-dependent', firstGP:reference.firstGP || 'Unavailable' };
 };
