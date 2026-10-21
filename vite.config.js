@@ -5,4 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   base: "/formula-dc1/",
   plugins: [react()],
+  // Canvas providers and their hooks must share one runtime, including lazy chunks.
+  resolve: { dedupe: ['react', 'react-dom', 'three', '@react-three/fiber'] },
+  optimizeDeps: { include: ['react', 'react-dom', 'three', '@react-three/fiber', '@react-three/drei'] },
 })
