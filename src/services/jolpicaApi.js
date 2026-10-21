@@ -157,20 +157,15 @@ export const getRaceResults = async (year, round, force = false) => {
 };
 
 export const getAllTimeChampions = async () => {
-  return cachedFetch('all_time_champions_v6', async () => {
+  return cachedFetch('all_time_champions_v7', async () => {
     try {
       let lists = championsData.filter(list => Number(list.season) < new Date().getFullYear());
       const currentYear = new Date().getFullYear();
       
-      // Determine the last year present in the json data
-      const lastRecordedYear = lists.length > 0 
-        ? Math.max(...lists.map(list => parseInt(list.season))) 
-        : 1949; // Before F1 started
-        
       // Reactive and updatable: dynamically fetch new champions for missing years
       const missingYears = [];
-      for (let year = lastRecordedYear + 1; year < currentYear; year++) {
-        missingYears.push(year);
+      for (let year = 1950; year < currentYear; year++) {
+        if (!lists.some(item => Number(item.season) === year)) missingYears.push(year);
       }
 
       if (missingYears.length > 0) {
