@@ -1,0 +1,886 @@
+[
+  {
+    "season": "1958",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "vanwall",
+          "name": "Vanwall",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1959",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "cooper",
+          "name": "Cooper",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1960",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "cooper",
+          "name": "Cooper",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1961",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "ferrari",
+          "name": "Ferrari",
+          "nationality": "Italian"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1962",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "brm",
+          "name": "BRM",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1963",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "lotus",
+          "name": "Lotus",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1964",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "ferrari",
+          "name": "Ferrari",
+          "nationality": "Italian"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1965",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "lotus",
+          "name": "Lotus",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1966",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "brabham",
+          "name": "Brabham",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1967",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "brabham",
+          "name": "Brabham",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1968",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "lotus",
+          "name": "Lotus",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1969",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "matra",
+          "name": "Matra",
+          "nationality": "French"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1970",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "lotus",
+          "name": "Lotus",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1971",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "tyrrell",
+          "name": "Tyrrell",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1972",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "lotus",
+          "name": "Lotus",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1973",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "lotus",
+          "name": "Lotus",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1974",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "mclaren",
+          "name": "McLaren",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1975",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "ferrari",
+          "name": "Ferrari",
+          "nationality": "Italian"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1976",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "ferrari",
+          "name": "Ferrari",
+          "nationality": "Italian"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1977",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "ferrari",
+          "name": "Ferrari",
+          "nationality": "Italian"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1978",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "lotus",
+          "name": "Lotus",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1979",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "ferrari",
+          "name": "Ferrari",
+          "nationality": "Italian"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1980",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "williams",
+          "name": "Williams",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1981",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "williams",
+          "name": "Williams",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1982",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "ferrari",
+          "name": "Ferrari",
+          "nationality": "Italian"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1983",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "ferrari",
+          "name": "Ferrari",
+          "nationality": "Italian"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1984",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "mclaren",
+          "name": "McLaren",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1985",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "mclaren",
+          "name": "McLaren",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1986",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "williams",
+          "name": "Williams",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1987",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "williams",
+          "name": "Williams",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1988",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "mclaren",
+          "name": "McLaren",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1989",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "mclaren",
+          "name": "McLaren",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1990",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "mclaren",
+          "name": "McLaren",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1991",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "mclaren",
+          "name": "McLaren",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1992",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "williams",
+          "name": "Williams",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1993",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "williams",
+          "name": "Williams",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1994",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "williams",
+          "name": "Williams",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1995",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "benetton",
+          "name": "Benetton",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1996",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "williams",
+          "name": "Williams",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1997",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "williams",
+          "name": "Williams",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1998",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "mclaren",
+          "name": "McLaren",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "1999",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "ferrari",
+          "name": "Ferrari",
+          "nationality": "Italian"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2000",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "ferrari",
+          "name": "Ferrari",
+          "nationality": "Italian"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2001",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "ferrari",
+          "name": "Ferrari",
+          "nationality": "Italian"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2002",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "ferrari",
+          "name": "Ferrari",
+          "nationality": "Italian"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2003",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "ferrari",
+          "name": "Ferrari",
+          "nationality": "Italian"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2004",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "ferrari",
+          "name": "Ferrari",
+          "nationality": "Italian"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2005",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "renault",
+          "name": "Renault",
+          "nationality": "French"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2006",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "renault",
+          "name": "Renault",
+          "nationality": "French"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2007",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "ferrari",
+          "name": "Ferrari",
+          "nationality": "Italian"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2008",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "ferrari",
+          "name": "Ferrari",
+          "nationality": "Italian"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2009",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "brawn",
+          "name": "Brawn",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2010",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "red_bull",
+          "name": "Red Bull",
+          "nationality": "Austrian"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2011",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "red_bull",
+          "name": "Red Bull",
+          "nationality": "Austrian"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2012",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "red_bull",
+          "name": "Red Bull",
+          "nationality": "Austrian"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2013",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "red_bull",
+          "name": "Red Bull",
+          "nationality": "Austrian"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2014",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "mercedes",
+          "name": "Mercedes",
+          "nationality": "German"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2015",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "mercedes",
+          "name": "Mercedes",
+          "nationality": "German"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2016",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "mercedes",
+          "name": "Mercedes",
+          "nationality": "German"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2017",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "mercedes",
+          "name": "Mercedes",
+          "nationality": "German"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2018",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "mercedes",
+          "name": "Mercedes",
+          "nationality": "German"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2019",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "mercedes",
+          "name": "Mercedes",
+          "nationality": "German"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2020",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "mercedes",
+          "name": "Mercedes",
+          "nationality": "German"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2021",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "mercedes",
+          "name": "Mercedes",
+          "nationality": "German"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2022",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "red_bull",
+          "name": "Red Bull",
+          "nationality": "Austrian"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2023",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "red_bull",
+          "name": "Red Bull",
+          "nationality": "Austrian"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2024",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "mclaren",
+          "name": "McLaren",
+          "nationality": "British"
+        }
+      }
+    ]
+  },
+  {
+    "season": "2025",
+    "ConstructorStandings": [
+      {
+        "position": "1",
+        "Constructor": {
+          "constructorId": "mclaren",
+          "name": "McLaren",
+          "nationality": "British"
+        }
+      }
+    ]
+  }
+]
