@@ -1,6 +1,6 @@
 # Formula DC-1
 
-Formula DC-1 is a modern, data-driven web application tailored for Formula 1 fans and analysts. It visualizes race data, provides insights into driver performance, and leverages machine learning to predict race outcomes and detect lap anomalies.
+Formula DC-1 is a modern, data-driven web application tailored for Formula 1 fans and analysts. It visualizes race data, provides insights into driver performance, and includes experimental machine-learning models for podium prediction and lap-anomaly detection.
 
 ## Tech Stack
 
@@ -20,11 +20,29 @@ Formula DC-1 is a modern, data-driven web application tailored for Formula 1 fan
 ## Key Web Features
 
 The application is divided into several dedicated sections:
-- **Start Here:** An engaging introduction and landing page.
+- **Learn F1 / Start Here:** Standard and Sprint weekend guides, an interactive points explorer, tire explanations, a circuit atlas, and an animated F1 dictionary.
 - **Racers:** Detailed insights into driver statistics, comparing historical performance, and visualizing driver clustering categories.
 - **Cars:** Exploration of F1 constructors and 3D car visualizations.
 - **Live Season:** Tracking and visualizing current season standings and race-by-race progress.
+- **All-Time Records:** Completed driver and constructor championship archives, consistent champion cards, and a season-by-season roll of honour.
 - **Pit Wall AI:** An AI-powered dashboard offering predictive insights and lap analysis based on historical data models.
+
+## Latest experience update — 23 October 2026
+
+- **27 animated dictionary explainers:** Each term has a 12–16 second film with four timestamped chapters, play/pause, replay, and a seekable timeline. Scene movement, captions, and example data follow the same clock.
+- **Mechanisms with context:** A road-going safety coupe leads the field; VSC uses minimum-time control without a pacing vehicle. Undercut and overcut show both pit stops. Purple Sector compares sector times and demonstrates why a best sector need not produce the fastest lap.
+- **Technical studies:** Animated wing hinges, hybrid-energy paths, the historical MGU-H, cockpit protection, garage inspection, and distinct tire-damage examples use dedicated scenes. Historical systems and 2026 concepts are identified separately.
+- **24 circuit locations:** The atlas uses locally stored, selected venue photographs with source and license credits. Geographic track layouts remain a separate view; missing photos are not replaced with unrelated images.
+- **Championship history:** Bundled completed-season archives cover driver titles from 1950–2025 and constructor titles from 1958–2025. An ongoing season leader is not treated as a champion.
+
+The 3D explainers are illustrative reconstructions, not physics simulations or live telemetry. Multi-lap examples compress race time; component packaging is schematic. The safety coupe is procedural and unbranded, and the Mercedes reference model represents a 2022 car rather than a 2026 specification.
+
+Implementation notes and attribution:
+
+- [Dictionary animation storyboards](docs/dictionary-animation-storyboards.md)
+- [Learning and championship data notes](docs/learning-and-records-upgrade.md)
+- [Venue photograph sources and handling](docs/venue-photographs.md)
+- [Circuit geometry license](public/circuit-data-LICENSE.txt)
 
 ## AI & Data Processing Scripts
 
@@ -76,11 +94,12 @@ The project includes several Python scripts that process raw F1 CSV datasets int
 ## Beginner experience and data integrity
 
 All original sections remain available under Learn, Explore, and Follow the Season.
-Start Here includes a five-step learning path with checks and local progress. Watch a
-Race explains a fictional timing tower, flags, tire codes, and race context. Strategy
+Start Here separates Standard and Sprint weekends and lets visitors explore points
+for each finishing position. Watch a Race explains a fictional timing tower, flags,
+tire codes, and race context. Strategy
 includes an interactive one-stop teaching model with visible assumptions. Garage
 part buttons explain systems and select camera views; models download on selection.
-The cinematic intro remains available as an optional choice.
+The cinematic intro plays on full openings and can be skipped immediately.
 
 - Publisher news contains only linked RSS items; provider failure is shown explicitly.
 - Missing race results stay unavailable. Points progression uses round standings
@@ -106,7 +125,9 @@ npm run lint
 python -m unittest discover -s tests -p 'test_*.py'
 ```
 
-Unit tests cover cache refresh/failures, missing standings, RSS deduplication and
+Dictionary tests cover all 27 narratives, deterministic seeking, sector timing arithmetic, separate pit stops, vehicle clearance, and race-control distinctions.
+
+Other unit tests cover cache refresh/failures, missing standings, RSS deduplication and
 source dates, strategy-model tradeoffs, and driver-result counts. Python tests use
 synthetic fixtures to verify prior-race feature construction and the export pipeline;
 these are not real-world accuracy measurements. GLB files are preserved at their original
@@ -117,7 +138,7 @@ provider. Rules and historical specifications should be reviewed by season.
 
 ### Mercedes pit-stop opening
 
-The 3D pit-stop plays on every full site opening/reload, without interrupting in-app navigation. Requested pages load underneath it. Skip and Escape are available immediately. An 8.8-second shared animation clock drives entry, jacks, tire removal/refitting, crew clearance and release. The console labels the timings and choreography as an illustrative simulation. Reduced-motion visitors receive a short static pit-box view. Failed model/graphics loads and a 10-second maximum loading wait release the overlay.
+The 3D pit-stop plays on every full site opening/reload, without interrupting in-app navigation. Requested pages load underneath it. Skip and Escape are available immediately. A 10-second shared animation clock drives entry, jacks, tire removal/refitting, crew clearance and release, followed by a five-second central logo sequence and an 800 ms fade into the requested page. The console labels the timings and choreography as an illustrative simulation. Reduced-motion visitors receive a short static pit-box view. Failed model/graphics loads and a 10-second maximum loading wait release the overlay.
 
 The environment contains code-built garage bays, overhead hoses, pit markings, equipment, a pit wall, fencing and instanced grandstand seats. Twelve crew prototypes use a skinned human mesh with procedural limb posing, with tire carriers, wheel-gun operators, jack operators and supporting personnel. Crew and jack equipment move clear before release. Rendering uses a capped pixel ratio, a single 1024-pixel shadow map and a precomputed studio reflection map. Human mesh provenance and project-use references are listed in public/pit-crew-base-attribution.txt. A purpose-built motorsport crew model is still required for authentic clothing and photo-level detail.
 
