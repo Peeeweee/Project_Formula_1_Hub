@@ -3,7 +3,7 @@ export const carModels = [
     id: 'mercedes_w13',
     name: 'Mercedes-AMG W13',
     year: '2022',
-    modelUrl: `${import.meta.env.BASE_URL}f1_mercedes_w13_concept.glb`,
+    modelUrl: `${import.meta.env.BASE_URL}mercedes-intro.glb`,
     specs: [
       { label: 'Chassis',    value: 'Mercedes W13' },
       { label: 'Season',     value: '2022 F1 World Championship' },
