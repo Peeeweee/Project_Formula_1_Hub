@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import useDialogAccessibility from '../hooks/useDialogAccessibility';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,7 +19,9 @@ import {
 } from 'recharts';
 import { SearchBar, SkeletonCard, PlotlyTooltip, StartingLights, RPMGauge } from '../components';
 import { getAllDrivers, getDriverCareerStats, getDriverStandings, getAllTimeChampions } from '../services/jolpicaApi';
-import getWikipediaImage from '../utils/getWikipediaImage';
+import getWikipediaImage, { localImage } from '../utils/getWikipediaImage';
+import driverSnapshot from '../data/driversSnapshot.json';
+import careerSnapshot from '../data/careerSnapshot.json';
 import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
 import DataNote from '../components/DataNote';
@@ -71,21 +74,22 @@ const NATIONALITY_TO_COUNTRY = {
 };
 
 function Racers() {
+  const [routeParams]=useSearchParams();
   // Champions Hall of Fame states
   const [selectedChampion, setSelectedChampion] = useState(null);
   const championDialogRef = useDialogAccessibility(Boolean(selectedChampion), () => setSelectedChampion(null));
-  const [championImages, setChampionImages] = useState({});
+  const [championImages, setChampionImages] = useState(() => Object.fromEntries(Object.entries(driverSnapshot.drivers || []).map(([, d]) => [d.driverId, localImage(d.url || `${d.givenName} ${d.familyName}`)])));
   const [championImagesLoading, setChampionImagesLoading] = useState({});
   const [championImagesError, setChampionImagesError] = useState({});
 
   // Full Driver Database states
-  const [driversList, setDriversList] = useState([]);
+  const [driversList, setDriversList] = useState(driverSnapshot.drivers || []);
   const [loadingDrivers, setLoadingDrivers] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [errorDrivers, setErrorDrivers] = useState(null);
 
   // Driver detail side panel states
-  const [selectedDetailDriver, setSelectedDetailDriver] = useState(null);
+  const [selectedDetailDriver, setSelectedDetailDriver] = useState(()=>routeParams.get('driver')?{driverId:routeParams.get('driver'),givenName:routeParams.get('given'),familyName:routeParams.get('family'),nationality:routeParams.get('nationality'),dateOfBirth:routeParams.get('born')||'Not provided'}:null);
   const [careerStandings, setCareerStandings] = useState([]);
   const [careerStats, setCareerStats] = useState(null);
   const detailRequest = useRef(0);
@@ -124,13 +128,15 @@ function Racers() {
   const heatmapContainerRef = useRef(null);
 
   const [sortedChampions, setSortedChampions] = useState([]);
+  const requestedDriver=routeParams.get('driver');
+  useEffect(()=>{if(!requestedDriver||loadingDrivers)return;const request=requestAnimationFrame(()=>document.getElementById('driver-profile')?.scrollIntoView({block:'start'}));return()=>cancelAnimationFrame(request);},[requestedDriver,loadingDrivers,sortedChampions.length]);
 
   // Fetch all drivers (limit 1000) for full search, comparison, and heatmap coverage
   const fetchDrivers = async (currentOffset) => {
     setLoadingDrivers(true);
     setErrorDrivers(null);
     try {
-      const data = await getAllDrivers(1000, currentOffset);
+      const data = driverSnapshot.drivers?.length ? driverSnapshot.drivers : await getAllDrivers(1000, currentOffset);
       setDriversList(data);
       
       // Compute sorted champions
@@ -158,7 +164,7 @@ function Racers() {
 
       // Fetch Champion Images for top 8
       sorted.slice(0, 8).forEach(async (champ) => {
-        setChampionImagesLoading(prev => ({ ...prev, [champ.driverId]: true }));
+        setChampionImagesLoading(prev => ({ ...prev, [champ.driverId]: !localImage(champ.url || champ.name) }));
         try {
           const fetchId = champ.url || champ.name;
           const url = await getWikipediaImage(fetchId);
@@ -184,6 +190,7 @@ function Racers() {
   // Initial load
   useEffect(() => {
     void Promise.resolve().then(() => fetchDrivers(0));
+    void getAllDrivers(1000, 0).then(setDriversList).catch(() => { /* Saved registry remains available. */ });
 
     // Fetch World Map TopoJSON
     fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
@@ -231,8 +238,10 @@ function Racers() {
   const fetchCompareStats = async (slot, driver) => {
     const request = ++comparisonRequests.current[slot];
     setComparisonError(null);
-    if (slot === 'A') setStatsA(null); else setStatsB(null);
-    setLoadingCompare(prev => ({ ...prev, [slot.toLowerCase()]: true }));
+    const saved = careerSnapshot.drivers?.[driver.driverId];
+    const immediate = saved ? { ...saved, source: 'Saved Jolpica results', asOf: careerSnapshot.retrievedAt } : null;
+    if (slot === 'A') setStatsA(immediate); else setStatsB(immediate);
+    setLoadingCompare(prev => ({ ...prev, [slot.toLowerCase()]: !saved }));
     try {
       const parsedStats = await getDriverCareerStats(driver.driverId);
       if (request !== comparisonRequests.current[slot]) return;
@@ -243,7 +252,7 @@ function Racers() {
       }
     } catch (err) {
       console.error('Error fetching comparison stats:', err);
-      if (request === comparisonRequests.current[slot]) setComparisonError('Comparison data is unavailable for a selected driver. Select the driver again to retry.');
+      if (!saved && request === comparisonRequests.current[slot]) setComparisonError('Comparison data is unavailable for a selected driver. Select the driver again to retry.');
     } finally {
       if (request === comparisonRequests.current[slot]) setLoadingCompare(prev => ({ ...prev, [slot.toLowerCase()]: false }));
     }
@@ -351,7 +360,7 @@ function Racers() {
       B: statsB ? Math.min((statsB.wins / 100) * 100, 100) : 0,
     },
     {
-      subject: 'Poles',
+      subject: 'Grid P1',
       A: statsA ? Math.min((statsA.poles / 100) * 100, 100) : 0,
       B: statsB ? Math.min((statsB.poles / 100) * 100, 100) : 0,
     },
@@ -399,9 +408,9 @@ function Racers() {
 
   // Color generator
   const getCountryColor = (count) => {
-    if (count === 0) return '#181822'; // Light gray in dark theme context
+    if (count === 0) return '#1b1b1b'; // Light gray in dark theme context
     const t = Math.pow(count / maxHeatmapDrivers, 0.4); // Highlight low counts beautifully
-    return d3.interpolateRgb('#3a1010', '#e10600')(t);
+    return d3.interpolateRgb('#e10600', '#e10600')(t);
   };
 
   const handleHeatmapMouseMove = (event, countryName, count, drivers) => {
@@ -421,6 +430,7 @@ function Racers() {
 
   return (
     <div className="pt-24 pb-12 px-6 max-w-7xl mx-auto space-y-16">
+      <header className="experience-heading"><p className="experience-kicker">THE PEOPLE BEHIND THE HELMETS</p><h1>Meet the drivers.</h1><p>Explore champions and the historical driver registry. Select a driver to inspect their recorded career, then compare results with the era in mind.</p></header>
       <DataNote kind="Historical statistics">Career totals reflect different cars, calendar lengths and scoring systems. Compare context as well as totals; these charts do not isolate driver skill. Source: Jolpica. Images: Wikipedia.</DataNote>
       {/* SECTION 1: Champions Hall of Fame */}
       <FadeInSection>
@@ -444,7 +454,7 @@ function Racers() {
               role="button" tabIndex={0} onKeyDown={event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setSelectedChampion(champ); } } } onClick={() => setSelectedChampion(champ)}
               className="bg-f1-panel border border-f1-border rounded-lg overflow-hidden cursor-pointer hover:border-f1-red/60 transition duration-300 flex flex-col group"
             >
-              <div className="relative overflow-hidden h-44 bg-[#1a1a24] flex items-center justify-center">
+              <div className="relative overflow-hidden h-44 bg-[#1d1d1d] flex items-center justify-center">
                 {championImagesLoading[champ.driverId] || championImagesError[champ.driverId] || !championImages[champ.driverId] ? (
                   <span className="text-3xl font-black text-white/50">
                     {champ.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
@@ -487,6 +497,7 @@ function Racers() {
       </FadeInSection>
 
       {/* SECTION 2: Full Driver Database */}
+      <span id="driver-database" className="block scroll-mt-48"/>
       <FadeInSection>
         <div className="border-l-2 border-f1-red pl-2 mb-4">
           <h4 className="text-[11px] font-black uppercase tracking-widest text-f1-red">
@@ -514,7 +525,7 @@ function Racers() {
               <select 
                 value={filterNationality} 
                 onChange={(e) => { setFilterNationality(e.target.value); setCurrentPage(1); }}
-                className="w-full bg-[#12121c] border border-f1-border text-f1-light text-xs font-bold py-2.5 px-3 rounded focus:outline-none focus:border-f1-red transition cursor-pointer"
+                className="w-full bg-[#151515] border border-f1-border text-f1-light text-xs font-bold py-2.5 px-3 rounded focus:outline-none focus:border-f1-red transition cursor-pointer"
               >
                 <option value="">All Nationalities</option>
                 {Array.from(new Set((driversList || []).map(d => d.nationality).filter(Boolean))).sort().map(nat => (
@@ -527,7 +538,7 @@ function Racers() {
               <select 
                 value={sortMethod} 
                 onChange={(e) => { setSortMethod(e.target.value); setCurrentPage(1); }}
-                className="w-full bg-[#12121c] border border-f1-border text-f1-light text-xs font-bold py-2.5 px-3 rounded focus:outline-none focus:border-f1-red transition cursor-pointer"
+                className="w-full bg-[#151515] border border-f1-border text-f1-light text-xs font-bold py-2.5 px-3 rounded focus:outline-none focus:border-f1-red transition cursor-pointer"
               >
                 <option value="name-asc">Last Name (A-Z)</option>
                 <option value="name-desc">Last Name (Z-A)</option>
@@ -540,7 +551,7 @@ function Racers() {
               <select 
                 value={itemsPerPage} 
                 onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
-                className="w-full bg-[#12121c] border border-f1-border text-f1-light text-xs font-bold py-2.5 px-3 rounded focus:outline-none focus:border-f1-red transition cursor-pointer"
+                className="w-full bg-[#151515] border border-f1-border text-f1-light text-xs font-bold py-2.5 px-3 rounded focus:outline-none focus:border-f1-red transition cursor-pointer"
               >
                 <option value={12}>12 rows</option>
                 <option value={25}>25 rows</option>
@@ -568,7 +579,7 @@ function Racers() {
             <div className="flex flex-wrap gap-1 justify-center md:justify-start">
               <button 
                 onClick={() => { setFilterLetter(''); setCurrentPage(1); }}
-                className={`px-2 py-1 text-[10px] font-bold rounded transition ${filterLetter === '' ? 'bg-f1-red text-white' : 'bg-[#12121c] text-f1-muted hover:bg-f1-border hover:text-f1-light'}`}
+                className={`px-2 py-1 text-[10px] font-bold rounded transition ${filterLetter === '' ? 'bg-f1-red text-white' : 'bg-[#151515] text-f1-muted hover:bg-f1-border hover:text-f1-light'}`}
               >
                 ALL
               </button>
@@ -576,7 +587,7 @@ function Racers() {
                 <button 
                   key={letter}
                   onClick={() => { setFilterLetter(letter); setCurrentPage(1); }}
-                  className={`px-2 py-1 text-[10px] font-bold rounded transition ${filterLetter === letter ? 'bg-f1-red text-white' : 'bg-[#12121c] text-f1-muted hover:bg-f1-border hover:text-f1-light'}`}
+                  className={`px-2 py-1 text-[10px] font-bold rounded transition ${filterLetter === letter ? 'bg-f1-red text-white' : 'bg-[#151515] text-f1-muted hover:bg-f1-border hover:text-f1-light'}`}
                 >
                   {letter}
                 </button>
@@ -591,9 +602,9 @@ function Racers() {
               ← Swipe to view details →
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
+              <div className="responsive-table" role="region" aria-label="Scrollable statistics table" tabIndex={0}><table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="bg-[#12121c] border-b border-f1-border text-f1-muted font-bold uppercase tracking-wider">
+                  <tr className="bg-[#151515] border-b border-f1-border text-f1-muted font-bold uppercase tracking-wider">
                     <th className="py-3.5 px-4 w-12 text-center">#</th>
                     <th className="py-3.5 px-4">Name</th>
                     <th className="py-3.5 px-4">Nationality</th>
@@ -628,12 +639,12 @@ function Racers() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             </div>
             
             {/* Pagination Controls */}
             {totalPages > 1 && !loadingDrivers && (
-              <div className="flex items-center justify-between p-4 bg-[#12121c] border-t border-f1-border text-xs font-bold">
+              <div className="flex items-center justify-between p-4 bg-[#151515] border-t border-f1-border text-xs font-bold">
                 <span className="text-f1-muted">
                   Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredDrivers.length)} of {filteredDrivers.length} Drivers
                 </span>
@@ -662,11 +673,11 @@ function Racers() {
             )}
           </div>
 
-          <div className="lg:col-span-1 bg-f1-panel border border-f1-border p-6 rounded-lg shadow-xl min-h-[500px] flex flex-col justify-between sticky top-28 self-start">
+          <div id="driver-profile" className="driver-profile-card lg:col-span-1 bg-f1-panel border border-f1-border p-6 rounded-lg shadow-xl min-h-[500px] flex flex-col justify-between sticky top-28 self-start">
             {selectedDetailDriver ? (
               <div className="space-y-6">
                 <div className="flex gap-5 items-center">
-                  <div className="w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden bg-[#07070a] border-2 border-f1-border flex-shrink-0 flex items-center justify-center shadow-lg">
+                  <div className="w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden bg-[#080808] border-2 border-f1-border flex-shrink-0 flex items-center justify-center shadow-lg">
                     {detailDriverImage ? (
                       <img src={detailDriverImage} alt={selectedDetailDriver.familyName} className="w-full h-full object-cover object-top" />
                     ) : (
@@ -700,25 +711,25 @@ function Racers() {
                 ) : careerStandings.length > 0 ? (
                   <div className="space-y-6">
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-[#07070a] p-3 border border-f1-border rounded">
+                      <div className="bg-[#080808] p-3 border border-f1-border rounded">
                         <span className="text-[9px] text-f1-muted uppercase font-bold tracking-wider block mb-0.5">Seasons</span>
                         <span className="text-sm font-extrabold text-f1-light">{activeSeasonsLabel}</span>
                       </div>
-                      <div className="bg-[#07070a] p-3 border border-f1-border rounded">
+                      <div className="bg-[#080808] p-3 border border-f1-border rounded">
                         <span className="text-[9px] text-f1-muted uppercase font-bold tracking-wider block mb-0.5">Total Races</span>
                         <span className="text-sm font-extrabold text-f1-light">{totalRaces}</span>
                       </div>
-                      <div className="bg-[#07070a] p-3 border border-f1-border rounded">
+                      <div className="bg-[#080808] p-3 border border-f1-border rounded">
                         <span className="text-[9px] text-f1-muted uppercase font-bold tracking-wider block mb-0.5">Career Wins</span>
                         <span className="text-sm font-extrabold text-f1-red">{totalWins}</span>
                       </div>
-                      <div className="bg-[#07070a] p-3 border border-f1-border rounded">
+                      <div className="bg-[#080808] p-3 border border-f1-border rounded">
                         <span className="text-[9px] text-f1-muted uppercase font-bold tracking-wider block mb-0.5">Podiums (Est)</span>
                         <span className="text-sm font-extrabold text-f1-light">{estimatedPodiums}</span>
                       </div>
                     </div>
 
-                    <div className="bg-[#07070a] p-3 border border-f1-border rounded">
+                    <div className="bg-[#080808] p-3 border border-f1-border rounded">
                       <span className="text-[9px] text-f1-muted uppercase font-bold tracking-wider block">Total Career Points</span>
                       <span className="text-xl font-black text-f1-light mt-0.5 block">{totalPoints} pts</span>
                     </div>
@@ -730,7 +741,7 @@ function Racers() {
                       <div className="h-44 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <LineChart data={lineChartData} margin={{ top: 0, right: 10, left: -25, bottom: 0 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#1a1a24" opacity={0.4} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="#1d1d1d" opacity={0.4} />
                             <XAxis dataKey="season" stroke="#666666" fontSize={9} tickLine={false} />
                             <YAxis stroke="#666666" fontSize={9} tickLine={false} />
                             <Tooltip content={<PlotlyTooltip xKey="season" />} />
@@ -792,9 +803,9 @@ function Racers() {
           <div className="relative">
             <label className="block text-[10px] font-black uppercase text-f1-red mb-2 tracking-wider">Compare Driver A</label>
             {driverA ? (
-              <div className="bg-[#0f0f18] border border-f1-red p-4 rounded flex justify-between items-center shadow-lg shadow-f1-red/5">
+              <div className="bg-[#121212] border border-f1-red p-4 rounded flex justify-between items-center shadow-lg shadow-f1-red/5">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-[#1a1a24] border border-f1-border flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-[#1d1d1d] border border-f1-border flex items-center justify-center flex-shrink-0">
                     {driverAImage ? (
                       <img src={driverAImage} alt={driverA.familyName} className="w-full h-full object-cover object-top" />
                     ) : (
@@ -809,6 +820,8 @@ function Racers() {
                 <motion.button 
                   whileTap={{ scale: 0.97 }}
                   onClick={() => {
+                    comparisonRequests.current.A++;
+                    setLoadingCompare(prev => ({ ...prev, a: false }));
                     setDriverA(null);
                     setStatsA(null);
                   }} 
@@ -828,10 +841,10 @@ function Racers() {
                     setShowDropdownA(true);
                   }}
                   onFocus={() => setShowDropdownA(true)}
-                  className="w-full bg-[#0a0a0f] border border-f1-border text-f1-light text-xs font-bold py-3 px-4 rounded focus:outline-none focus:border-f1-red transition placeholder-f1-muted"
+                  className="w-full bg-[#0c0c0c] border border-f1-border text-f1-light text-xs font-bold py-3 px-4 rounded focus:outline-none focus:border-f1-red transition placeholder-f1-muted"
                 />
                 {showDropdownA && (
-                  <div className="absolute left-0 right-0 mt-1 bg-[#0f0f18] border border-f1-border rounded shadow-2xl max-h-[400px] overflow-y-auto z-40 divide-y divide-f1-border/40 scrollbar-thin scrollbar-thumb-f1-red scrollbar-track-f1-dark">
+                  <div className="absolute left-0 right-0 mt-1 bg-[#121212] border border-f1-border rounded shadow-2xl max-h-[400px] overflow-y-auto z-40 divide-y divide-f1-border/40 scrollbar-thin scrollbar-thumb-f1-red scrollbar-track-f1-dark">
                     {(driversList || [])
                       .filter(d => {
                         if (!d) return false;
@@ -858,9 +871,9 @@ function Racers() {
           <div className="relative">
             <label className="block text-[10px] font-black uppercase text-f1-red mb-2 tracking-wider">Compare Driver B</label>
             {driverB ? (
-              <div className="bg-[#0f0f18] border border-f1-red p-4 rounded flex justify-between items-center shadow-lg shadow-f1-red/5">
+              <div className="bg-[#121212] border border-f1-red p-4 rounded flex justify-between items-center shadow-lg shadow-f1-red/5">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-[#1a1a24] border border-f1-border flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-[#1d1d1d] border border-f1-border flex items-center justify-center flex-shrink-0">
                     {driverBImage ? (
                       <img src={driverBImage} alt={driverB.familyName} className="w-full h-full object-cover object-top" />
                     ) : (
@@ -875,6 +888,8 @@ function Racers() {
                 <motion.button 
                   whileTap={{ scale: 0.97 }}
                   onClick={() => {
+                    comparisonRequests.current.B++;
+                    setLoadingCompare(prev => ({ ...prev, b: false }));
                     setDriverB(null);
                     setStatsB(null);
                   }} 
@@ -894,10 +909,10 @@ function Racers() {
                     setShowDropdownB(true);
                   }}
                   onFocus={() => setShowDropdownB(true)}
-                  className="w-full bg-[#0a0a0f] border border-f1-border text-f1-light text-xs font-bold py-3 px-4 rounded focus:outline-none focus:border-f1-red transition placeholder-f1-muted"
+                  className="w-full bg-[#0c0c0c] border border-f1-border text-f1-light text-xs font-bold py-3 px-4 rounded focus:outline-none focus:border-f1-red transition placeholder-f1-muted"
                 />
                 {showDropdownB && (
-                  <div className="absolute left-0 right-0 mt-1 bg-[#0f0f18] border border-f1-border rounded shadow-2xl max-h-[400px] overflow-y-auto z-40 divide-y divide-f1-border/40 scrollbar-thin scrollbar-thumb-f1-red scrollbar-track-f1-dark">
+                  <div className="absolute left-0 right-0 mt-1 bg-[#121212] border border-f1-border rounded shadow-2xl max-h-[400px] overflow-y-auto z-40 divide-y divide-f1-border/40 scrollbar-thin scrollbar-thumb-f1-red scrollbar-track-f1-dark">
                     {(driversList || [])
                       .filter(d => {
                         if (!d) return false;
@@ -929,7 +944,8 @@ function Racers() {
           </div>
         )}
 
-        {comparisonError && <p role="status" className="text-sm text-amber-300">{comparisonError}</p>}
+        {(statsA?.asOf || statsB?.asOf) && <p className="comparison-provenance">{[statsA,statsB].filter(Boolean).map((stats,index) => `${index === 0 ? 'A' : 'B'}: ${stats.source} · ${new Date(stats.asOf).toLocaleDateString()}`).join(' / ')}. Totals reflect the retrieval date; starting from P1 is used for the pole count.</p>}
+          {comparisonError && <p role="status" className="text-sm text-red-300">{comparisonError}</p>}
         <DataNote kind="Comparison guide">Wins, podiums and grid-P1 starts are counted from recorded results. Fastest-lap coverage varies by era. Finish rate counts results marked Finished or a lap deficit; it combines driving and mechanical outcomes. Radar scales cap wins and poles at 100, podiums at 200 and seasons at 20, so they are not a driver-skill rating.</DataNote>
         {driverA && driverB && statsA && statsB && !loadingCompare.a && !loadingCompare.b && (
           <>
@@ -939,19 +955,19 @@ function Racers() {
                 <h3 className="text-base font-extrabold text-f1-light mb-4 border-b border-f1-border/40 pb-2 uppercase tracking-wide">
                   Side-by-Side Comparison
                 </h3>
-                <table className="w-full text-sm">
+                <div className="responsive-table" role="region" aria-label="Scrollable statistics table" tabIndex={0}><table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-f1-border text-f1-muted uppercase font-bold">
-                      <th className="py-4 text-left">Telemetry Metric</th>
+                      <th className="py-4 text-left">Career metric</th>
                       <th className="py-4 text-center text-f1-red font-black text-base">{driverA.familyName}</th>
-                      <th className="py-4 text-center text-[#ffd300] font-black text-base">{driverB.familyName}</th>
+                      <th className="py-4 text-center text-[#9b9b9b] font-black text-base">{driverB.familyName}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-f1-border/30 font-mono text-f1-light">
                     <tr>
                       <td className="py-4 font-bold text-f1-muted text-left">Championships</td>
                       <td className="py-4 text-center font-black text-base text-f1-red">{statsA.championships}</td>
-                      <td className="py-4 text-center font-black text-base text-[#ffd300]">{statsB.championships}</td>
+                      <td className="py-4 text-center font-black text-base text-[#9b9b9b]">{statsB.championships}</td>
                     </tr>
                     <tr>
                       <td className="py-4 font-bold text-f1-muted text-left">GP Race Wins</td>
@@ -959,7 +975,7 @@ function Racers() {
                       <td className="py-4 text-center font-black text-base">{statsB.wins}</td>
                     </tr>
                     <tr>
-                      <td className="py-4 font-bold text-f1-muted text-left">Poles Positions</td>
+                      <td className="py-4 font-bold text-f1-muted text-left">Grid P1 starts</td>
                       <td className="py-4 text-center font-black text-base">{statsA.poles}</td>
                       <td className="py-4 text-center font-black text-base">{statsB.poles}</td>
                     </tr>
@@ -984,7 +1000,7 @@ function Racers() {
                       <td className="py-4 text-center font-black text-base">{statsB.reliability}%</td>
                     </tr>
                   </tbody>
-                </table>
+                </table></div>
               </div>
 
               <div className="mt-6 flex justify-end">
@@ -1008,9 +1024,9 @@ function Racers() {
               <div className="flex-1 w-full flex items-center justify-center min-h-[300px] mt-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
-                    <PolarGrid stroke="#1a1a24" />
+                    <PolarGrid stroke="#1d1d1d" />
                     <PolarAngleAxis dataKey="subject" stroke="#888888" fontSize={12} fontWeight="bold" />
-                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} stroke="#1a1a24" />
+                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} stroke="#1d1d1d" />
                     <Radar 
                       name={driverA.familyName} 
                       dataKey="A" 
@@ -1022,9 +1038,9 @@ function Racers() {
                     <Radar 
                       name={driverB.familyName} 
                       dataKey="B" 
-                      stroke="#ffd300" 
+                      stroke="#9b9b9b"
                       strokeWidth={2}
-                      fill="#ffd300" 
+                      fill="#9b9b9b"
                       fillOpacity={0.25} 
                     />
                     <Legend verticalAlign="bottom" height={24} fontSize={13} iconSize={12} wrapperStyle={{ fontWeight: 'bold' }} />
@@ -1099,7 +1115,7 @@ function Racers() {
                       key={feature.id || i}
                       d={pathGenerator(feature)}
                       fill={fill}
-                      stroke="#0a0a0f"
+                      stroke="#0c0c0c"
                       strokeWidth={0.5}
                       className="hover:opacity-85 transition duration-150 cursor-pointer"
                       onClick={() => {
@@ -1127,7 +1143,7 @@ function Racers() {
           {/* Heatmap Tooltip */}
           {heatmapTooltip && (
             <div 
-              className="absolute z-50 bg-[#0f0f18]/95 backdrop-blur-md border border-f1-red p-3 rounded shadow-2xl pointer-events-none text-left w-52"
+              className="absolute z-50 bg-[#121212]/95 backdrop-blur-md border border-f1-red p-3 rounded shadow-2xl pointer-events-none text-left w-52"
               style={{ 
                 left: `${heatmapTooltip.x + 15}px`, 
                 top: `${heatmapTooltip.y + 15}px` 
@@ -1157,7 +1173,7 @@ function Racers() {
 
         {/* Gradient Legend */}
         <div className="mt-4 flex flex-col items-center space-y-2">
-          <div className="w-full max-w-md h-3.5 bg-gradient-to-r from-[#181822] via-[#5c1616] to-[#e10600] border border-f1-border rounded-sm" />
+          <div className="w-full max-w-md h-3.5 bg-gradient-to-r from-[#1b1b1b] via-[#e10600] to-[#e10600] border border-f1-border rounded-sm" />
           <div className="w-full max-w-md flex justify-between text-[9px] font-bold text-f1-muted uppercase tracking-wider">
             <span>0 Drivers</span>
             <span>Mid Density</span>
@@ -1187,12 +1203,12 @@ function Racers() {
               <motion.button 
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setSelectedChampion(null)}
-                className="absolute top-4 right-4 text-f1-muted hover:text-f1-light text-base font-bold z-10 bg-[#0f0f18]/60 p-2 rounded-full w-8 h-8 flex items-center justify-center transition duration-300"
+                className="absolute top-4 right-4 text-f1-muted hover:text-f1-light text-base font-bold z-10 bg-[#121212]/60 p-2 rounded-full w-8 h-8 flex items-center justify-center transition duration-300"
               >
                 ✕
               </motion.button>
 
-              <div className="relative h-64 w-full bg-[#09090f] overflow-hidden">
+              <div className="relative h-64 w-full bg-[#0b0b0b] overflow-hidden">
                 {worldTopology ? (
                   <div className="absolute inset-0 opacity-60 pointer-events-none">
                     <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid slice" className="w-full h-full">
@@ -1200,14 +1216,14 @@ function Racers() {
                         {worldTopology.features.map((feature, i) => {
                           const countryName = feature.properties.name;
                           const isChampCountry = countryName === (NATIONALITY_TO_COUNTRY[selectedChampion.nationality]?.name);
-                          const fill = isChampCountry ? '#e10600' : '#1a1a24';
+                          const fill = isChampCountry ? '#e10600' : '#1d1d1d';
                           
                           return (
                             <path
                               key={feature.id || i}
                               d={pathGenerator(feature)}
                               fill={fill}
-                              stroke="#09090f"
+                              stroke="#0b0b0b"
                               strokeWidth={0.5}
                             />
                           );
@@ -1232,7 +1248,7 @@ function Racers() {
                                     cx={centroid[0]} 
                                     cy={centroid[1]} 
                                     r={6} 
-                                    fill="#ffd300"
+                                    fill="#9b9b9b"
                                     stroke="#000000"
                                     strokeWidth={1}
                                   />
@@ -1252,7 +1268,7 @@ function Racers() {
                     className="w-full h-full object-cover opacity-20"
                   />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f18] via-[#0f0f18]/60 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/60 to-transparent" />
                 
                 <div className="absolute bottom-5 left-6 right-6 flex justify-between items-end gap-4">
                   <div className="flex-1">
@@ -1272,7 +1288,7 @@ function Racers() {
                     </span>
                   </div>
 
-                  <div className="w-24 h-32 md:w-28 md:h-36 rounded-md border border-f1-border/50 overflow-hidden shadow-2xl bg-[#1a1a24] flex-shrink-0 relative">
+                  <div className="w-24 h-32 md:w-28 md:h-36 rounded-md border border-f1-border/50 overflow-hidden shadow-2xl bg-[#1d1d1d] flex-shrink-0 relative">
                     <img 
                       src={championImages[selectedChampion.driverId] || selectedChampion.imageUrl} 
                       alt={selectedChampion.name} 
@@ -1282,40 +1298,40 @@ function Racers() {
                         e.target.src = 'https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg';
                       }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f18]/80 to-transparent opacity-50" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#121212]/80 to-transparent opacity-50" />
                   </div>
                 </div>
               </div>
 
               <div className="p-6 space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-[#07070a] p-3 border border-f1-border rounded">
+                  <div className="bg-[#080808] p-3 border border-f1-border rounded">
                     <span className="text-[9px] text-f1-muted uppercase font-black tracking-wider block mb-0.5">Active Years</span>
                     <span className="text-sm font-extrabold text-f1-light">{selectedChampion.activeYears}</span>
                   </div>
-                  <div className="bg-[#07070a] p-3 border border-f1-border rounded">
+                  <div className="bg-[#080808] p-3 border border-f1-border rounded">
                     <span className="text-[9px] text-f1-muted uppercase font-black tracking-wider block mb-0.5">Best Team Ally</span>
                     <span className="text-sm font-extrabold text-f1-light">{selectedChampion.bestTeam}</span>
                   </div>
-                  <div className="bg-[#07070a] p-3 border border-f1-border rounded">
+                  <div className="bg-[#080808] p-3 border border-f1-border rounded">
                     <span className="text-[9px] text-f1-muted uppercase font-black tracking-wider block mb-0.5">Total Races</span>
                     <span className="text-sm font-extrabold text-f1-light">{selectedChampion.totalRaces ?? '—'}</span>
                   </div>
-                  <div className="bg-[#07070a] p-3 border border-f1-border rounded">
+                  <div className="bg-[#080808] p-3 border border-f1-border rounded">
                     <span className="text-[9px] text-f1-muted uppercase font-black tracking-wider block mb-0.5">Podiums</span>
                     <span className="text-sm font-extrabold text-f1-light">{selectedChampion.podiums ?? '—'}</span>
                   </div>
-                  <div className="bg-[#07070a] p-3 border border-f1-border rounded">
+                  <div className="bg-[#080808] p-3 border border-f1-border rounded">
                     <span className="text-[9px] text-f1-muted uppercase font-black tracking-wider block mb-0.5">Grand Prix Wins</span>
                     <span className="text-sm font-extrabold text-f1-red">{selectedChampion.totalWins ?? '—'}</span>
                   </div>
-                  <div className="bg-[#07070a] p-3 border border-f1-border rounded">
+                  <div className="bg-[#080808] p-3 border border-f1-border rounded">
                     <span className="text-[9px] text-f1-muted uppercase font-black tracking-wider block mb-0.5">Pole Positions</span>
                     <span className="text-sm font-extrabold text-f1-light">{selectedChampion.totalPoles}</span>
                   </div>
                 </div>
 
-                <div className="bg-[#07070a] p-3 border border-f1-border rounded">
+                <div className="bg-[#080808] p-3 border border-f1-border rounded">
                   <span className="text-[9px] text-f1-muted uppercase font-black tracking-wider block mb-1">Championship Seasons</span>
                   <span className="text-xs font-semibold text-f1-light leading-relaxed">
                     {selectedChampion.years.join(', ')}
@@ -1348,7 +1364,7 @@ function Racers() {
               <motion.button 
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setSelectedHeatmapCountry(null)}
-                className="absolute top-4 right-4 text-f1-muted hover:text-f1-light text-base font-bold z-10 bg-[#0f0f18]/60 p-2 rounded-full w-8 h-8 flex items-center justify-center transition duration-300"
+                className="absolute top-4 right-4 text-f1-muted hover:text-f1-light text-base font-bold z-10 bg-[#121212]/60 p-2 rounded-full w-8 h-8 flex items-center justify-center transition duration-300"
               >
                 ✕
               </motion.button>
@@ -1365,7 +1381,7 @@ function Racers() {
               <div className="p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-f1-red scrollbar-track-f1-dark">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {selectedHeatmapCountry.drivers.map((d, idx) => (
-                    <div key={d.driverId || idx} className="bg-[#0f0f18] border border-f1-border p-3 rounded hover:border-f1-red transition duration-200">
+                    <div key={d.driverId || idx} className="bg-[#121212] border border-f1-border p-3 rounded hover:border-f1-red transition duration-200">
                       <h4 className="text-f1-light font-bold text-sm">
                         <span className="text-f1-muted font-normal mr-1">{d.givenName}</span>
                         <span className="uppercase">{d.familyName}</span>
