@@ -1,3 +1,6 @@
+import NewsImage from '../components/NewsImage';
+import teamLogos from '../data/teamLogos.json';
+import { localImage } from '../utils/getWikipediaImage';
 import useDialogAccessibility from '../hooks/useDialogAccessibility';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,25 +23,25 @@ const QUICK_TAGS = [
   { 
     label: 'Mercedes', 
     query: 'Mercedes', 
-    color: '#00a19c', 
+    color: '#6a6a6a',
     logo: 'https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.mercedesamgf1.com&size=256' 
   },
   { 
     label: 'Red Bull', 
     query: 'Red Bull', 
-    color: '#3b82f6', 
+    color: '#919191',
     logo: 'https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.redbullracing.com&size=256' 
   },
   { 
     label: 'McLaren', 
     query: 'McLaren', 
-    color: '#ff8700', 
+    color: '#e10600',
     logo: 'https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.mclaren.com&size=256' 
   },
   { 
     label: 'Aston Martin', 
     query: 'Aston Martin', 
-    color: '#229977', 
+    color: '#666666',
     logo: 'https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.astonmartinf1.com&size=256' 
   },
   { 
@@ -50,13 +53,13 @@ const QUICK_TAGS = [
   { 
     label: 'Max Verstappen', 
     query: 'Verstappen', 
-    color: '#3b82f6', 
+    color: '#919191',
     avatar: 'https://media.formula1.com/d_driver_fallback_image.png/content/dam/fom-website/drivers/M/MAXVER01_Max_Verstappen/maxver01.png' 
   },
   { 
     label: 'Kimi Antonelli', 
     query: 'Antonelli', 
-    color: '#00a19c', 
+    color: '#6a6a6a',
     avatar: 'https://media.formula1.com/d_driver_fallback_image.png/content/dam/fom-website/drivers/K/KIMANT01_Kimi_Antonelli/kimant01.png' 
   },
   { 
@@ -68,13 +71,13 @@ const QUICK_TAGS = [
   { 
     label: 'Lando Norris', 
     query: 'Norris', 
-    color: '#ff8700', 
+    color: '#e10600',
     avatar: 'https://media.formula1.com/d_driver_fallback_image.png/content/dam/fom-website/drivers/L/LANNOR01_Lando_Norris/lannor01.png' 
   },
   { 
     label: 'Fernando Alonso', 
     query: 'Alonso', 
-    color: '#229977', 
+    color: '#666666',
     avatar: 'https://media.formula1.com/d_driver_fallback_image.png/content/dam/fom-website/drivers/F/FERALO01_Fernando_Alonso/feralo01.png' 
   }
 ];
@@ -158,9 +161,9 @@ export default function News() {
   };
 
   return (
-    <div className="pt-20 pb-16 min-h-screen bg-[#07070a] text-f1-light relative">
+    <div className="pt-20 pb-16 min-h-screen bg-[#080808] text-f1-light relative">
       <NewsTicker headlines={articles.slice(0, 8)} />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6"><DataNote kind={feedError ? 'Feed unavailable' : 'Publisher RSS'}>Source: publisher feeds via rss2json. Categories are automatically assigned; summaries may be incomplete. {fetchedAt && `Retrieved ${new Date(fetchedAt).toLocaleString()}.`} {feedError && `${feedError} Any articles still shown are from the last successful retrieval.`} {feedError && <button onClick={() => loadNews(true)} className="ml-2 underline text-white">Retry</button>}</DataNote></div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6"><DataNote kind={feedError ? 'Feed unavailable' : 'Publisher RSS'}>{articles[0]?.delivery === 'snapshot' ? `Saved publisher edition from ${new Date(articles[0].retrievedAt).toLocaleString()}. Live feeds are temporarily unavailable.` : 'F1-only publisher feeds: Autosport and Motorsport.com.'} Categories are automatically assigned; summaries may be incomplete. {fetchedAt && `Retrieved ${new Date(fetchedAt).toLocaleString()}.`} {feedError && `${feedError} Any articles still shown are from the last successful retrieval.`} {feedError && <button onClick={() => loadNews(true)} className="ml-2 underline text-white">Retry</button>}</DataNote></div>
 
       {/* Live Toast Alert for New Wire Articles */}
       <AnimatePresence>
@@ -184,15 +187,15 @@ export default function News() {
             <div className="flex flex-wrap items-center gap-3 mb-2">
               <span className="bg-f1-red text-white text-[10px] font-black uppercase px-2 py-0.5 tracking-widest rounded-sm flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                LIVE PADDOCK WIRE
+                {articles[0]?.delivery === 'snapshot' ? 'SAVED PADDOCK EDITION' : 'F1 PADDOCK WIRE'}
               </span>
               
               {/* Auto Sync Indicator & Control */}
-              <div className="flex items-center gap-2 bg-[#12121c] border border-f1-border px-3 py-1 rounded text-[10px] font-mono text-f1-muted">
+              <div className="flex items-center gap-2 bg-[#151515] border border-f1-border px-3 py-1 rounded text-[10px] font-mono text-f1-muted">
                 <span>AUTO-SYNC:</span>
                 <button
                   onClick={() => setAutoUpdate(!autoUpdate)}
-                  className={`font-bold uppercase tracking-wider ${autoUpdate ? 'text-green-400' : 'text-f1-muted'}`}
+                  className={`font-bold uppercase tracking-wider ${autoUpdate ? 'text-red-400' : 'text-f1-muted'}`}
                 >
                   {autoUpdate ? `ON (${countdown}s)` : 'OFF'}
                 </button>
@@ -203,7 +206,7 @@ export default function News() {
               F1 PADDOCK <span className="text-f1-red font-sans not-italic">WIRE</span>
             </h1>
             <p className="text-f1-muted text-sm mt-1 max-w-2xl">
-              Real-time multi-feed RSS engine. Auto-refreshing paddock announcements, telemetry reports, and technical updates.
+              Formula 1 reporting from specialist publishers. Fresh headlines, race analysis and technical developments.
             </p>
           </div>
 
@@ -213,7 +216,7 @@ export default function News() {
               whileTap={{ scale: 0.97 }}
               onClick={() => loadNews(true)}
               disabled={refreshing}
-              className="bg-[#12121c] hover:bg-[#1f1f2e] text-f1-light border border-f1-border text-xs font-mono font-bold uppercase tracking-wider px-4 py-2.5 rounded flex items-center justify-center gap-2 transition"
+              className="bg-[#151515] hover:bg-[#242424] text-f1-light border border-f1-border text-xs font-mono font-bold uppercase tracking-wider px-4 py-2.5 rounded flex items-center justify-center gap-2 transition"
             >
               <svg className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -227,7 +230,7 @@ export default function News() {
                 placeholder="Search Ferrari, Hamilton, Max, Kimi..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#12121c] border border-f1-border text-xs text-f1-light px-4 py-2.5 rounded focus:outline-none focus:border-f1-red transition font-mono pr-8"
+                className="w-full bg-[#151515] border border-f1-border text-xs text-f1-light px-4 py-2.5 rounded focus:outline-none focus:border-f1-red transition font-mono pr-8"
               />
               {searchQuery ? (
                 <button 
@@ -246,7 +249,7 @@ export default function News() {
         </div>
 
         {/* SEARCHABLE DRIVERS & TEAMS QUICK-TAG BAR (FLEX WRAP + BRAND LOGOS + DRIVER AVATARS - NO SCROLLBAR) */}
-        <div className="bg-[#0e0e15] border border-f1-border/60 rounded-xl p-4 space-y-3">
+        <div className="bg-[#101010] border border-f1-border/60 rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between text-[11px] font-mono uppercase text-f1-muted">
             <span className="flex items-center gap-2 font-bold text-f1-red">
               <span className="w-2 h-2 rounded-full bg-f1-red animate-pulse" />
@@ -269,13 +272,13 @@ export default function News() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold tracking-wide border transition duration-200 flex items-center gap-2.5 ${
                     isSelected 
                       ? 'bg-f1-red text-white border-f1-red shadow-lg shadow-f1-red/30' 
-                      : 'bg-[#14141f] text-f1-light border-f1-border/60 hover:border-f1-red/60 hover:bg-[#1a1a28]'
+                      : 'bg-[#181818] text-f1-light border-f1-border/60 hover:border-f1-red/60 hover:bg-[#1f1f1f]'
                   }`}
                 >
                   {tag.logo ? (
                     <div className="w-5 h-5 rounded bg-white/10 p-0.5 flex items-center justify-center shrink-0 overflow-hidden">
                       <img 
-                        src={tag.logo} 
+                        src={`${import.meta.env.BASE_URL}${teamLogos[({ Ferrari:'ferrari', Mercedes:'mercedes', 'Red Bull':'red_bull', McLaren:'mclaren', 'Aston Martin':'aston_martin' })[tag.label]]?.path || 'favicon.svg'}`}
                         alt={tag.label} 
                         className="max-w-full max-h-full object-contain" 
                         referrerPolicy="no-referrer"
@@ -284,7 +287,7 @@ export default function News() {
                     </div>
                   ) : tag.avatar ? (
                     <img 
-                      src={tag.avatar} 
+                      src={localImage(tag.label) || `${import.meta.env.BASE_URL}favicon.svg`}
                       alt={tag.label} 
                       className="w-5 h-5 rounded-full object-cover bg-black/40 border border-white/20 shrink-0" 
                       onError={(e) => { e.target.style.display = 'none'; }}
@@ -301,14 +304,14 @@ export default function News() {
 
         {/* Category Pill Filters */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-f1-border/40">
-          {['ALL', ...CATEGORIES.filter(c => c !== 'ALL'), 'BOOKMARKED'].map(cat => (
+          {CATEGORIES.map(cat => (
             <button
               key={cat}
               role="button" tabIndex={0} onKeyDown={event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setSelectedCategory(cat); } } } onClick={() => setSelectedCategory(cat)}
               className={`px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider whitespace-nowrap transition duration-200 ${
                 selectedCategory === cat 
                   ? 'bg-f1-red text-white shadow-lg shadow-f1-red/20' 
-                  : 'bg-[#12121a] text-f1-muted hover:text-white hover:bg-[#1c1c28]'
+                  : 'bg-[#151515] text-f1-muted hover:text-white hover:bg-[#202020]'
               }`}
             >
               {cat === 'BOOKMARKED' ? '★ Bookmarked' : cat}
@@ -328,15 +331,15 @@ export default function News() {
               <FadeInSection>
                 <div 
                   role="button" tabIndex={0} onKeyDown={event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setSelectedArticle(heroArticle); } } } onClick={() => setSelectedArticle(heroArticle)}
-                  className="group cursor-pointer relative overflow-hidden rounded-2xl border border-f1-border bg-[#0e0e15] grid grid-cols-1 lg:grid-cols-12 shadow-2xl hover:border-f1-red transition duration-300"
+                  className="group cursor-pointer relative overflow-hidden rounded-2xl border border-f1-border bg-[#101010] grid grid-cols-1 lg:grid-cols-12 shadow-2xl hover:border-f1-red transition duration-300"
                 >
                   <div className="lg:col-span-7 relative h-72 lg:h-auto overflow-hidden">
-                    <img 
+                    <NewsImage
                       src={heroArticle.imageUrl} 
                       alt={heroArticle.title} 
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0e0e15] via-transparent to-transparent lg:hidden" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#101010] via-transparent to-transparent lg:hidden" />
                   </div>
 
                   <div className="lg:col-span-5 p-8 lg:p-10 flex flex-col justify-between relative z-10">
@@ -386,7 +389,7 @@ export default function News() {
                 </div>
 
                 {filteredArticles.length === 0 ? (
-                  <div className="bg-[#0e0e15] border border-f1-border p-12 text-center rounded-xl text-f1-muted font-mono text-xs space-y-3">
+                  <div className="bg-[#101010] border border-f1-border p-12 text-center rounded-xl text-f1-muted font-mono text-xs space-y-3">
                     <p className="text-white font-bold text-sm">No articles found matching "{searchQuery}"</p>
                     <p>Try searching for "Ferrari", "Mercedes", "Hamilton", or "Verstappen"</p>
                     <button
@@ -403,16 +406,16 @@ export default function News() {
                         key={article.id}
                         whileHover={{ y: -4 }}
                         role="button" tabIndex={0} onKeyDown={event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setSelectedArticle(article); } } } onClick={() => setSelectedArticle(article)}
-                        className="bg-[#0e0e15] border border-f1-border hover:border-f1-red/50 rounded-xl overflow-hidden shadow-lg cursor-pointer flex flex-col justify-between transition duration-200 group"
+                        className="bg-[#101010] border border-f1-border hover:border-f1-red/50 rounded-xl overflow-hidden shadow-lg cursor-pointer flex flex-col justify-between transition duration-200 group"
                       >
                         <div>
                           <div className="h-44 overflow-hidden relative">
-                            <img 
+                            <NewsImage
                               src={article.imageUrl} 
                               alt={article.title}
                               className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
                             />
-                            <span className="absolute top-3 left-3 bg-[#0a0a0f]/80 backdrop-blur-sm border border-f1-border text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase">
+                            <span className="absolute top-3 left-3 bg-[#0c0c0c]/80 backdrop-blur-sm border border-f1-border text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase">
                               {article.category}
                             </span>
                           </div>
@@ -455,7 +458,7 @@ export default function News() {
 
               {/* Sidebar: Trending & Paddock Wire */}
               <div className="lg:col-span-4 space-y-6">
-                <div className="bg-[#0e0e15] border border-f1-border rounded-xl p-6 shadow-xl">
+                <div className="bg-[#101010] border border-f1-border rounded-xl p-6 shadow-xl">
                   <h3 className="text-xs font-black uppercase tracking-widest text-f1-red border-b border-f1-border/40 pb-3 mb-4 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-f1-red animate-pulse" />
                     TRENDING IN THE PADDOCK
@@ -488,12 +491,12 @@ export default function News() {
                 </div>
 
                 {/* Newsletter / Bulletin Card */}
-                <div className="bg-gradient-to-br from-[#180a0a] to-[#0a0a0f] border border-f1-red/40 rounded-xl p-6 text-center">
+                <div className="bg-gradient-to-br from-[#e10600] to-[#0c0c0c] border border-f1-red/40 rounded-xl p-6 text-center">
                   <h4 className="font-extrabold text-sm text-white uppercase tracking-wider mb-2">
-                    Pit Wall Telemetry Feed
+                    Publisher feed status
                   </h4>
                   <p className="text-xs text-f1-muted mb-4 leading-relaxed">
-                    Auto-polling active every 15 seconds. New dispatches are automatically sorted to the top.
+                    Auto-refresh runs every 60 seconds when enabled. New dispatches are automatically sorted to the top.
                   </p>
                   <button 
                     onClick={() => loadNews(true)}
@@ -523,7 +526,7 @@ export default function News() {
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.95, y: 20 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-[#0e0e16] border border-f1-red/50 w-full max-w-3xl rounded-2xl overflow-hidden shadow-2xl my-8 relative"
+                className="bg-[#111111] border border-f1-red/50 w-full max-w-3xl rounded-2xl overflow-hidden shadow-2xl my-8 relative"
               >
                 <button
                   onClick={() => setSelectedArticle(null)}
@@ -533,8 +536,8 @@ export default function News() {
                 </button>
 
                 <div className="h-64 sm:h-80 overflow-hidden relative">
-                  <img src={selectedArticle.imageUrl} alt={selectedArticle.title} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0e0e16] via-transparent to-transparent" />
+                  <NewsImage src={selectedArticle.imageUrl} alt={selectedArticle.title} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#111111] via-transparent to-transparent" />
                   <div className="absolute bottom-6 left-6 right-6">
                     <span className="bg-f1-red text-white text-[10px] font-black px-2.5 py-1 rounded uppercase tracking-widest mb-2 inline-block">
                       {selectedArticle.category}
