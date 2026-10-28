@@ -1,0 +1,145 @@
+{
+  "mercedes": {
+    "path": "assets/logos/mercedes.webp",
+    "source": "https://media.formula1.com/image/upload/c_lfill,w_240/q_auto/v1740000001/common/f1/2026/mercedes/2026mercedeslogowhite.webp",
+    "season": 2026,
+    "credit": "Formula 1 official team directory"
+  },
+  "ferrari": {
+    "path": "assets/logos/ferrari.webp",
+    "source": "https://media.formula1.com/image/upload/c_lfill,w_240/q_auto/v1740000001/common/f1/2026/ferrari/2026ferrarilogowhite.webp",
+    "season": 2026,
+    "credit": "Formula 1 official team directory"
+  },
+  "red_bull": {
+    "path": "assets/logos/red_bull.webp",
+    "source": "https://media.formula1.com/image/upload/c_lfill,w_240/q_auto/v1740000001/common/f1/2026/redbullracing/2026redbullracinglogowhite.webp",
+    "season": 2026,
+    "credit": "Formula 1 official team directory"
+  },
+  "mclaren": {
+    "path": "assets/logos/mclaren.webp",
+    "source": "https://media.formula1.com/image/upload/c_lfill,w_240/q_auto/v1740000001/common/f1/2026/mclaren/2026mclarenlogowhite.webp",
+    "season": 2026,
+    "credit": "Formula 1 official team directory"
+  },
+  "rb": {
+    "path": "assets/logos/rb.webp",
+    "source": "https://media.formula1.com/image/upload/c_lfill,w_240/q_auto/v1740000001/common/f1/2026/racingbulls/2026racingbullslogowhite.webp",
+    "season": 2026,
+    "credit": "Formula 1 official team directory"
+  },
+  "alpine": {
+    "path": "assets/logos/alpine.webp",
+    "source": "https://media.formula1.com/image/upload/c_lfill,w_240/q_auto/v1740000001/common/f1/2026/alpine/2026alpinelogowhite.webp",
+    "season": 2026,
+    "credit": "Formula 1 official team directory"
+  },
+  "haas": {
+    "path": "assets/logos/haas.webp",
+    "source": "https://media.formula1.com/image/upload/c_lfill,w_240/q_auto/v1740000001/common/f1/2026/haasf1team/2026haasf1teamlogowhite.webp",
+    "season": 2026,
+    "credit": "Formula 1 official team directory"
+  },
+  "audi": {
+    "path": "assets/logos/audi.webp",
+    "source": "https://media.formula1.com/image/upload/c_lfill,w_240/q_auto/v1740000001/common/f1/2026/audi/2026audilogowhite.webp",
+    "season": 2026,
+    "credit": "Formula 1 official team directory"
+  },
+  "williams": {
+    "path": "assets/logos/williams.webp",
+    "source": "https://media.formula1.com/image/upload/c_lfill,w_240/q_auto/v1740000001/common/f1/2026/williams/2026williamslogowhite.webp",
+    "season": 2026,
+    "credit": "Formula 1 official team directory"
+  },
+  "aston_martin": {
+    "path": "assets/logos/aston_martin.webp",
+    "source": "https://media.formula1.com/image/upload/c_lfill,w_240/q_auto/v1740000001/common/f1/2026/astonmartin/2026astonmartinlogowhite.webp",
+    "season": 2026,
+    "credit": "Formula 1 official team directory"
+  },
+  "cadillac": {
+    "path": "assets/logos/cadillac.webp",
+    "source": "https://media.formula1.com/image/upload/c_lfill,w_240/q_auto/v1740000001/common/f1/2026/cadillac/2026cadillaclogowhite.webp",
+    "season": 2026,
+    "credit": "Formula 1 official team directory"
+  },
+  "lotus": {
+    "path": "assets/logos/lotus-archive.jpg",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/9/9e/TeamLotus.jpg",
+    "page": "https://en.wikipedia.org/wiki/Team_Lotus",
+    "historical": true,
+    "credit": "Archived constructor badge via Wikipedia"
+  },
+  "brabham": {
+    "path": "assets/logos/brabham-archive.png",
+    "source": "https://upload.wikimedia.org/wikipedia/en/5/53/Brabham91.png",
+    "page": "https://en.wikipedia.org/wiki/Brabham",
+    "historical": true,
+    "credit": "Archived constructor badge via Wikipedia"
+  },
+  "benetton": {
+    "path": "assets/logos/benetton-archive.jpg",
+    "source": "https://thumb.wikimedia.org/wikipedia/en/thumb/5/54/Benetton_Formula_logo.jpg/250px-Benetton_Formula_logo.jpg",
+    "page": "https://en.wikipedia.org/wiki/Benetton_Formula",
+    "historical": true,
+    "credit": "Archived constructor badge via Wikipedia"
+  },
+  "tyrrell": {
+    "path": "assets/logos/tyrrell-archive.png",
+    "source": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5e/Tyrrell.svg/250px-Tyrrell.svg.png",
+    "page": "https://en.wikipedia.org/wiki/Tyrrell_Racing",
+    "historical": true,
+    "credit": "Archived constructor badge via Wikipedia"
+  },
+  "cooper": {
+    "path": "assets/logos/cooper-archive.png",
+    "source": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b0/Cooper_car_company.png/250px-Cooper_car_company.png",
+    "page": "https://en.wikipedia.org/wiki/Cooper_Car_Company",
+    "historical": true,
+    "credit": "Archived constructor badge via Wikipedia"
+  },
+  "brm": {
+    "path": "assets/logos/brm-archive.png",
+    "source": "https://upload.wikimedia.org/wikipedia/en/b/bd/BritishRacingMotorsLogo.png",
+    "page": "https://en.wikipedia.org/wiki/British_Racing_Motors",
+    "historical": true,
+    "credit": "Archived constructor badge via Wikipedia"
+  },
+  "sauber": {
+    "path": "assets/logos/sauber-archive.png",
+    "source": "https://thumb.wikimedia.org/wikipedia/en/thumb/b/b7/Sauber_Motorsport_SVG_logo_%282023%29.svg/250px-Sauber_Motorsport_SVG_logo_%282023%29.svg.png",
+    "page": "https://en.wikipedia.org/wiki/Sauber_Motorsport",
+    "historical": true,
+    "credit": "Archived constructor badge via Wikipedia"
+  },
+  "brawn": {
+    "path": "assets/logos/brawn-archive.png",
+    "source": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/24/Brawn_GP_logo.svg/250px-Brawn_GP_logo.svg.png",
+    "page": "https://en.wikipedia.org/wiki/Brawn_GP",
+    "historical": true,
+    "credit": "Archived constructor badge via Wikipedia"
+  },
+  "renault": {
+    "path": "assets/logos/renault-archive.png",
+    "source": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/2021_Renault_Group_logo.svg/250px-2021_Renault_Group_logo.svg.png",
+    "page": "https://en.wikipedia.org/wiki/Renault",
+    "historical": true,
+    "credit": "Archived constructor badge via Wikipedia"
+  },
+  "alfa": {
+    "path": "assets/logos/alfa-archive.png",
+    "source": "https://upload.wikimedia.org/wikipedia/en/2/2a/Alfa_Romeo_logo.png",
+    "page": "https://en.wikipedia.org/wiki/Alfa_Romeo",
+    "historical": true,
+    "credit": "Archived constructor badge via Wikipedia"
+  },
+  "maserati": {
+    "path": "assets/logos/maserati-archive.png",
+    "source": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/78/Maserati_logo_2.svg/250px-Maserati_logo_2.svg.png",
+    "page": "https://en.wikipedia.org/wiki/Maserati",
+    "historical": true,
+    "credit": "Archived constructor badge via Wikipedia"
+  }
+}
