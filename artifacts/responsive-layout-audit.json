@@ -1,0 +1,1398 @@
+{
+  "checks": [
+    {
+      "route": "/",
+      "documentWidth": 373,
+      "offenders": [],
+      "overflow": false,
+      "title": "NewtoF1?Starthere.",
+      "width": 390
+    },
+    {
+      "route": "/watch",
+      "documentWidth": 373,
+      "offenders": [],
+      "overflow": false,
+      "title": "Watch your first race",
+      "width": 390
+    },
+    {
+      "route": "/racers",
+      "documentWidth": 373,
+      "offenders": [
+        {
+          "class": "w-full text-left text-xs border-collapse",
+          "tag": "TABLE",
+          "width": 490
+        },
+        {
+          "class": "",
+          "tag": "THEAD",
+          "width": 490
+        },
+        {
+          "class": "bg-[#151515] border-b border-f1-border text-f1-muted font-bold uppercase tracking-wider",
+          "tag": "TR",
+          "width": 490
+        },
+        {
+          "class": "py-3.5 px-4",
+          "tag": "TH",
+          "width": 65
+        },
+        {
+          "class": "py-3.5 px-4 w-20 text-center",
+          "tag": "TH",
+          "width": 86
+        },
+        {
+          "class": "divide-y divide-f1-border/40",
+          "tag": "TBODY",
+          "width": 490
+        }
+      ],
+      "overflow": false,
+      "title": "Meet the drivers.",
+      "width": 390
+    },
+    {
+      "route": "/teams",
+      "documentWidth": 373,
+      "offenders": [],
+      "overflow": false,
+      "title": "Two drivers. One team.",
+      "width": 390
+    },
+    {
+      "route": "/circuits",
+      "documentWidth": 373,
+      "offenders": [],
+      "overflow": false,
+      "title": "🏁 F1 Circuit Directory",
+      "width": 390
+    },
+    {
+      "route": "/live-season",
+      "documentWidth": 373,
+      "offenders": [
+        {
+          "class": "w-full text-xs text-left",
+          "tag": "TABLE",
+          "width": 423
+        },
+        {
+          "class": "",
+          "tag": "THEAD",
+          "width": 423
+        },
+        {
+          "class": "border-b border-f1-border text-f1-muted uppercase font-bold",
+          "tag": "TR",
+          "width": 423
+        },
+        {
+          "class": "py-2 text-center w-24",
+          "tag": "TH",
+          "width": 87
+        },
+        {
+          "class": "py-2 text-right w-16",
+          "tag": "TH",
+          "width": 50
+        },
+        {
+          "class": "divide-y divide-f1-border/30 font-mono text-f1-light",
+          "tag": "TBODY",
+          "width": 423
+        }
+      ],
+      "overflow": false,
+      "title": "🏁 Current Season Standings(Points Reset Yearly)",
+      "width": 390
+    },
+    {
+      "route": "/strategy",
+      "documentWidth": 373,
+      "offenders": [],
+      "overflow": false,
+      "title": "Race Strategy & Tyre Guide",
+      "width": 390
+    },
+    {
+      "route": "/all-time",
+      "documentWidth": 373,
+      "offenders": [],
+      "overflow": false,
+      "title": "Championship records.",
+      "width": 390
+    },
+    {
+      "route": "/cars",
+      "documentWidth": 373,
+      "offenders": [
+        {
+          "class": "flex gap-6 py-4 w-max",
+          "tag": "DIV",
+          "width": 2568
+        },
+        {
+          "class": "w-[300px] bg-f1-panel border border-f1-border rounded-lg overflow-hidden hover:border-f1-red/60 transition duration-300 flex flex-col group shrink-0 cursor-pointer",
+          "tag": "DIV",
+          "width": 300
+        },
+        {
+          "class": "h-40 relative bg-[#0b0b0b] flex items-center justify-center overflow-hidden",
+          "tag": "DIV",
+          "width": 298
+        },
+        {
+          "class": "w-full h-full object-cover object-center group-hover:scale-105 transition duration-500 pointer-events-none",
+          "tag": "IMG",
+          "width": 298
+        },
+        {
+          "class": "absolute inset-0 bg-gradient-to-t from-f1-panel to-transparent",
+          "tag": "DIV",
+          "width": 298
+        },
+        {
+          "class": "absolute bottom-3 left-4 text-xs bg-f1-red text-f1-light font-black px-2 py-0.5 rounded-sm uppercase tracking-wider",
+          "tag": "SPAN",
+          "width": 98
+        }
+      ],
+      "overflow": false,
+      "title": "Understand the machine.",
+      "width": 390
+    },
+    {
+      "route": "/garage",
+      "documentWidth": 373,
+      "offenders": [],
+      "overflow": false,
+      "title": "Your own pit garage.",
+      "width": 390
+    },
+    {
+      "route": "/dictionary",
+      "documentWidth": 373,
+      "offenders": [],
+      "overflow": false,
+      "title": "F1, translated.",
+      "width": 390
+    },
+    {
+      "route": "/news",
+      "documentWidth": 373,
+      "offenders": [],
+      "overflow": false,
+      "title": "F1 PADDOCK WIRE",
+      "width": 390
+    },
+    {
+      "route": "/pit-wall-ai",
+      "documentWidth": 373,
+      "offenders": [],
+      "overflow": false,
+      "title": "F1 Data Lab",
+      "width": 390
+    },
+    {
+      "requested": 320,
+      "route": "/",
+      "documentWidth": 303,
+      "error": false,
+      "overflow": false,
+      "width": 321
+    },
+    {
+      "requested": 320,
+      "route": "/watch",
+      "documentWidth": 303,
+      "error": false,
+      "overflow": false,
+      "width": 321
+    },
+    {
+      "requested": 320,
+      "route": "/racers",
+      "documentWidth": 303,
+      "error": false,
+      "overflow": false,
+      "width": 321
+    },
+    {
+      "requested": 320,
+      "route": "/teams",
+      "documentWidth": 303,
+      "error": false,
+      "overflow": false,
+      "width": 321
+    },
+    {
+      "requested": 320,
+      "route": "/circuits",
+      "documentWidth": 303,
+      "error": false,
+      "overflow": false,
+      "width": 321
+    },
+    {
+      "requested": 320,
+      "route": "/live-season",
+      "documentWidth": 303,
+      "error": false,
+      "overflow": false,
+      "width": 321
+    },
+    {
+      "requested": 320,
+      "route": "/strategy",
+      "documentWidth": 303,
+      "error": false,
+      "overflow": false,
+      "width": 321
+    },
+    {
+      "requested": 320,
+      "route": "/all-time",
+      "documentWidth": 303,
+      "error": false,
+      "overflow": false,
+      "width": 321
+    },
+    {
+      "requested": 320,
+      "route": "/cars",
+      "documentWidth": 303,
+      "error": false,
+      "overflow": false,
+      "width": 321
+    },
+    {
+      "requested": 320,
+      "route": "/garage",
+      "documentWidth": 303,
+      "error": false,
+      "overflow": false,
+      "width": 321
+    },
+    {
+      "requested": 320,
+      "route": "/dictionary",
+      "documentWidth": 303,
+      "error": false,
+      "overflow": false,
+      "width": 321
+    },
+    {
+      "requested": 320,
+      "route": "/news",
+      "documentWidth": 303,
+      "error": false,
+      "overflow": false,
+      "width": 321
+    },
+    {
+      "requested": 320,
+      "route": "/pit-wall-ai",
+      "documentWidth": 303,
+      "error": false,
+      "overflow": false,
+      "width": 321
+    },
+    {
+      "requested": 430,
+      "route": "/",
+      "documentWidth": 412,
+      "error": false,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": 430,
+      "route": "/watch",
+      "documentWidth": 412,
+      "error": false,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": 430,
+      "route": "/racers",
+      "documentWidth": 412,
+      "error": false,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": 430,
+      "route": "/teams",
+      "documentWidth": 412,
+      "error": false,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": 430,
+      "route": "/circuits",
+      "documentWidth": 412,
+      "error": false,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": 430,
+      "route": "/live-season",
+      "documentWidth": 412,
+      "error": false,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": 430,
+      "route": "/strategy",
+      "documentWidth": 412,
+      "error": false,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": 430,
+      "route": "/all-time",
+      "documentWidth": 412,
+      "error": false,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": 430,
+      "route": "/cars",
+      "documentWidth": 412,
+      "error": false,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": 430,
+      "route": "/garage",
+      "documentWidth": 412,
+      "error": false,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": 430,
+      "route": "/dictionary",
+      "documentWidth": 412,
+      "error": false,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": 430,
+      "route": "/news",
+      "documentWidth": 412,
+      "error": false,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": 430,
+      "route": "/pit-wall-ai",
+      "documentWidth": 412,
+      "error": false,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": 768,
+      "route": "/",
+      "documentWidth": 751,
+      "error": false,
+      "overflow": false,
+      "width": 769
+    },
+    {
+      "requested": 768,
+      "route": "/watch",
+      "documentWidth": 751,
+      "error": false,
+      "overflow": false,
+      "width": 769
+    },
+    {
+      "requested": 768,
+      "route": "/racers",
+      "documentWidth": 751,
+      "error": false,
+      "overflow": false,
+      "width": 769
+    },
+    {
+      "requested": 768,
+      "route": "/teams",
+      "documentWidth": 751,
+      "error": false,
+      "overflow": false,
+      "width": 769
+    },
+    {
+      "requested": 768,
+      "route": "/circuits",
+      "documentWidth": 751,
+      "error": false,
+      "overflow": false,
+      "width": 769
+    },
+    {
+      "requested": 768,
+      "route": "/live-season",
+      "documentWidth": 751,
+      "error": false,
+      "overflow": false,
+      "width": 769
+    },
+    {
+      "requested": 768,
+      "route": "/strategy",
+      "documentWidth": 751,
+      "error": false,
+      "overflow": false,
+      "width": 769
+    },
+    {
+      "requested": 768,
+      "route": "/all-time",
+      "documentWidth": 751,
+      "error": false,
+      "overflow": false,
+      "width": 769
+    },
+    {
+      "requested": 768,
+      "route": "/cars",
+      "documentWidth": 751,
+      "error": false,
+      "overflow": false,
+      "width": 769
+    },
+    {
+      "requested": 768,
+      "route": "/garage",
+      "documentWidth": 751,
+      "error": false,
+      "overflow": false,
+      "width": 769
+    },
+    {
+      "requested": 768,
+      "route": "/dictionary",
+      "documentWidth": 751,
+      "error": false,
+      "overflow": false,
+      "width": 769
+    },
+    {
+      "requested": 768,
+      "route": "/news",
+      "documentWidth": 751,
+      "error": false,
+      "overflow": false,
+      "width": 769
+    },
+    {
+      "requested": 768,
+      "route": "/pit-wall-ai",
+      "documentWidth": 751,
+      "error": false,
+      "overflow": false,
+      "width": 769
+    },
+    {
+      "requested": 1024,
+      "route": "/",
+      "documentWidth": 1007,
+      "error": false,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": 1024,
+      "route": "/watch",
+      "documentWidth": 1007,
+      "error": false,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": 1024,
+      "route": "/racers",
+      "documentWidth": 1007,
+      "error": false,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": 1024,
+      "route": "/teams",
+      "documentWidth": 1007,
+      "error": false,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": 1024,
+      "route": "/circuits",
+      "documentWidth": 1007,
+      "error": false,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": 1024,
+      "route": "/live-season",
+      "documentWidth": 1007,
+      "error": false,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": 1024,
+      "route": "/strategy",
+      "documentWidth": 1007,
+      "error": false,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": 1024,
+      "route": "/all-time",
+      "documentWidth": 1007,
+      "error": false,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": 1024,
+      "route": "/cars",
+      "documentWidth": 1007,
+      "error": false,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": 1024,
+      "route": "/garage",
+      "documentWidth": 1007,
+      "error": false,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": 1024,
+      "route": "/dictionary",
+      "documentWidth": 1007,
+      "error": false,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": 1024,
+      "route": "/news",
+      "documentWidth": 1007,
+      "error": false,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": 1024,
+      "route": "/pit-wall-ai",
+      "documentWidth": 1007,
+      "error": false,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": 1440,
+      "route": "/",
+      "documentWidth": 1423,
+      "error": false,
+      "overflow": false,
+      "width": 1440
+    },
+    {
+      "requested": 1440,
+      "route": "/watch",
+      "documentWidth": 1423,
+      "error": false,
+      "overflow": false,
+      "width": 1440
+    },
+    {
+      "requested": 1440,
+      "route": "/racers",
+      "documentWidth": 1423,
+      "error": false,
+      "overflow": false,
+      "width": 1440
+    },
+    {
+      "requested": 1440,
+      "route": "/teams",
+      "documentWidth": 1423,
+      "error": false,
+      "overflow": false,
+      "width": 1440
+    },
+    {
+      "requested": 1440,
+      "route": "/circuits",
+      "documentWidth": 1423,
+      "error": false,
+      "overflow": false,
+      "width": 1440
+    },
+    {
+      "requested": 1440,
+      "route": "/live-season",
+      "documentWidth": 1423,
+      "error": false,
+      "overflow": false,
+      "width": 1440
+    },
+    {
+      "requested": 1440,
+      "route": "/strategy",
+      "documentWidth": 1423,
+      "error": false,
+      "overflow": false,
+      "width": 1440
+    },
+    {
+      "requested": 1440,
+      "route": "/all-time",
+      "documentWidth": 1423,
+      "error": false,
+      "overflow": false,
+      "width": 1440
+    },
+    {
+      "requested": 1440,
+      "route": "/cars",
+      "documentWidth": 1423,
+      "error": false,
+      "overflow": false,
+      "width": 1440
+    },
+    {
+      "requested": 1440,
+      "route": "/garage",
+      "documentWidth": 1423,
+      "error": false,
+      "overflow": false,
+      "width": 1440
+    },
+    {
+      "requested": 1440,
+      "route": "/dictionary",
+      "documentWidth": 1423,
+      "error": false,
+      "overflow": false,
+      "width": 1440
+    },
+    {
+      "requested": 1440,
+      "route": "/news",
+      "documentWidth": 1423,
+      "error": false,
+      "overflow": false,
+      "width": 1440
+    },
+    {
+      "requested": 1440,
+      "route": "/pit-wall-ai",
+      "documentWidth": 1423,
+      "error": false,
+      "overflow": false,
+      "width": 1440
+    },
+    {
+      "requested": 2560,
+      "route": "/",
+      "documentWidth": 2543,
+      "error": false,
+      "overflow": false,
+      "width": 2561
+    },
+    {
+      "requested": 2560,
+      "route": "/watch",
+      "documentWidth": 2543,
+      "error": false,
+      "overflow": false,
+      "width": 2561
+    },
+    {
+      "requested": 2560,
+      "route": "/racers",
+      "documentWidth": 2543,
+      "error": false,
+      "overflow": false,
+      "width": 2561
+    },
+    {
+      "requested": 2560,
+      "route": "/teams",
+      "documentWidth": 2543,
+      "error": false,
+      "overflow": false,
+      "width": 2561
+    },
+    {
+      "requested": 2560,
+      "route": "/circuits",
+      "documentWidth": 2543,
+      "error": false,
+      "overflow": false,
+      "width": 2561
+    },
+    {
+      "requested": 2560,
+      "route": "/live-season",
+      "documentWidth": 2543,
+      "error": false,
+      "overflow": false,
+      "width": 2561
+    },
+    {
+      "requested": 2560,
+      "route": "/strategy",
+      "documentWidth": 2543,
+      "error": false,
+      "overflow": false,
+      "width": 2561
+    },
+    {
+      "requested": 2560,
+      "route": "/all-time",
+      "documentWidth": 2543,
+      "error": false,
+      "overflow": false,
+      "width": 2561
+    },
+    {
+      "requested": 2560,
+      "route": "/cars",
+      "documentWidth": 2543,
+      "error": false,
+      "overflow": false,
+      "width": 2561
+    },
+    {
+      "requested": 2560,
+      "route": "/garage",
+      "documentWidth": 2543,
+      "error": false,
+      "overflow": false,
+      "width": 2561
+    },
+    {
+      "requested": 2560,
+      "route": "/dictionary",
+      "documentWidth": 2543,
+      "error": false,
+      "overflow": false,
+      "width": 2561
+    },
+    {
+      "requested": 2560,
+      "route": "/news",
+      "documentWidth": 2543,
+      "error": false,
+      "overflow": false,
+      "width": 2561
+    },
+    {
+      "requested": 2560,
+      "route": "/pit-wall-ai",
+      "documentWidth": 2543,
+      "error": false,
+      "overflow": false,
+      "width": 2561
+    },
+    {
+      "requested": [
+        375,
+        667
+      ],
+      "route": "/",
+      "error": false,
+      "height": 668,
+      "overflow": false,
+      "width": 375
+    },
+    {
+      "requested": [
+        375,
+        667
+      ],
+      "route": "/watch",
+      "error": false,
+      "height": 668,
+      "overflow": false,
+      "width": 375
+    },
+    {
+      "requested": [
+        375,
+        667
+      ],
+      "route": "/racers",
+      "error": false,
+      "height": 668,
+      "overflow": false,
+      "width": 375
+    },
+    {
+      "requested": [
+        375,
+        667
+      ],
+      "route": "/teams",
+      "error": false,
+      "height": 668,
+      "overflow": false,
+      "width": 375
+    },
+    {
+      "requested": [
+        375,
+        667
+      ],
+      "route": "/circuits",
+      "error": false,
+      "height": 668,
+      "overflow": false,
+      "width": 375
+    },
+    {
+      "requested": [
+        375,
+        667
+      ],
+      "route": "/live-season",
+      "error": false,
+      "height": 668,
+      "overflow": false,
+      "width": 375
+    },
+    {
+      "requested": [
+        375,
+        667
+      ],
+      "route": "/strategy",
+      "error": false,
+      "height": 668,
+      "overflow": false,
+      "width": 375
+    },
+    {
+      "requested": [
+        375,
+        667
+      ],
+      "route": "/all-time",
+      "error": false,
+      "height": 668,
+      "overflow": false,
+      "width": 375
+    },
+    {
+      "requested": [
+        375,
+        667
+      ],
+      "route": "/cars",
+      "error": false,
+      "height": 668,
+      "overflow": false,
+      "width": 375
+    },
+    {
+      "requested": [
+        375,
+        667
+      ],
+      "route": "/garage",
+      "error": false,
+      "height": 668,
+      "overflow": false,
+      "width": 375
+    },
+    {
+      "requested": [
+        375,
+        667
+      ],
+      "route": "/dictionary",
+      "error": false,
+      "height": 668,
+      "overflow": false,
+      "width": 375
+    },
+    {
+      "requested": [
+        375,
+        667
+      ],
+      "route": "/news",
+      "error": false,
+      "height": 668,
+      "overflow": false,
+      "width": 375
+    },
+    {
+      "requested": [
+        375,
+        667
+      ],
+      "route": "/pit-wall-ai",
+      "error": false,
+      "height": 668,
+      "overflow": false,
+      "width": 375
+    },
+    {
+      "requested": [
+        430,
+        932
+      ],
+      "route": "/",
+      "error": false,
+      "height": 932,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": [
+        430,
+        932
+      ],
+      "route": "/watch",
+      "error": false,
+      "height": 932,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": [
+        430,
+        932
+      ],
+      "route": "/racers",
+      "error": false,
+      "height": 932,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": [
+        430,
+        932
+      ],
+      "route": "/teams",
+      "error": false,
+      "height": 932,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": [
+        430,
+        932
+      ],
+      "route": "/circuits",
+      "error": false,
+      "height": 932,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": [
+        430,
+        932
+      ],
+      "route": "/live-season",
+      "error": false,
+      "height": 932,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": [
+        430,
+        932
+      ],
+      "route": "/strategy",
+      "error": false,
+      "height": 932,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": [
+        430,
+        932
+      ],
+      "route": "/all-time",
+      "error": false,
+      "height": 932,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": [
+        430,
+        932
+      ],
+      "route": "/cars",
+      "error": false,
+      "height": 932,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": [
+        430,
+        932
+      ],
+      "route": "/garage",
+      "error": false,
+      "height": 932,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": [
+        430,
+        932
+      ],
+      "route": "/dictionary",
+      "error": false,
+      "height": 932,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": [
+        430,
+        932
+      ],
+      "route": "/news",
+      "error": false,
+      "height": 932,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": [
+        430,
+        932
+      ],
+      "route": "/pit-wall-ai",
+      "error": false,
+      "height": 932,
+      "overflow": false,
+      "width": 430
+    },
+    {
+      "requested": [
+        844,
+        390
+      ],
+      "route": "/",
+      "error": false,
+      "height": 390,
+      "overflow": false,
+      "width": 844
+    },
+    {
+      "requested": [
+        844,
+        390
+      ],
+      "route": "/watch",
+      "error": false,
+      "height": 390,
+      "overflow": false,
+      "width": 844
+    },
+    {
+      "requested": [
+        844,
+        390
+      ],
+      "route": "/racers",
+      "error": false,
+      "height": 390,
+      "overflow": false,
+      "width": 844
+    },
+    {
+      "requested": [
+        844,
+        390
+      ],
+      "route": "/teams",
+      "error": false,
+      "height": 390,
+      "overflow": false,
+      "width": 844
+    },
+    {
+      "requested": [
+        844,
+        390
+      ],
+      "route": "/circuits",
+      "error": false,
+      "height": 390,
+      "overflow": false,
+      "width": 844
+    },
+    {
+      "requested": [
+        844,
+        390
+      ],
+      "route": "/live-season",
+      "error": false,
+      "height": 390,
+      "overflow": false,
+      "width": 844
+    },
+    {
+      "requested": [
+        844,
+        390
+      ],
+      "route": "/strategy",
+      "error": false,
+      "height": 390,
+      "overflow": false,
+      "width": 844
+    },
+    {
+      "requested": [
+        844,
+        390
+      ],
+      "route": "/all-time",
+      "error": false,
+      "height": 390,
+      "overflow": false,
+      "width": 844
+    },
+    {
+      "requested": [
+        844,
+        390
+      ],
+      "route": "/cars",
+      "error": false,
+      "height": 390,
+      "overflow": false,
+      "width": 844
+    },
+    {
+      "requested": [
+        844,
+        390
+      ],
+      "route": "/garage",
+      "error": false,
+      "height": 390,
+      "overflow": false,
+      "width": 844
+    },
+    {
+      "requested": [
+        844,
+        390
+      ],
+      "route": "/dictionary",
+      "error": false,
+      "height": 390,
+      "overflow": false,
+      "width": 844
+    },
+    {
+      "requested": [
+        844,
+        390
+      ],
+      "route": "/news",
+      "error": false,
+      "height": 390,
+      "overflow": false,
+      "width": 844
+    },
+    {
+      "requested": [
+        844,
+        390
+      ],
+      "route": "/pit-wall-ai",
+      "error": false,
+      "height": 390,
+      "overflow": false,
+      "width": 844
+    },
+    {
+      "requested": [
+        1024,
+        600
+      ],
+      "route": "/",
+      "error": false,
+      "height": 600,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": [
+        1024,
+        600
+      ],
+      "route": "/watch",
+      "error": false,
+      "height": 600,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": [
+        1024,
+        600
+      ],
+      "route": "/racers",
+      "error": false,
+      "height": 600,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": [
+        1024,
+        600
+      ],
+      "route": "/teams",
+      "error": false,
+      "height": 600,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": [
+        1024,
+        600
+      ],
+      "route": "/circuits",
+      "error": false,
+      "height": 600,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": [
+        1024,
+        600
+      ],
+      "route": "/live-season",
+      "error": false,
+      "height": 600,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": [
+        1024,
+        600
+      ],
+      "route": "/strategy",
+      "error": false,
+      "height": 600,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": [
+        1024,
+        600
+      ],
+      "route": "/all-time",
+      "error": false,
+      "height": 600,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": [
+        1024,
+        600
+      ],
+      "route": "/cars",
+      "error": false,
+      "height": 600,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": [
+        1024,
+        600
+      ],
+      "route": "/garage",
+      "error": false,
+      "height": 600,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": [
+        1024,
+        600
+      ],
+      "route": "/dictionary",
+      "error": false,
+      "height": 600,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": [
+        1024,
+        600
+      ],
+      "route": "/news",
+      "error": false,
+      "height": 600,
+      "overflow": false,
+      "width": 1024
+    },
+    {
+      "requested": [
+        1024,
+        600
+      ],
+      "route": "/pit-wall-ai",
+      "error": false,
+      "height": 600,
+      "overflow": false,
+      "width": 1024
+    }
+  ],
+  "notes": "Browser viewport reflow checks include narrow phones, phone landscape, tablets, desktop and zoom-equivalent CSS widths. These are browser layout checks, not physical iOS Safari device tests."
+}
