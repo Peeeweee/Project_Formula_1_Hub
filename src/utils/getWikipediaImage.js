@@ -1,76 +1,37 @@
-const queue = [];
-let isProcessing = false;
-const cache = new Map();
-
-// Load from localStorage on initialization
-try {
-  const savedCache = localStorage.getItem('wikiImageCache');
-  if (savedCache) {
-    const parsed = JSON.parse(savedCache);
-    for (const [key, val] of Object.entries(parsed)) {
-      cache.set(key, val);
-    }
-  }
-} catch { /* Optional persistent image cache. */ }
-
-const saveToLocalStorage = () => {
-  try {
-    const obj = Object.fromEntries(cache.entries());
-    localStorage.setItem('wikiImageCache', JSON.stringify(obj));
-  } catch { /* Optional persistent image cache. */ }
+import media from '../data/mediaManifest.json';
+export const mediaKey = value => {
+ let title = String(value || '').split('/wiki/').pop().split('#')[0];
+ try { title = decodeURIComponent(title); } catch { /* Preserve plain names. */ }
+ return title.replaceAll('_', ' ').trim();
 };
-
-const processQueue = async () => {
-  if (isProcessing) return;
-  isProcessing = true;
-  while (queue.length > 0) {
-    const { driverFullName, resolve } = queue.shift();
-    try {
-      let searchName = driverFullName;
-      if (driverFullName.includes('wikipedia.org/wiki/')) {
-        searchName = decodeURIComponent(driverFullName.split('wikipedia.org/wiki/')[1]).replace(/_/g, ' ');
-      }
-      searchName = encodeURIComponent(searchName);
-      const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${searchName}&prop=pageimages&format=json&pithumbsize=300&origin=*&redirects=1`;
-      const res = await fetch(url);
-      if (!res.ok) {
-        // Don't save rate-limit failures to localStorage
-        cache.set(driverFullName, null);
-        resolve(null);
-      } else {
-        const data = await res.json();
-        const pages = data.query?.pages;
-        if (pages) {
-          const page = Object.values(pages)[0];
-          const imgUrl = page?.thumbnail?.source || null;
-          cache.set(driverFullName, imgUrl);
-          if (imgUrl) saveToLocalStorage();
-          resolve(imgUrl);
-        } else {
-          cache.set(driverFullName, null);
-          saveToLocalStorage(); // Page exists but no image
-          resolve(null);
-        }
-      }
-    } catch {
-      cache.set(driverFullName, null);
-      resolve(null);
-    }
-    // 350ms delay between Wikipedia requests to prevent rate-limiting and ERR_CONNECTION_RESET
-    await new Promise(r => setTimeout(r, 350));
-  }
-  isProcessing = false;
+export const localMedia = value => media[mediaKey(value)] || null;
+export const localImage = value => {
+ const entry = localMedia(value);
+ return entry?.path ? `${import.meta.env?.BASE_URL || '/'}${entry.path}` : null;
 };
-
-async function getWikipediaImage(driverFullName) {
-  if (!driverFullName) return null;
-  if (cache.has(driverFullName)) {
-    return cache.get(driverFullName);
-  }
-  return new Promise((resolve) => {
-    queue.push({ driverFullName, resolve });
-    processQueue();
-  });
+const pending = new Map(), cache = new Map(), waiting = [];
+let active = 0;
+async function resolveRemote(title) {
+ if (active >= 3) await new Promise(resolve => waiting.push(resolve));
+ active++;
+ try {
+  const response = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replaceAll(' ', '_'))}`, { signal: AbortSignal.timeout(6000) });
+  if (!response.ok) return null;
+  const data = await response.json();
+  const image = data.thumbnail?.source || null;
+  if (image) cache.set(title, image);
+  return image;
+ } catch { return null; }
+ finally { active--; waiting.shift()?.(); }
 }
-
-export default getWikipediaImage;
+export default function getWikipediaImage(value) {
+ const title = mediaKey(value);
+ if (!title) return Promise.resolve(null);
+ const local = localImage(title);
+ if (local) return Promise.resolve(local);
+ if (cache.has(title)) return Promise.resolve(cache.get(title));
+ if (pending.has(title)) return pending.get(title);
+ const request = resolveRemote(title).finally(() => pending.delete(title));
+ pending.set(title, request);
+ return request;
+}
