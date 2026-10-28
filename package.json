@@ -8,7 +8,10 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "refresh:news": "node scripts/refresh-news.mjs && node scripts/cache-news-images.mjs",
+    "refresh:drivers": "node scripts/cache-driver-data.mjs",
+    "refresh:media": "node scripts/cache-site-media.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.8",
