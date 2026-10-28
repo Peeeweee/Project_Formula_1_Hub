@@ -2,11 +2,39 @@ import axios from 'axios';
 import { summariseDriverResults } from '../utils/driverStats';
 import championsData from '../data/champions.json';
 import { cachedFetch } from './cache';
+import driverSnapshot from '../data/driversSnapshot.json';
+import careerSnapshot from '../data/careerSnapshot.json';
 
 const api = axios.create({
   baseURL: 'https://api.jolpi.ca/ergast/f1',
   timeout: 15000,
 });
+
+// Spread historical requests across the provider's burst window; retry transient failures.
+let nextRequestAt = 0;
+api.interceptors.request.use(async config => {
+  const delay = Math.max(0, nextRequestAt - Date.now());
+  nextRequestAt = Math.max(Date.now(), nextRequestAt) + 450;
+  if (delay) await new Promise(resolve => setTimeout(resolve, delay));
+  return config;
+});
+api.interceptors.response.use(response => response, async error => {
+ const config = error.config;
+ if (config && (error.response?.status === 429 || error.response?.status >= 500 || !error.response) && (config._retries || 0) < 2) {
+  config._retries = (config._retries || 0) + 1;
+  await new Promise(resolve => setTimeout(resolve, 1500 * config._retries));
+  return api(config);
+ }
+ throw error;
+});
+
+export const getSeasonConstructors = (year, force = false) => cachedFetch(`season_constructors_${year}`, async () => {
+ const [grid, standings] = await Promise.all([
+  api.get(`/${year}/constructors.json?limit=100`),
+  Number(year) >= 1958 ? api.get(`/${year}/constructorStandings.json?limit=100`).catch(() => null) : Promise.resolve(null),
+ ]);
+ return { season: String(year), constructors: grid.data?.MRData?.ConstructorTable?.Constructors || [], standings: standings?.data?.MRData?.StandingsTable?.StandingsLists?.[0] || null };
+}, Number(year) < new Date().getFullYear() ? 1440 : 5, { force });
 
 export const getCurrentDriverStandings = async (force = false) => {
   return cachedFetch('current_driver_standings', async () => {
@@ -80,6 +108,7 @@ export const getAllDrivers = async (limit = 50, offset = 0) => {
       }
     } catch (error) {
       console.error('Error fetching getAllDrivers:', error);
+      if (driverSnapshot.drivers?.length) return driverSnapshot.drivers.slice(offset, offset + limit);
       throw error;
     }
   }, 720);
@@ -204,7 +233,8 @@ export const getRoundStandings = (year, round, force = false) => cachedFetch(`ro
   return response.data?.MRData?.StandingsTable?.StandingsLists?.[0]?.DriverStandings || null;
 }, 5, { force });
 
-export const getDriverCareerStats = driverId => cachedFetch(`driver_career_stats_${driverId}`, async () => {
+export const getDriverCareerStats = driverId => cachedFetch(`driver_career_stats_v3_${driverId}`, async () => {
+ try {
   const races = [];
   let offset = 0;
   let total = Infinity;
@@ -218,8 +248,14 @@ export const getDriverCareerStats = driverId => cachedFetch(`driver_career_stats
     if (!batch.length && offset < total) throw new Error('Incomplete career results');
     offset += 100;
   }
-  const standings = await getDriverStandings(driverId);
-  return summariseDriverResults(races, standings);
+  // Championship winners are already bundled; comparison must not depend on dozens of season calls.
+  const standings = (await getAllTimeChampions()).filter(row => row.DriverStandings?.[0]?.Driver?.driverId === driverId);
+  return { ...summariseDriverResults(races, standings), source: 'Jolpica live results', asOf: new Date().toISOString() };
+ } catch (error) {
+  const saved = careerSnapshot.drivers?.[driverId];
+  if (saved) return { ...saved, source: 'Saved Jolpica results', asOf: careerSnapshot.retrievedAt };
+  throw error;
+ }
 }, 360);
 
 export const getSeasonWinners = (year, force = false) => cachedFetch(`season_winners_${year}`, async () => {
