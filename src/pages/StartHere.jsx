@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import circuitsData from '../data/circuits.json';
 import FadeInSection from '../components/FadeInSection';
+import BeginnerPath from '../components/BeginnerPath';
 import WeekendGuide from '../components/WeekendGuide';
 import PointsExplorer from '../components/PointsExplorer';
 import CircuitVenueMedia from '../components/CircuitVenueMedia';
@@ -12,41 +13,11 @@ const GlossaryModal = lazy(() => import('../components/GlossaryModal'));
 import { GLOSSARY } from '../data/glossary';
 
 const TIRES = [
-  {
-    name: 'Soft',
-    color: '#e10600',
-    use: 'The fastest tire, but it wears out the quickest. Best for short sprints and setting fast laps.',
-    speed: 100,
-    durability: 30
-  },
-  {
-    name: 'Medium',
-    color: '#ffd300',
-    use: 'A great middle option. It offers a good mix of speed and how long it lasts on the track.',
-    speed: 80,
-    durability: 60
-  },
-  {
-    name: 'Hard',
-    color: '#ffffff',
-    use: 'The slowest tire, but it lasts a very long time. Perfect for driving long distances without stopping.',
-    speed: 60,
-    durability: 90
-  },
-  {
-    name: 'Intermediate',
-    color: '#00a650',
-    use: 'Has grooves to pump water away. Used when the track is a little wet or it is lightly raining.',
-    speed: 50,
-    durability: 70
-  },
-  {
-    name: 'Wet',
-    color: '#007aff',
-    use: 'Has deep grooves to clear lots of water. Only used during heavy rain to stop the car from sliding.',
-    speed: 40,
-    durability: 85
-  }
+ {name:'Soft',color:'#e10600',use:'A softer selected slick compound, often useful for a short performance run. Warm-up, grip and wear depend on conditions.',pace:'Performance focus',life:'Usually shorter stints'},
+ {name:'Medium',color:'#ffd300',use:'A middle option among the selected slick compounds, balancing pace and usable tire life.',pace:'Balanced choice',life:'Flexible stint length'},
+ {name:'Hard',color:'#ffffff',use:'A harder selected slick compound, often used for longer stints. It still wears and may take more work to warm up.',pace:'Long-run focus',life:'Often longer stints'},
+ {name:'Intermediate',color:'#00a650',use:'A grooved tire for damp or wet conditions when a slick is unsuitable. Its purpose is water management, not a fixed speed ranking.',pace:'Damp / wet track',life:'Depends on water and temperature'},
+ {name:'Wet',color:'#007aff',use:'Deep grooves manage more standing water. Visibility and track conditions can still prevent safe racing.',pace:'Very wet track',life:'Depends on conditions'},
 ];
 
 const COUNTRY_FLAGS = {
@@ -141,9 +112,9 @@ function StartHere() {
           </div>
           
           <div className="hidden md:flex gap-8 mt-4 md:mt-0">
-            <AnimatedCounter end={22} label="Drivers" />
-            <AnimatedCounter end={11} label="Teams" />
-            <AnimatedCounter end={10} label="Points positions" />
+            <AnimatedCounter end={8} label="Short chapters" />
+            <AnimatedCounter end={27} label="Animated terms" />
+            <AnimatedCounter end={24} label="Venues to explore" />
           </div>
         </div>
 
@@ -155,6 +126,8 @@ function StartHere() {
         />
       </div>
 
+      <BeginnerPath />
+      <div className="beginner-resource-heading"><p className="experience-kicker">EXPLORE AT YOUR OWN PACE</p><h2>Your F1 reference shelf.</h2><p>Jump to a topic whenever you need it.</p></div>
       {/* Navigation Pills */}
       <div className="max-w-7xl mx-auto px-6 mt-6 mb-12 flex flex-wrap gap-3">
         <motion.button whileTap={{ scale: 0.97 }} onClick={() => scrollToSection('timeline')} className="bg-f1-panel border border-f1-border text-f1-light px-4 py-2 rounded-full text-sm font-semibold hover:border-f1-red transition">How a Race Works</motion.button>
@@ -205,7 +178,7 @@ function StartHere() {
           <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light mb-6 tracking-tight">
             Which tires do they use?
           </h2>
-          <p className="text-xs text-f1-muted mb-5">Bars are illustrative comparisons, not measured performance percentages. Grip and tire life depend on the track, conditions and compound selection.</p>
+          <p className="text-xs text-f1-muted mb-5">Compounds are selected for each event. These are qualitative guides, not measured speed or lifespan ratings; wet and dry tires serve different conditions.</p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
             {TIRES.map((tire) => (
@@ -225,38 +198,12 @@ function StartHere() {
                     />
                     <span className="font-extrabold text-lg text-f1-light">{tire.name}</span>
                   </div>
-                  <p className="text-xs text-f1-muted leading-relaxed mb-4 min-h-[40px]">
+                  <p className="text-sm text-f1-muted leading-relaxed mb-4 min-h-[40px]">
                     {tire.use}
                   </p>
                 </div>
 
-                <div className="space-y-3 pt-3 border-t border-f1-border/40">
-                  <div>
-                    <div className="flex justify-between text-[10px] font-bold text-f1-muted uppercase mb-1">
-                      <span>Speed</span>
-                      <span className="text-f1-light">{tire.speed}%</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-f1-border rounded-full overflow-hidden">
-                      <div 
-                        className="h-full rounded-full" 
-                        style={{ width: `${tire.speed}%`, backgroundColor: tire.color }} 
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-[10px] font-bold text-f1-muted uppercase mb-1">
-                      <span>How long it lasts</span>
-                      <span className="text-f1-light">{tire.durability}%</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-f1-border rounded-full overflow-hidden">
-                      <div 
-                        className="h-full rounded-full" 
-                        style={{ width: `${tire.durability}%`, backgroundColor: tire.color }} 
-                      />
-                    </div>
-                  </div>
-                </div>
+                <dl className="tire-qualitative"><div><dt>Best understood as</dt><dd>{tire.pace}</dd></div><div><dt>Stint context</dt><dd>{tire.life}</dd></div></dl>
               </motion.div>
             ))}
           </div>
@@ -283,7 +230,7 @@ function StartHere() {
           <div className="relative w-full aspect-[2/1] bg-f1-panel border border-f1-border rounded-lg overflow-hidden flex items-center justify-center">
             {/* Base SVG Map */}
             <img 
-              src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg" 
+              src={`${import.meta.env.BASE_URL}assets/world-map.svg`}
               alt="World Map Outline" 
               className="w-full h-full object-cover opacity-20 filter invert select-none pointer-events-none" 
             />
@@ -398,39 +345,7 @@ function StartHere() {
                   {selectedTire.use}
                 </p>
 
-                <div className="space-y-6">
-                  <div>
-                    <div className="flex justify-between text-xs md:text-sm font-bold text-f1-muted uppercase tracking-widest mb-2">
-                      <span>Top Speed</span>
-                      <span className="text-f1-light">{selectedTire.speed}%</span>
-                    </div>
-                    <div className="w-full h-3 bg-[#111] rounded-full overflow-hidden border border-white/5">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${selectedTire.speed}%` }}
-                        transition={{ delay: 0.3, duration: 0.8, ease: "easeOut" }}
-                        className="h-full rounded-full" 
-                        style={{ backgroundColor: selectedTire.color }} 
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-xs md:text-sm font-bold text-f1-muted uppercase tracking-widest mb-2">
-                      <span>Durability</span>
-                      <span className="text-f1-light">{selectedTire.durability}%</span>
-                    </div>
-                    <div className="w-full h-3 bg-[#111] rounded-full overflow-hidden border border-white/5">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${selectedTire.durability}%` }}
-                        transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
-                        className="h-full rounded-full" 
-                        style={{ backgroundColor: selectedTire.color }} 
-                      />
-                    </div>
-                  </div>
-                </div>
+                <dl className="tire-qualitative"><div><dt>Use case</dt><dd>{selectedTire.pace}</dd></div><div><dt>Stint context</dt><dd>{selectedTire.life}</dd></div></dl><Link className="experience-primary" to="/strategy">Explore tire decisions →</Link>
               </div>
             </motion.div>
           </motion.div>
