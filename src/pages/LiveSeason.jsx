@@ -1,3 +1,4 @@
+import getWikipediaImage, { localImage } from '../utils/getWikipediaImage';
 import useDialogAccessibility from '../hooks/useDialogAccessibility';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -34,15 +35,15 @@ import {
 
 
 const TEAM_COLORS = {
-  'Red Bull Racing': '#3b82f6',
+  'Red Bull Racing': '#919191',
   'Ferrari': '#e10600',
-  'McLaren': '#ff8700',
-  'Mercedes': '#00a19c',
-  'Aston Martin': '#229977',
-  'Alpine': '#ff87bc',
-  'Williams': '#005aff',
-  'RB': '#6692ff',
-  'Sauber': '#00e701',
+  'McLaren': '#e10600',
+  'Mercedes': '#6a6a6a',
+  'Aston Martin': '#666666',
+  'Alpine': '#e10600',
+  'Williams': '#737373',
+  'RB': '#a8a8a8',
+  'Sauber': '#4d4d4d',
   'Haas': '#ffffff'
 };
 
@@ -52,11 +53,11 @@ const getDriverColor = (driver) => {
 };
 
 const PIT_STOP_DATA = [
-  { team: 'Red Bull Racing', avgTime: 2.15, color: '#001a30' },
+  { team: 'Red Bull Racing', avgTime: 2.15, color: '#191919' },
   { team: 'Ferrari', avgTime: 2.34, color: '#e10600' },
-  { team: 'McLaren', avgTime: 2.41, color: '#ff8700' },
-  { team: 'Mercedes', avgTime: 2.58, color: '#00a19c' },
-  { team: 'Aston Martin', avgTime: 2.82, color: '#229977' }
+  { team: 'McLaren', avgTime: 2.41, color: '#e10600' },
+  { team: 'Mercedes', avgTime: 2.58, color: '#6a6a6a' },
+  { team: 'Aston Martin', avgTime: 2.82, color: '#666666' }
 ];
 
 const containerVariants = {
@@ -105,31 +106,13 @@ function Countdown({ targetDate }) {
 }
 
 const LeaderSpotlight = ({ leaderDriver }) => {
-  const [headshotUrl, setHeadshotUrl] = useState(null);
-  const [teamColor, setTeamColor] = useState('#e10600');
-
+  const [headshotUrl, setHeadshotUrl] = useState(() => localImage(leaderDriver?.Driver?.url));
+  const teamColor = '#e10600';
   useEffect(() => {
-    if (!leaderDriver) return;
-    const fetchHeadshot = async () => {
-      try {
-        const number = leaderDriver.Driver.permanentNumber;
-        const res = await fetch(`https://api.openf1.org/v1/drivers?session_key=latest&driver_number=${number}`);
-        const data = await res.json();
-        if (data && data.length > 0) {
-          if (data[0].headshot_url) {
-            let url = data[0].headshot_url.replace('d_driver_fallback_image.png/', '');
-            url = url.split('.transform')[0];
-            setHeadshotUrl(url);
-          }
-          if (data[0].team_colour) {
-            setTeamColor(`#${data[0].team_colour}`);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to fetch headshot', err);
-      }
-    };
-    fetchHeadshot();
+    let active = true;
+    const driver = leaderDriver?.Driver;
+    getWikipediaImage(driver?.url || (driver ? `${driver.givenName} ${driver.familyName}` : '')).then(image => { if (active) setHeadshotUrl(image); });
+    return () => { active = false; };
   }, [leaderDriver]);
 
   if (!leaderDriver) return null;
@@ -143,7 +126,7 @@ const LeaderSpotlight = ({ leaderDriver }) => {
         animate={{ opacity: 1, height: 'auto', scale: 1 }}
         exit={{ opacity: 0, height: 0, scale: 0.95 }}
         transition={{ type: "spring", stiffness: 200, damping: 20 }}
-        className="mt-8 mb-8 relative overflow-hidden rounded-2xl shadow-2xl border bg-[#0f0f15]"
+        className="mt-8 mb-8 relative overflow-hidden rounded-2xl shadow-2xl border bg-[#111111]"
         style={{ borderColor: teamColor }}
       >
         <div className="absolute inset-0 z-0 opacity-20" style={{ background: `linear-gradient(to bottom right, ${teamColor}, transparent)` }}></div>
@@ -201,7 +184,7 @@ const LeaderSpotlight = ({ leaderDriver }) => {
             initial={{ scale: 0.5, opacity: 0, rotate: -20 }}
             animate={{ scale: 1, opacity: 1, rotate: 0 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
-            className="hidden md:flex relative items-center justify-center w-56 h-56 rounded-full border-4 bg-[#0a0a0f] z-10 overflow-hidden"
+            className="hidden md:flex relative items-center justify-center w-56 h-56 rounded-full border-4 bg-[#0c0c0c] z-10 overflow-hidden"
             style={{ borderColor: teamColor, boxShadow: `0 0 80px ${teamColor}4d` }}
           >
             <div className="absolute inset-2 rounded-full border border-dashed animate-[spin_10s_linear_infinite] z-0" style={{ borderColor: `${teamColor}4d` }}></div>
@@ -230,31 +213,13 @@ const LeaderSpotlight = ({ leaderDriver }) => {
 
 const DriverSpotlightModal = ({ spotlightDriver, onClose }) => {
   const dialogRef = useDialogAccessibility(true, onClose);
-  const [headshotUrl, setHeadshotUrl] = useState(null);
-  const [teamColor, setTeamColor] = useState('#e10600');
-
+  const [headshotUrl, setHeadshotUrl] = useState(() => localImage(spotlightDriver?.Driver?.url));
+  const teamColor = '#e10600';
   useEffect(() => {
-    if (!spotlightDriver) return;
-    const fetchHeadshot = async () => {
-      try {
-        const number = spotlightDriver.Driver.permanentNumber;
-        const res = await fetch(`https://api.openf1.org/v1/drivers?session_key=latest&driver_number=${number}`);
-        const data = await res.json();
-        if (data && data.length > 0) {
-          if (data[0].headshot_url) {
-            let url = data[0].headshot_url.replace('d_driver_fallback_image.png/', '');
-            url = url.split('.transform')[0];
-            setHeadshotUrl(url);
-          }
-          if (data[0].team_colour) {
-            setTeamColor(`#${data[0].team_colour}`);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to fetch headshot', err);
-      }
-    };
-    fetchHeadshot();
+    let active = true;
+    const driver = spotlightDriver?.Driver;
+    getWikipediaImage(driver?.url || (driver ? `${driver.givenName} ${driver.familyName}` : '')).then(image => { if (active) setHeadshotUrl(image); });
+    return () => { active = false; };
   }, [spotlightDriver]);
 
   if (!spotlightDriver) return null;
@@ -274,7 +239,7 @@ const DriverSpotlightModal = ({ spotlightDriver, onClose }) => {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.8, y: 50 }}
         transition={{ type: "spring", stiffness: 200, damping: 25 }}
-        className="relative overflow-hidden rounded-2xl shadow-2xl border bg-[#0f0f15] w-full max-w-4xl"
+        className="relative overflow-hidden rounded-2xl shadow-2xl border bg-[#111111] w-full max-w-4xl"
         style={{ borderColor: teamColor }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -339,7 +304,7 @@ const DriverSpotlightModal = ({ spotlightDriver, onClose }) => {
             initial={{ scale: 0.5, opacity: 0, rotate: -20 }}
             animate={{ scale: 1, opacity: 1, rotate: 0 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
-            className="hidden md:flex relative items-center justify-center w-56 h-56 rounded-full border-4 bg-[#0a0a0f] z-10 overflow-hidden"
+            className="hidden md:flex relative items-center justify-center w-56 h-56 rounded-full border-4 bg-[#0c0c0c] z-10 overflow-hidden"
             style={{ borderColor: teamColor, boxShadow: `0 0 80px ${teamColor}4d` }}
           >
             <div className="absolute inset-2 rounded-full border border-dashed animate-[spin_10s_linear_infinite] z-0" style={{ borderColor: `${teamColor}4d` }}></div>
@@ -453,7 +418,7 @@ function LiveTelemetryTab() {
     <div className="space-y-6">
       <DataNote kind="OpenF1 session data">This is the latest available session, which may have ended. {lastUpdated && `Latest source observation: ${lastUpdated.toLocaleString()}.`} {telemetryError} <Link to="/watch" className="underline text-white">Understand the timing screen →</Link></DataNote>
       {/* Session Banner */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0e0e16] border border-f1-red/30 rounded-xl px-5 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#111111] border border-f1-red/30 rounded-xl px-5 py-3">
         <div className="flex items-center gap-3">
           <span className="w-2 h-2 rounded-full bg-f1-red animate-pulse" />
           <div>
@@ -477,7 +442,7 @@ function LiveTelemetryTab() {
             { label: 'Humidity', value: `${weather.humidity?.toFixed(0)}%`, icon: '💧' },
             { label: 'Wind Speed', value: `${weather.wind_speed?.toFixed(1)} m/s`, icon: '💨' },
           ].map(({ label, value, icon }) => (
-            <div key={label} className="bg-[#0e0e16] border border-f1-border rounded-xl px-4 py-3 text-center">
+            <div key={label} className="bg-[#111111] border border-f1-border rounded-xl px-4 py-3 text-center">
               <div className="text-2xl mb-1">{icon}</div>
               <div className="text-[9px] text-f1-muted uppercase tracking-widest">{label}</div>
               <div className="text-white font-black text-base">{value || '—'}</div>
@@ -488,7 +453,7 @@ function LiveTelemetryTab() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Live Position Board */}
-        <div className="bg-[#0e0e16] border border-f1-border rounded-xl overflow-hidden">
+        <div className="bg-[#111111] border border-f1-border rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-f1-border flex items-center justify-between">
             <span className="text-[11px] font-black uppercase tracking-widest text-f1-light">Latest observed positions</span>
             <span className="text-[10px] text-f1-muted font-mono">{positions.length} drivers</span>
@@ -517,7 +482,7 @@ function LiveTelemetryTab() {
         </div>
 
         {/* Lap Time Chart */}
-        <div className="bg-[#0e0e16] border border-f1-border rounded-xl overflow-hidden">
+        <div className="bg-[#111111] border border-f1-border rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-f1-border">
             <span className="text-[11px] font-black uppercase tracking-widest text-f1-light">
               Lap Times — Driver #{selectedDriver}
@@ -531,12 +496,12 @@ function LiveTelemetryTab() {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={lapData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1a1d2e" />
-                  <XAxis dataKey="lap" tick={{ fill: '#888', fontSize: 10 }} label={{ value: 'Lap', position: 'insideBottom', fill: '#888', fontSize: 10 }} />
-                  <YAxis tick={{ fill: '#888', fontSize: 10 }} domain={['auto', 'auto']} tickFormatter={v => `${v}s`} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#222222" />
+                  <XAxis dataKey="lap" tick={{ fill: '#888888', fontSize: 10 }} label={{ value: 'Lap', position: 'insideBottom', fill: '#888888', fontSize: 10 }} />
+                  <YAxis tick={{ fill: '#888888', fontSize: 10 }} domain={['auto', 'auto']} tickFormatter={v => `${v}s`} />
                   <Tooltip
-                    contentStyle={{ background: '#0e0e16', border: '1px solid #e1060044', borderRadius: 8 }}
-                    labelStyle={{ color: '#fff', fontWeight: 'bold', fontSize: 11 }}
+                    contentStyle={{ background: '#111111', border: '1px solid #e1060044', borderRadius: 8 }}
+                    labelStyle={{ color: '#ffffff', fontWeight: 'bold', fontSize: 11 }}
                     formatter={v => [`${v}s`, 'Lap Time']}
                   />
                   <Line type="monotone" dataKey="duration" stroke="#e10600" strokeWidth={2} dot={{ fill: '#e10600', r: 3 }} activeDot={{ r: 5 }} />
@@ -828,7 +793,7 @@ function LiveSeason() {
       {showLeaderSpotlight && <LeaderSpotlight leaderDriver={leaderDriver} />}
         </FadeInSection>
 
-      {snapshotError && <p role="status" className="text-sm text-amber-300">{snapshotError}</p>}
+      {snapshotError && <p role="status" className="text-sm text-red-300">{snapshotError}</p>}
       {/* SECTION: Latest Session Snapshot */}
       <FadeInSection>
         <div className="border-l-2 border-f1-red pl-2 mb-4 mt-8">
@@ -843,7 +808,7 @@ function LiveSeason() {
           <motion.button 
             whileTap={{ scale: 0.97 }}
             onClick={() => fetchOpenF1Data(true)}
-            className="flex items-center gap-2 bg-[#1a1a24] hover:bg-[#2a2a35] text-f1-light text-[10px] font-black uppercase tracking-wider px-4 py-2 rounded-sm border border-f1-border transition duration-200"
+            className="flex items-center gap-2 bg-[#1d1d1d] hover:bg-[#2e2e2e] text-f1-light text-[10px] font-black uppercase tracking-wider px-4 py-2 rounded-sm border border-f1-border transition duration-200"
           >
             {openF1Refreshing ? 'PIT STOP...' : '🔄 Refresh'}
           </motion.button>
@@ -857,12 +822,12 @@ function LiveSeason() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute top-4 right-4 flex gap-2 z-50 bg-[#0a0a0f] p-2 rounded-md shadow-xl border border-f1-border"
+                className="absolute top-4 right-4 flex gap-2 z-50 bg-[#0c0c0c] p-2 rounded-md shadow-xl border border-f1-border"
               >
                 {[0, 1, 2, 3, 4].map((i) => (
                   <motion.div
                     key={`light-${i}`}
-                    initial={{ backgroundColor: '#2a2a35', boxShadow: 'none' }}
+                    initial={{ backgroundColor: '#2e2e2e', boxShadow: 'none' }}
                     animate={{ backgroundColor: '#e10600', boxShadow: '0 0 8px #e10600' }}
                     transition={{ delay: i * 0.15, duration: 0.1, repeat: Infinity, repeatType: 'reverse', repeatDelay: 0.5 }}
                     className="w-3 h-3 rounded-full"
@@ -892,23 +857,23 @@ function LiveSeason() {
 
               {openF1Data.weather && (
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
-                  <div className="bg-[#0a0a0f] border border-f1-border p-4 rounded flex flex-col items-center justify-center">
+                  <div className="bg-[#0c0c0c] border border-f1-border p-4 rounded flex flex-col items-center justify-center">
                     <span className="text-[10px] text-f1-muted uppercase font-bold text-center mb-1">Air Temp</span>
                     <motion.span key={`air-${openF1Data.weather.air_temperature}`} initial={{ opacity: 0.5, scale: 1.2, color: '#e10600' }} animate={{ opacity: 1, scale: 1, color: '#ffffff' }} className="text-lg font-black text-f1-light">{openF1Data.weather.air_temperature}°C</motion.span>
                   </div>
-                  <div className="bg-[#0a0a0f] border border-f1-border p-4 rounded flex flex-col items-center justify-center">
+                  <div className="bg-[#0c0c0c] border border-f1-border p-4 rounded flex flex-col items-center justify-center">
                     <span className="text-[10px] text-f1-muted uppercase font-bold text-center mb-1">Track Temp</span>
                     <motion.span key={`track-${openF1Data.weather.track_temperature}`} initial={{ opacity: 0.5, scale: 1.2, color: '#e10600' }} animate={{ opacity: 1, scale: 1, color: '#ffffff' }} className="text-lg font-black text-f1-light">{openF1Data.weather.track_temperature}°C</motion.span>
                   </div>
-                  <div className="bg-[#0a0a0f] border border-f1-border p-4 rounded flex flex-col items-center justify-center">
+                  <div className="bg-[#0c0c0c] border border-f1-border p-4 rounded flex flex-col items-center justify-center">
                     <span className="text-[10px] text-f1-muted uppercase font-bold text-center mb-1">Humidity</span>
                     <motion.span key={`hum-${openF1Data.weather.humidity}`} initial={{ opacity: 0.5, scale: 1.2, color: '#e10600' }} animate={{ opacity: 1, scale: 1, color: '#ffffff' }} className="text-lg font-black text-f1-light">{openF1Data.weather.humidity}%</motion.span>
                   </div>
-                  <div className="bg-[#0a0a0f] border border-f1-border p-4 rounded flex flex-col items-center justify-center">
+                  <div className="bg-[#0c0c0c] border border-f1-border p-4 rounded flex flex-col items-center justify-center">
                     <span className="text-[10px] text-f1-muted uppercase font-bold text-center mb-1">Wind</span>
                     <motion.span key={`wind-${openF1Data.weather.wind_speed}`} initial={{ opacity: 0.5, scale: 1.2, color: '#e10600' }} animate={{ opacity: 1, scale: 1, color: '#ffffff' }} className="text-lg font-black text-f1-light">{openF1Data.weather.wind_speed} m/s</motion.span>
                   </div>
-                  <div className="bg-[#0a0a0f] border border-f1-border p-4 rounded flex flex-col items-center justify-center">
+                  <div className="bg-[#0c0c0c] border border-f1-border p-4 rounded flex flex-col items-center justify-center">
                     <span className="text-[10px] text-f1-muted uppercase font-bold text-center mb-1">Rainfall</span>
                     <motion.span key={`rain-${openF1Data.weather.rainfall}`} initial={{ opacity: 0.5, scale: 1.2, color: '#e10600' }} animate={{ opacity: 1, scale: 1, color: '#ffffff' }} className="text-lg font-black text-f1-light">{openF1Data.weather.rainfall ? 'Yes' : 'No'}</motion.span>
                   </div>
@@ -918,8 +883,8 @@ function LiveSeason() {
               <div>
                 <h4 className="text-xs font-bold text-f1-muted uppercase tracking-wider mb-3">Latest observed positions</h4>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-xs text-left relative bg-[#0a0a0f] border border-f1-border rounded">
-                    <thead className="bg-[#111116] z-10 outline outline-1 outline-f1-border/40">
+                  <table className="w-full text-xs text-left relative bg-[#0c0c0c] border border-f1-border rounded">
+                    <thead className="bg-[#131313] z-10 outline outline-1 outline-f1-border/40">
                       <tr className="border-b border-f1-border text-f1-muted uppercase font-bold">
                         <th className="py-2 px-4 w-20">Pos</th>
                         <th className="py-2 px-4">Driver</th>
@@ -947,7 +912,7 @@ function LiveSeason() {
                               hidden: { opacity: 0, x: -10 },
                               show: { opacity: 1, x: 0 }
                             }}
-                            className="hover:bg-[#1a1a24] transition duration-150"
+                            className="hover:bg-[#1d1d1d] transition duration-150"
                           >
                             <td className="py-3 px-4 font-bold text-f1-red">
                               {p.position === 1 || p.position === '1' ? '🥇 P1' : 
@@ -977,7 +942,7 @@ function LiveSeason() {
                       <button 
                         onClick={() => setOpenF1Page(Math.min(Math.ceil(openF1Data.positions.length / ITEMS_PER_PAGE), openF1Page + 1))}
                         disabled={openF1Page === Math.ceil(openF1Data.positions.length / ITEMS_PER_PAGE)}
-                        className={`px-3 py-1 rounded transition ${openF1Page === Math.ceil(openF1Data.positions.length / ITEMS_PER_PAGE) ? 'opacity-50 cursor-not-allowed bg-[#1a1a24] text-f1-muted' : 'bg-f1-light text-[#0a0a0f] hover:bg-f1-red hover:text-white'}`}>
+                        className={`px-3 py-1 rounded transition ${openF1Page === Math.ceil(openF1Data.positions.length / ITEMS_PER_PAGE) ? 'opacity-50 cursor-not-allowed bg-[#1d1d1d] text-f1-muted' : 'bg-f1-light text-[#0c0c0c] hover:bg-f1-red hover:text-white'}`}>
                         NEXT
                       </button>
                     </div>
@@ -1054,7 +1019,7 @@ function LiveSeason() {
                 <button 
                   onClick={() => setDriverPage(Math.min(Math.ceil(driversList.length / ITEMS_PER_PAGE), driverPage + 1))}
                   disabled={driverPage === Math.ceil(driversList.length / ITEMS_PER_PAGE)}
-                  className={`px-3 py-1 rounded transition ${driverPage === Math.ceil(driversList.length / ITEMS_PER_PAGE) ? 'opacity-50 cursor-not-allowed bg-[#1a1a24] text-f1-muted' : 'bg-f1-light text-[#0a0a0f] hover:bg-f1-red hover:text-white'}`}>
+                  className={`px-3 py-1 rounded transition ${driverPage === Math.ceil(driversList.length / ITEMS_PER_PAGE) ? 'opacity-50 cursor-not-allowed bg-[#1d1d1d] text-f1-muted' : 'bg-f1-light text-[#0c0c0c] hover:bg-f1-red hover:text-white'}`}>
                   NEXT
                 </button>
               </div>
@@ -1113,7 +1078,7 @@ function LiveSeason() {
                 <button 
                   onClick={() => setConstructorPage(Math.min(Math.ceil(constructorsList.length / ITEMS_PER_PAGE), constructorPage + 1))}
                   disabled={constructorPage === Math.ceil(constructorsList.length / ITEMS_PER_PAGE)}
-                  className={`px-3 py-1 rounded transition ${constructorPage === Math.ceil(constructorsList.length / ITEMS_PER_PAGE) ? 'opacity-50 cursor-not-allowed bg-[#1a1a24] text-f1-muted' : 'bg-f1-light text-[#0a0a0f] hover:bg-f1-red hover:text-white'}`}>
+                  className={`px-3 py-1 rounded transition ${constructorPage === Math.ceil(constructorsList.length / ITEMS_PER_PAGE) ? 'opacity-50 cursor-not-allowed bg-[#1d1d1d] text-f1-muted' : 'bg-f1-light text-[#0c0c0c] hover:bg-f1-red hover:text-white'}`}>
                   NEXT
                 </button>
               </div>
@@ -1138,7 +1103,7 @@ function LiveSeason() {
           <motion.button 
             whileTap={{ scale: 0.97 }}
             onClick={() => fetchSeasonData(true)}
-            className="flex items-center gap-2 bg-[#1a1a24] hover:bg-[#2a2a35] text-f1-light text-[10px] font-black uppercase tracking-wider px-4 py-2 rounded-sm border border-f1-border transition duration-200"
+            className="flex items-center gap-2 bg-[#1d1d1d] hover:bg-[#2e2e2e] text-f1-light text-[10px] font-black uppercase tracking-wider px-4 py-2 rounded-sm border border-f1-border transition duration-200"
           >
             {calendarRefreshing ? 'UPDATING...' : '🔄 Refresh'}
           </motion.button>
@@ -1244,7 +1209,7 @@ function LiveSeason() {
                           <td className="py-3 font-sans font-bold flex items-center gap-2">
                             <span>{result.Driver.givenName} {result.Driver.familyName}</span>
                             {hasFastestLap && (
-                              <span className="text-[9px] bg-purple-900/40 border border-purple-500 text-purple-300 font-extrabold px-1.5 py-0.5 rounded-sm uppercase tracking-wider flex items-center gap-0.5">
+                              <span className="text-[9px] bg-red-900/40 border border-red-500 text-red-300 font-extrabold px-1.5 py-0.5 rounded-sm uppercase tracking-wider flex items-center gap-0.5">
                                 💜 {result.FastestLap.Time?.time || "FL"}
                               </span>
                             )}
@@ -1271,7 +1236,7 @@ function LiveSeason() {
                   <button 
                     onClick={() => setRaceResultPage(Math.min(Math.ceil(lastRace.Results.length / ITEMS_PER_PAGE), raceResultPage + 1))}
                     disabled={raceResultPage === Math.ceil(lastRace.Results.length / ITEMS_PER_PAGE)}
-                    className={`px-3 py-1 rounded transition ${raceResultPage === Math.ceil(lastRace.Results.length / ITEMS_PER_PAGE) ? 'opacity-50 cursor-not-allowed bg-[#1a1a24] text-f1-muted' : 'bg-f1-light text-[#0a0a0f] hover:bg-f1-red hover:text-white'}`}>
+                    className={`px-3 py-1 rounded transition ${raceResultPage === Math.ceil(lastRace.Results.length / ITEMS_PER_PAGE) ? 'opacity-50 cursor-not-allowed bg-[#1d1d1d] text-f1-muted' : 'bg-f1-light text-[#0c0c0c] hover:bg-f1-red hover:text-white'}`}>
                     NEXT
                   </button>
                 </div>
@@ -1293,7 +1258,7 @@ function LiveSeason() {
                       layout="vertical"
                       margin={{ top: 0, right: 10, left: 10, bottom: 0 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1a1a24" opacity={0.4} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1d1d1d" opacity={0.4} />
                       <XAxis type="number" stroke="#999999" fontSize={10} domain={[0, 3.5]} tickLine={false} />
                       <YAxis dataKey="team" type="category" stroke="#cccccc" fontSize={12} width={110} tickLine={false} fontWeight="bold" />
                       <Tooltip content={<PlotlyTooltip xKey="team" yFormatter={(val) => `${val}s`} />} />
@@ -1336,7 +1301,7 @@ function LiveSeason() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} className="h-96 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={progressionData} margin={{ top: 20, right: 30, left: -10, bottom: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1a1a24" opacity={0.4} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1d1d1d" opacity={0.4} />
                   <XAxis dataKey="round" stroke="#666666" fontSize={10} tickLine={false} />
                   <YAxis stroke="#666666" fontSize={10} tickLine={false} />
                   <Tooltip content={<PlotlyTooltip xKey="round" />} />
@@ -1383,7 +1348,7 @@ function LiveSeason() {
                     onClick={() => toggleDriverVisibility(id)}
                     className={`px-3 py-1.5 rounded-sm border text-[11px] font-bold transition duration-200 flex items-center gap-2 select-none ${
                       isVisible 
-                        ? 'bg-[#0f0f18] text-f1-light border-f1-border hover:border-f1-red' 
+                        ? 'bg-[#121212] text-f1-light border-f1-border hover:border-f1-red'
                         : 'bg-f1-dark/40 text-f1-muted border-f1-border/40 opacity-40 hover:opacity-60'
                     }`}
                     style={{ borderLeftColor: isVisible ? color : undefined, borderLeftWidth: isVisible ? '3px' : undefined }}
