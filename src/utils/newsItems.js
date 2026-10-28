@@ -5,8 +5,8 @@ const safeUrl = value => {
 
 function category(text) {
   if (/crash|penalty|disqualif|steward|incident|retire/.test(text)) return 'BREAKING';
-  if (/aero|floor|diffuser|wing|downforce|upgrade/.test(text)) return 'TECHNICAL';
-  if (/power unit|engine|mgu|hybrid|fuel|ers|battery/.test(text)) return 'POWER UNIT';
+  if (/\b(aero(?:dynamics?)?|floor|diffuser|wings?|downforce|upgrades?)\b/.test(text)) return 'TECHNICAL';
+  if (/\b(power units?|engines?|mgu(?:-h|-k)?|hybrid|fuel|ers|battery)\b/.test(text)) return 'POWER UNIT';
   if (/telemetry|sector|lap time|timing|delta/.test(text)) return 'TELEMETRY';
   if (/contract|paddock|principal|signs|transfer/.test(text)) return 'PADDOCK';
   return 'DEVELOPMENT';
@@ -19,6 +19,7 @@ export function normaliseNewsItems(feeds) {
       const title = plainText(item.title);
       const url = safeUrl(item.link);
       if (!title || !url) continue;
+      if (feed.f1Only && !isF1Article(url)) continue;
       const key = title.toLowerCase().replace(/\s+/g, ' ');
       if (unique.has(key)) continue;
       const content = plainText(item.content || item.description);
@@ -37,4 +38,11 @@ export function normaliseNewsItems(feeds) {
     }
   }
   return [...unique.values()].sort((a, b) => (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0));
+}
+
+export function isF1Article(value) {
+ try {
+  const url = new URL(value);
+  return ['www.autosport.com', 'www.motorsport.com', 'autosport.com', 'motorsport.com'].includes(url.hostname) && url.pathname.startsWith('/f1/news/');
+ } catch { return false; }
 }
