@@ -19,15 +19,15 @@ const TIRE_GUIDE = [
     name: 'SOFT TIRES',
     color: '#ef4444',
     badgeBg: 'bg-red-500/20 text-red-400 border-red-500/40',
-    speed: 'Fastest Speed',
+    speed: 'Short-run performance',
     durability: 'Shorter life · conditions vary',
-    description: 'Provides maximum grip for qualifying or aggressive overtakes, but wears down quickly.'
+    description: 'Often chosen for short performance runs. Grip, warm-up and wear depend on the event selection and conditions.'
   },
   {
     name: 'MEDIUM TIRES',
     color: '#fbbf24',
     badgeBg: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40',
-    speed: 'Balanced Speed',
+    speed: 'Balanced choice',
     durability: 'Balanced life · conditions vary',
     description: 'A common compromise. Good speed with solid longevity for race stints.'
   },
@@ -35,9 +35,9 @@ const TIRE_GUIDE = [
     name: 'HARD TIRES',
     color: '#ffffff',
     badgeBg: 'bg-white/20 text-white border-white/40',
-    speed: 'Moderate Speed',
+    speed: 'Long-run focus',
     durability: 'Longer life · conditions vary',
-    description: 'Takes longer to warm up, but lasts the longest distance without degradation.'
+    description: 'Often suitable for longer stints, with a warm-up tradeoff. Hard tires still degrade, and their performance depends on conditions.'
   }
 ];
 
