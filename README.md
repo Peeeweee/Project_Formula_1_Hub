@@ -27,6 +27,14 @@ The application is divided into several dedicated sections:
 - **All-Time Records:** Completed driver and constructor championship archives, consistent champion cards, and a season-by-season roll of honour.
 - **Pit Wall AI:** An AI-powered dashboard offering predictive insights and lap analysis based on historical data models.
 
+## Beginner navigation and learning path — 28 October 2026
+
+The desktop header exposes eight direct destinations and five resource links without nested dropdowns. On smaller screens, a labeled navigation drawer presents the same destinations with short descriptions and keyboard focus handling.
+
+Start Here includes eight short chapters, optional understanding checks, and progress saved on the current device. Dedicated Teams and Dictionary pages separate people and vocabulary from the car collection. Teams distinguishes the available season standings feed from the historical constructor directory; provider failure is shown explicitly.
+
+Search covers pages, dictionary terms, venues, teams and drivers. Local topics and archived champions work without the full driver feed. Term, venue, team and driver results open specific destinations; accented names and common tire terminology are normalized. Tire guides use qualitative context rather than invented speed or durability percentages. Existing car, data and 3D routes remain available, and the opening pit-stop sequence is preserved.
+
 ## Latest experience update — 23 October 2026
 
 - **27 animated dictionary explainers:** Each term has a 12–16 second film with four timestamped chapters, play/pause, replay, and a seekable timeline. Scene movement, captions, and example data follow the same clock.
@@ -149,3 +157,20 @@ The intro uses `public/mercedes-intro.glb` (5.85 MB), generated from the origina
 The intro uses the CC BY 4.0 OpenRC F1 crew mesh by 3D Print Tech Design for four wheel-gun operators. The original low-resolution STL is archived under `artifacts/asset-review/`; `python scripts/prepare_openrc_crew.py` rebuilds the 253 KB indexed GLB. It preserves the source kneeling pose and animates instance transforms, rather than claiming a full skeletal rig. Remaining personnel use an adapted generic rig. The in-app crew credits include source links, license and modifications. Framer Motion handles the UI; Three.js handles the 3D scene.
 
 The detailed Pit Crew Helmet PL by Pierre-Louis Baril is displayed using 16 directional rendered views (~641 KB total). `python scripts/render_pit_helmet.py` renders these locally with Blender Python; the original `.blend` and conversion tools stay ignored. Crew bodies and the Mercedes remain live Three.js geometry. This keeps the extractable source helmet mesh out of the web distribution, in accordance with Blendkit's rendered-use and distribution guidance. The credits link contains asset, author and license links.
+## Reliability and interface update — 28 October 2026
+
+- Champion, historical car and era-gallery photographs are served locally through a shared media manifest. Common active-driver portraits and news thumbnails are also bundled; unknown archival portraits retain a named fallback and a bounded remote lookup. Source links are indexed in [local media sources](docs/local-media-sources.md).
+- Driver comparison uses recorded race results without requiring every seasonal standings request. Saved champion/current-driver career totals appear immediately, with retrieval dates, while live totals refresh. Grid-P1 starts are labeled separately from qualifying pole awards.
+- Teams has a season selector from 1950 through the next calendar year, automatically advancing with the calendar. Current-season data refreshes every five minutes. Future grids appear only when the provider publishes them. Pre-1958 seasons have constructor entries but no constructors' championship standings. The early archive includes Indianapolis 500 constructors.
+- Constructor profiles expand within the directory and include summaries, associated drivers and archive-derived championship years. Current official team logos and archived team/manufacturer marks are stored locally. Archived marks are representative identities, not guaranteed season-specific artwork; uncommon constructors without a verified badge use a name mark.
+- The garage provides labeled views, component explanations, reset, rotation, lighting and optional specifications. Mobile component explanations appear below the controls. The first Mercedes model uses the existing 5.85 MB optimized asset; other models load only when selected.
+- Branding uses black, white and red interface colors. Official images, car liveries and race-control teaching signals retain their source colors. Eurostile Bold Extended handles headings, GoodTimes the brand and section accents, and Chrono selected metadata. Body text uses a readable system sans-serif.
+- Development and preview servers expose a fixed F1 publisher-news route. Public static hosting uses an RSS relay or the clearly dated bundled edition if that relay is blocked. Always-live production news requires hosting an equivalent server route; a static build alone cannot provide a server endpoint.
+
+Refresh saved editions with `npm run refresh:news`, `npm run refresh:drivers`, and `npm run refresh:media`. These jobs need network access; they do not replace content with invented data when providers fail. Font source details and production-license status are recorded in the media notes.
+
+## Responsive layouts — 28 October 2026
+
+Shared page widths now expand on large monitors and reflow as browser zoom reduces available CSS space. Navigation uses a drawer below 1024 px. Phone layouts include 44 px controls, 16 px form fields to avoid iOS focus zoom, safe-area insets, dynamic viewport heights, scrollable data tables, stacked team cards, and tap-based car anatomy controls. The desktop garage keeps its controls in a scrollable panel; phone explanations remain beside their controls.
+
+Browser review covered all 13 routes at narrow phone, iPhone-sized portrait/landscape, tablet, desktop and zoom-equivalent widths: 143 viewport/route checks with no document-level horizontal overflow or rendered error boundaries. Expanded team profiles, two-driver comparison, search, mobile navigation, dictionary dialogs and garage component controls were also exercised. This verifies browser reflow, not a physical iOS Safari device run. The layout audit is saved in `artifacts/responsive-layout-audit.json`.
