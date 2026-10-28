@@ -1,19 +1,17 @@
 import { Suspense, useRef, useState, useCallback, useMemo, useEffect } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, useGLTF, useProgress } from '@react-three/drei';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { OrbitControls, PerspectiveCamera, useGLTF, useProgress } from '@react-three/drei';
 import F1CarSVG from '../components/F1CarSVG';
 import ErrorBoundary from '../components/ErrorBoundary';
-import GarageGuide from '../components/GarageGuide';
+import { PARTS } from '../data/garageParts';
 import * as THREE from 'three';
 
 // ── Livery presets ─────────────────────────────────────────────────────────
 const LIVERY_PRESETS = [
   { id: 'original', label: 'Original', color: 'linear-gradient(135deg, #777 50%, #444 50%)', isOriginal: true },
-  { id: 'mercedes', label: 'Mercedes', color: '#00d2be', accent: '#00a19c' },
+  { id: 'white', label: 'White', color: '#ffffff', accent: '#aaaaaa' },
   { id: 'ferrari',  label: 'Ferrari',  color: '#e10600', accent: '#9b0000' },
-  { id: 'redbull',  label: 'Red Bull', color: '#1e3a8a', accent: '#3b82f6' },
-  { id: 'mclaren',  label: 'McLaren',  color: '#ff8700', accent: '#cc6b00' },
-  { id: 'alpine',   label: 'Alpine',   color: '#ff87bc', accent: '#e05ca0' },
+  { id: 'black', label: 'Black', color: '#181818', accent: '#444444' },
 ];
 
 // ── Environment lighting presets ──────────────────────────────────────────
@@ -24,25 +22,25 @@ const ENV_PRESETS = {
     ambient: { color: '#ffffff', intensity: 0.9 },
     key:    { color: '#ffffff', intensity: 4.5 },
     fill:   { color: '#ffffff', intensity: 2.8 },
-    rim:    { color: '#00e5c0', intensity: 3.0 },
+    rim:    { color: '#ffffff', intensity: 3.0 },
     bounce: { color: '#e10600', intensity: 2.0 },
   },
   pitlane: {
     label: 'Pit Lane',
     icon: '🏎',
-    ambient: { color: '#fffef5', intensity: 1.4 },
-    key:    { color: '#fff8e8', intensity: 6.0 },
-    fill:   { color: '#fffef5', intensity: 4.0 },
+    ambient: { color: '#ffffff', intensity: 1.4 },
+    key:    { color: '#ffffff', intensity: 6.0 },
+    fill:   { color: '#ffffff', intensity: 4.0 },
     rim:    { color: '#ffffff',  intensity: 1.5 },
-    bounce: { color: '#ffd080', intensity: 1.0 },
+    bounce: { color: '#e10600', intensity: 1.0 },
   },
   night: {
     label: 'Night Race',
     icon: '🌙',
-    ambient: { color: '#0a1a40', intensity: 0.4 },
-    key:    { color: '#7090ff', intensity: 3.5 },
-    fill:   { color: '#2040a0', intensity: 1.5 },
-    rim:    { color: '#ff4400', intensity: 4.0 },
+    ambient: { color: '#111111', intensity: 0.4 },
+    key:    { color: '#ffffff', intensity: 3.5 },
+    fill:   { color: '#777777', intensity: 1.5 },
+    rim:    { color: '#e10600', intensity: 4.0 },
     bounce: { color: '#e10600', intensity: 3.5 },
   },
 };
@@ -53,7 +51,7 @@ import { carModels } from '../data/carModels';
 
 // ── Camera preset positions ────────────────────────────────────────────────
 const PRESETS = [
-  { id: 'hero',   label: 'Hero',   icon: '✦', pos: [-3.8, 1.8, -4.2],  target: [0, 0.5, 0] },
+  { id: 'hero',   label: 'Hero',   icon: '✦', pos: [-4.6, 2.2, -5.2],  target: [0, 0.5, 0] },
   { id: 'front',  label: 'Front',  icon: '⬆', pos: [0, 0.8, -5.5],     target: [0, 0.4, 0] },
   { id: 'side',   label: 'Side',   icon: '➡', pos: [6.5, 1.0, 0],      target: [0, 0.4, 0] },
   { id: 'rear',   label: 'Rear',   icon: '⬇', pos: [0, 0.8, 5.5],      target: [0, 0.4, 0] },
@@ -63,6 +61,7 @@ const PRESETS = [
 
 // ── Scene setup inside Canvas ──────────────────────────────────────────────
 function GarageScene({ autoRotate, targetPreset, onPresetDone, env, brightness, activeCar, onModelReady }) {
+  const { size } = useThree();
   const orbitRef = useRef();
   const transitioning = useRef(false);
   const targetPos = useRef(null);
@@ -102,14 +101,15 @@ function GarageScene({ autoRotate, targetPreset, onPresetDone, env, brightness, 
 
   return (
     <>
+      <PerspectiveCamera makeDefault fov={size.width < 600 ? 60 : 42} position={[-4.6, 2.2, -5.2]} />
       {/* Studio floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[100, 100]} />
-        <meshStandardMaterial color="#0b0c14" roughness={0.5} metalness={0.5} />
+        <meshStandardMaterial color="#111111" roughness={0.5} metalness={0.5} />
       </mesh>
 
       {/* Red F1 grid */}
-      <gridHelper args={[40, 40, '#e10600', '#1a1d2e']} position={[0, 0.003, 0]} />
+      <gridHelper args={[40, 40, '#e10600', '#292929']} position={[0, 0.003, 0]} />
 
       {/* ── Dynamic Lighting ── */}
       <ambientLight intensity={env.ambient.intensity * b} color={env.ambient.color} />
@@ -118,7 +118,7 @@ function GarageScene({ autoRotate, targetPreset, onPresetDone, env, brightness, 
       {/* Fill */}
       <directionalLight position={[7, 9, 7]} intensity={env.fill.intensity * b} color={env.fill.color} />
       {/* Overhead */}
-      <directionalLight position={[0, 15, 0]} intensity={3.0 * b} color="#f0f4ff" />
+      <directionalLight position={[0, 15, 0]} intensity={3.0 * b} color="#ffffff" />
       {/* Rim */}
       <pointLight position={[-4, 2, -3]} intensity={env.rim.intensity * b} color={env.rim.color} distance={12} />
       {/* Bounce */}
@@ -256,7 +256,9 @@ const Garage3D = () => {
   const activeCar = carModels[activeCarIdx];
   const [autoRotate, setAutoRotate] = useState(false);
   const [activePreset, setActivePreset] = useState(null);
-  const [showSpecs, setShowSpecs] = useState(true);
+  const [showSpecs, setShowSpecs] = useState(false);
+  const [cameraId, setCameraId] = useState('hero');
+  const [selectedPart, setSelectedPart] = useState(null);
   const [modelLoaded, setModelLoaded] = useState(false);
   const [liveryIdx, setLiveryIdx] = useState(0);
   const [brightness, setBrightness] = useState(1);
@@ -270,268 +272,27 @@ const Garage3D = () => {
 
   const handlePreset = useCallback((preset) => {
     setAutoRotate(false);
+    setCameraId(preset.id);
     setActivePreset(preset);
   }, []);
 
   const handleModelReady = useCallback(() => setModelLoaded(true), []);
 
-  return (
-    <>
-    <div className="relative mt-16 w-full flex flex-col overflow-hidden h-[calc(100dvh-4rem)] min-h-[640px]" style={{ background: '#07070b' }}>
-
-      {/* ── Header strip ── */}
-      <div className="relative z-10 flex items-center justify-between px-6 py-3 border-b border-white/5 bg-black/40 backdrop-blur-sm flex-shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="flex flex-col">
-            <span className="text-[10px] text-white/40 uppercase tracking-[3px] font-rajdhani">
-              3D Garage — Interactive Viewer
-            </span>
-            <span className="text-sm font-bold text-white tracking-widest font-rajdhani leading-tight uppercase">
-              {activeCar.name} · {activeCar.year}
-            </span>
-          </div>
-          {/* Live badge */}
-          <div className="hidden sm:flex items-center gap-1.5 bg-[#e10600]/10 border border-[#e10600]/30 px-2.5 py-1 rounded text-[10px] text-[#e10600] font-rajdhani tracking-widest uppercase">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#e10600] animate-pulse" />
-            GLB Model
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Specs toggle */}
-          <button
-            onClick={() => setShowSpecs(s => !s)}
-            className={`text-[11px] font-bold uppercase tracking-wider px-3 py-1.5 rounded border transition-all font-rajdhani ${
-              showSpecs
-                ? 'bg-white/10 border-white/20 text-white'
-                : 'bg-transparent border-white/10 text-white/40 hover:text-white/70'
-            }`}
-          >
-            Specs
-          </button>
-          {/* Turntable */}
-          <button
-            onClick={() => setAutoRotate(r => !r)}
-            className={`text-[11px] font-bold uppercase tracking-wider px-3 py-1.5 rounded border transition-all font-rajdhani ${
-              autoRotate
-                ? 'bg-[#e10600] border-[#e10600] text-white shadow-[0_0_12px_rgba(225,6,0,0.5)]'
-                : 'bg-transparent border-white/10 text-white/40 hover:text-white/70'
-            }`}
-          >
-            ↻ Turntable
-          </button>
-        </div>
-      </div>
-
-      {/* ── Main area ── */}
-      <div className="relative flex-1 flex overflow-hidden">
-
-        {/* ── 3D Canvas ── */}
-        <div className="absolute inset-0">
-          {graphicsError ? <div className="h-full grid place-items-center px-16 text-center"><div className="max-w-md rounded-xl border border-f1-border bg-f1-panel p-6"><div className="h-20 flex justify-center overflow-hidden"><F1CarSVG color={activeCar.brandColor} scale={0.8} opacity={1} /></div><h2 className="mt-4 text-xl font-black">Explore the car below</h2><p className="mt-2 text-sm text-f1-muted">The 3D view could not render on this device. Specifications and the mechanical guide are still available.</p><button className="mt-4 rounded border border-f1-red px-4 py-2 text-sm" onClick={() => setGraphicsError(false)}>Retry 3D view</button></div></div> : <ErrorBoundary><Canvas
-            dpr={[1, 1.5]}
-            fallback={<div className="p-20 text-center text-f1-muted">3D is unavailable on this device. Explore the specifications and mechanical guide below.</div>}
-            camera={{ position: [-3.8, 1.8, -4.2], fov: 42 }}
-            gl={{
-              antialias: true,
-              toneMapping: 4,
-              toneMappingExposure: 1.1,
-              physicallyCorrectLights: true,
-            }}
-            shadows
-            onCreated={({ gl }) => { gl.outputColorSpace = THREE.SRGBColorSpace; gl.debug.onShaderError = () => queueMicrotask(() => setGraphicsError(true)); }}
-          >
-            <GarageScene
-              autoRotate={autoRotate}
-              targetPreset={activePreset}
-              onPresetDone={() => setActivePreset(null)}
-              env={activeEnv}
-              brightness={brightness}
-              activeCar={activeCar}
-              onModelReady={handleModelReady}
-            />
-          </Canvas></ErrorBoundary>}
-        </div>
-
-        {/* Loading overlay */}
-        {!graphicsError && !modelLoaded && <LoadingOverlay />}
-
-        {/* ── Camera presets ── */}
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-2">
-          {PRESETS.map((p) => (
-            <button
-              key={p.id}
-              aria-label={`Camera: ${p.label}`}
-              onClick={() => handlePreset(p)}
-              title={p.label}
-              className={`w-10 h-10 rounded-lg border text-sm transition-all duration-200 font-rajdhani flex items-center justify-center ${
-                activePreset?.id === p.id
-                  ? 'bg-[#e10600] border-[#e10600] text-white shadow-[0_0_12px_rgba(225,6,0,0.6)]'
-                  : 'bg-black/60 border-white/10 text-white/50 hover:text-white hover:border-white/30 backdrop-blur-sm'
-              }`}
-            >
-              <span className="text-base leading-none">{p.icon}</span>
-            </button>
-          ))}
-          <div className="mt-1 text-[9px] text-white/20 text-center tracking-widest font-rajdhani uppercase">View</div>
-        </div>
-
-        {/* ── Livery + Lighting Controls panel ── */}
-        <div
-          className="absolute bottom-16 left-4 z-10 w-56 rounded-xl border border-white/8 overflow-hidden"
-          style={{ background: 'rgba(7,7,11,0.88)', backdropFilter: 'blur(16px)' }}
-        >
-          {/* Livery */}
-          <div className="px-3 pt-3 pb-2">
-            <div className="text-[9px] text-white/30 uppercase tracking-[2px] font-rajdhani mb-2">Livery Color</div>
-            <div className="flex gap-1.5 flex-wrap">
-              {LIVERY_PRESETS.map((lp, i) => (
-                <button
-                  key={lp.id}
-                  title={lp.label}
-                  onClick={() => setLiveryIdx(i)}
-                  className={`w-7 h-7 rounded-full border-2 transition-all ${
-                    liveryIdx === i ? 'border-white scale-110 shadow-lg' : 'border-transparent hover:border-white/40'
-                  }`}
-                  style={{ background: lp.color, boxShadow: liveryIdx === i && !lp.isOriginal ? `0 0 10px ${lp.color}88` : undefined }}
-                />
-              ))}
-            </div>
-            <div className="text-[9px] text-white/40 font-rajdhani mt-1">{LIVERY_PRESETS[liveryIdx].label}</div>
-          </div>
-
-          <div className="border-t border-white/6" />
-
-          {/* Brightness */}
-          <div className="px-3 py-2">
-            <div className="text-[9px] text-white/30 uppercase tracking-[2px] font-rajdhani mb-2">Brightness</div>
-            <input
-              aria-label="Garage brightness"
-              type="range"
-              min="0.3"
-              max="2"
-              step="0.05"
-              value={brightness}
-              onChange={e => setBrightness(parseFloat(e.target.value))}
-              className="w-full h-1 accent-[#e10600] cursor-pointer"
-            />
-            <div className="text-[9px] text-white/30 font-rajdhani mt-1">{Math.round(brightness * 100)}%</div>
-          </div>
-
-          <div className="border-t border-white/6" />
-
-          {/* Environment */}
-          <div className="px-3 py-2">
-            <div className="text-[9px] text-white/30 uppercase tracking-[2px] font-rajdhani mb-2">Environment</div>
-            <div className="flex flex-col gap-1">
-              {Object.entries(ENV_PRESETS).map(([key, ep]) => (
-                <button
-                  key={key}
-                  onClick={() => setEnvKey(key)}
-                  className={`flex items-center gap-2 px-2 py-1.5 rounded text-left transition-all text-[11px] font-rajdhani ${
-                    envKey === key
-                      ? 'bg-f1-red/20 text-white border border-f1-red/40'
-                      : 'text-white/40 hover:text-white/70 border border-transparent hover:bg-white/5'
-                  }`}
-                >
-                  <span>{ep.icon}</span>
-                  <span>{ep.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ── Controls hint ── */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-6 bg-black/50 backdrop-blur-sm border border-white/8 px-5 py-2 rounded-full pointer-events-none">
-          {[
-            { icon: '🖱', label: 'Drag to Rotate' },
-            { icon: '⚙', label: 'Scroll to Zoom' },
-            { icon: '⇧', label: 'Right-drag to Pan' },
-          ].map(({ icon, label }) => (
-            <div key={label} className="flex items-center gap-1.5">
-              <span className="text-xs opacity-60">{icon}</span>
-              <span className="text-[9px] text-white/30 tracking-widest uppercase font-rajdhani">{label}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* ── Car Selector panel ── */}
-        <div
-          className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex max-w-[95%] overflow-x-auto items-center gap-1 bg-black/60 backdrop-blur-md border border-white/10 p-1.5 rounded-full"
-        >
-          {carModels.map((car, idx) => (
-            <button
-              key={car.id}
-              onClick={() => { if (idx !== activeCarIdx) { setModelLoaded(false); setActiveCarIdx(idx); } }}
-              className={`px-4 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase font-rajdhani transition-all ${
-                activeCarIdx === idx
-                  ? 'bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.4)]'
-                  : 'text-white/50 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              {car.id.split('_')[0]}
-            </button>
-          ))}
-        </div>
-
-        {/* ── Specs panel ── */}
-        {showSpecs && (
-          <div
-            className="absolute top-20 right-2 sm:right-4 z-10 w-44 sm:w-64 max-h-[60%] overflow-y-auto rounded-xl border border-white/8 overflow-hidden"
-            style={{ background: 'rgba(7,7,11,0.82)', backdropFilter: 'blur(16px)' }}
-          >
-            {/* Panel header */}
-            <div className="px-4 py-3 border-b border-white/8 flex items-center gap-2">
-              <div className="w-1.5 h-4 rounded-sm bg-[#e10600]" />
-              <span className="text-xs font-bold text-white tracking-widest uppercase font-rajdhani">
-                Car Specifications
-              </span>
-            </div>
-
-            {/* Brand color stripe accent */}
-            <div className="h-[2px]" style={{ background: `linear-gradient(to right, ${activeCar.brandColor}, ${activeCar.brandColor}, transparent)` }} />
-
-            {/* Spec rows */}
-            <div className="px-4 py-3 flex flex-col gap-2.5">
-              {activeCar.specs.map(({ label, value }) => (
-                <div key={label}>
-                  <div className="text-[9px] text-white/30 uppercase tracking-[2px] font-rajdhani mb-0.5">
-                    {label}
-                  </div>
-                  <div className="text-xs text-white/85 font-rajdhani font-semibold leading-snug">
-                    {value}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Bottom badge */}
-            <div className="px-4 py-2.5 border-t border-white/5 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div
-                  className="w-5 h-5 rounded flex items-center justify-center text-[8px] font-bold"
-                  style={{
-                    backgroundColor: `${activeCar.brandColor}20`,
-                    border: `1px solid ${activeCar.brandColor}30`,
-                    color: activeCar.brandColor
-                  }}
-                >
-                  {activeCar.brandBadge}
-                </div>
-                <span className="text-[9px] text-white/25 font-rajdhani tracking-widest uppercase">
-                  {activeCar.teamLabel}
-                </span>
-              </div>
-              <span className="text-[9px] text-white/20 font-rajdhani">{activeCar.year}</span>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-    <GarageGuide car={activeCar} onFocus={camera => { handlePreset(PRESETS.find(preset => preset.id === camera)); }} />
-    </>
-  );
+  return <div className="garage-workspace">
+    <header className="garage-heading"><div><p className="experience-kicker">THE PADDOCK / DESIGN LAB</p><h1>Your own pit garage.</h1></div><p>Choose a car. Find your angle. Explore the engineering up close with six guided views and a hands-on component tour.</p></header>
+    <div className="garage-shell"><section className="garage-stage" aria-label="Interactive 3D car viewer">
+      <div className="garage-model-tag"><p>{activeCar.year} / MODEL COLLECTION</p><h2>{activeCar.name}</h2></div>
+      {graphicsError ? <div className="absolute inset-0 grid place-items-center p-12 text-center"><div><F1CarSVG color="#e10600" scale={0.8}/><h2>3D is unavailable on this device</h2><p>Explore the specifications and component guide alongside.</p><button className="garage-action" onClick={()=>setGraphicsError(false)}>Retry 3D</button></div></div> : <ErrorBoundary key={activeCar.id}><Canvas dpr={[1,1.5]} fallback={<p>3D is unavailable. The component guide and specifications remain available.</p>} camera={{position:[-4.6,2.2,-5.2],fov:42}} gl={{antialias:true,toneMapping:4,toneMappingExposure:1.1}} shadows onCreated={({gl})=>{gl.outputColorSpace=THREE.SRGBColorSpace;gl.debug.onShaderError=()=>queueMicrotask(()=>setGraphicsError(true));}}><GarageScene autoRotate={autoRotate} targetPreset={activePreset} onPresetDone={()=>setActivePreset(null)} env={activeEnv} brightness={brightness} activeCar={activeCar} onModelReady={handleModelReady}/></Canvas></ErrorBoundary>}
+      {!graphicsError&&!modelLoaded&&<LoadingOverlay/>}
+      {selectedPart!==null&&<div className="garage-part-panel" aria-live="polite"><button aria-label="Close component explanation" onClick={()=>setSelectedPart(null)}>×</button><p className="experience-kicker">COMPONENT TOUR / {selectedPart+1} OF {PARTS.length}</p><h3>{PARTS[selectedPart].name}</h3><p>{PARTS[selectedPart].text}</p><p><strong>Watch for: </strong>{PARTS[selectedPart].watch}</p></div>}
+      <p className="garage-interaction-hint">Drag to orbit · Scroll or pinch to zoom · Right-drag to pan</p>
+    </section><aside className="garage-sidebar" aria-label="Garage controls">
+      <section><h3><label htmlFor="garage-car">01 / CHOOSE YOUR CAR</label></h3><select id="garage-car" value={activeCarIdx} onChange={event=>{setModelLoaded(false);setSelectedPart(null);setActiveCarIdx(Number(event.target.value));handlePreset(PRESETS[0]);}}>{carModels.map((car,index)=><option key={car.id} value={index}>{car.year} · {car.name}</option>)}</select><button className="garage-action" aria-expanded={showSpecs} onClick={()=>setShowSpecs(value=>!value)}>{showSpecs?'Hide':'View'} specifications</button></section>
+      <section><h3>02 / FIND YOUR ANGLE</h3><div className="garage-button-grid">{PRESETS.map(preset=><button key={preset.id} aria-pressed={cameraId===preset.id} onClick={()=>handlePreset(preset)}>{preset.label}</button>)}</div><button className="garage-action" aria-pressed={autoRotate} onClick={()=>setAutoRotate(value=>!value)}>{autoRotate?'Ⅱ Pause rotation':'↻ Rotate car'}</button><button className="garage-action" onClick={()=>{setBrightness(1);setLiveryIdx(0);setEnvKey('garage');setSelectedPart(null);handlePreset(PRESETS[0]);}}>Reset view & lighting</button></section>
+      <section><h3>03 / EXPLORE THE PARTS</h3><div className="garage-button-grid">{PARTS.map((part,index)=><button key={part.name} aria-pressed={selectedPart===index} onClick={()=>{setSelectedPart(index);handlePreset(PRESETS.find(preset=>preset.id===part.camera));}}>{part.name}</button>)}</div>{selectedPart!==null&&<div className="garage-part-details-mobile" aria-live="polite"><h4>{PARTS[selectedPart].name}</h4><p>{PARTS[selectedPart].text}</p><p>{PARTS[selectedPart].watch}</p></div>}</section>
+      <section><h3>04 / SET THE SCENE</h3><div className="garage-button-grid">{Object.entries(ENV_PRESETS).map(([key,preset])=><button key={key} aria-pressed={envKey===key} onClick={()=>setEnvKey(key)}>{preset.label}</button>)}</div><label className="block text-xs text-f1-muted mt-4" htmlFor="garage-brightness">Brightness · {Math.round(brightness*100)}%</label><input id="garage-brightness" type="range" min="0.3" max="2" step="0.05" value={brightness} onChange={event=>setBrightness(Number(event.target.value))}/><label className="block text-xs text-f1-muted mt-3 mb-2" htmlFor="garage-livery">Body finish</label><select id="garage-livery" value={liveryIdx} onChange={event=>setLiveryIdx(Number(event.target.value))}>{LIVERY_PRESETS.map((livery,index)=><option key={livery.id} value={index}>{livery.label}</option>)}</select></section>
+      {showSpecs&&<section className="garage-specs"><h3>REFERENCE SPECIFICATIONS</h3><dl>{activeCar.specs.map(spec=><div key={spec.label}><dt>{spec.label}</dt><dd>{spec.value}</dd></div>)}</dl></section>}
+    </aside></div><div className="garage-tutorial"><p><strong>Start exploring</strong>Use a camera button or select a component to move closer.</p><p><strong>About the models</strong>Illustrative historical references. Internal parts and airflow are not simulated. Downloads begin when you select a car.</p></div>
+  </div>;
 };
-
 export default Garage3D;
