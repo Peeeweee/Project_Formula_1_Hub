@@ -1,0 +1,8 @@
+export const PARTS = [
+  { name: 'Front wing', camera: 'front', text: 'Creates front downforce and guides airflow along the car. Its balance affects turn-in and front-tire loading.', watch: 'Understeer: the car runs wider than the driver wants. Setup, tire condition and speed can all contribute.' },
+  { name: 'Floor & diffuser', camera: 'side', text: 'Shapes the flow beneath the car to help create downforce. The effect depends on ride height and the regulations for that era.', watch: 'Teams tune ride height to balance aerodynamic performance, stability and clearance over bumps.' },
+  { name: 'Rear wing', camera: 'rear', text: 'Helps load the rear tires for cornering, while adding drag on straights. Teams choose a compromise for each circuit.', watch: 'A lower-drag setup can improve straight-line speed while reducing cornering performance.' },
+  { name: 'Tires & suspension', camera: 'side', text: 'Tires provide the contact with the road. Suspension controls wheel movement and the car’s platform; temperature and load affect grip.', watch: 'A tire can lose performance through overheating, wear or being too cold. Compound alone does not determine pace.' },
+  { name: 'Power unit', camera: 'rear', text: 'Combines a turbocharged combustion engine, electrical machine and energy storage. Energy recovery and deployment affect lap performance.', watch: 'The 2026 system removes the MGU-H and increases the electrical contribution compared with 2014–2025.' },
+  { name: 'Cockpit & Halo', camera: 'cockpit', text: 'The driver operates steering, braking, gears and many settings from the cockpit. The Halo helps protect the head from impacts.', watch: 'Safety structures reduce risk; they cannot guarantee protection in every accident.' },
+];
