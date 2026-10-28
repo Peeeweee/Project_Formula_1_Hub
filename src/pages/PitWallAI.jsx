@@ -61,9 +61,9 @@ const STRATEGIES = {
 
 const CLUSTER_COLORS = {
   0: '#e10600', // f1-red
-  1: '#00d2be', // mercedes-teal-ish
-  2: '#ff8700', // mclaren-orange-ish
-  3: '#1f48ed'  // alpine/blue
+  1: '#858585', // mercedes-teal-ish
+  2: '#e10600', // mclaren-orange-ish
+  3: '#717171'  // alpine/blue
 };
 
 // Tooltip for Driver Cluster Scatter
@@ -73,7 +73,7 @@ const DriverTooltip = ({ active, payload }) => {
     const color = CLUSTER_COLORS[data.cluster] || '#e10600';
     return (
       <div 
-        className="plotly-tooltip bg-[#1f2c3f]/95 border border-white/10 rounded px-3 py-2 text-[11px] text-white shadow-2xl pointer-events-none font-mono z-50"
+        className="plotly-tooltip bg-[#2e2e2e]/95 border border-white/10 rounded px-3 py-2 text-[11px] text-white shadow-2xl pointer-events-none font-mono z-50"
         style={{
           borderLeft: `4px solid ${color}`,
           boxShadow: '0 4px 15px rgba(0, 0, 0, 0.6)',
@@ -111,10 +111,10 @@ const AnomalyDot = (props) => {
 const AnomalyTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
-    const color = data.isAnomaly ? '#e10600' : '#4a4a5a';
+    const color = data.isAnomaly ? '#e10600' : '#4f4f4f';
     return (
       <div 
-        className="plotly-tooltip bg-[#1f2c3f]/95 border border-white/10 rounded px-3 py-2 text-[11px] text-white shadow-2xl pointer-events-none font-mono z-50"
+        className="plotly-tooltip bg-[#2e2e2e]/95 border border-white/10 rounded px-3 py-2 text-[11px] text-white shadow-2xl pointer-events-none font-mono z-50"
         style={{
           borderLeft: `4px solid ${color}`,
           boxShadow: '0 4px 15px rgba(0, 0, 0, 0.6)',
@@ -165,7 +165,7 @@ const ConstructorNetworkGraph = ({ data, onTooltip }) => {
       .force('collide', d3.forceCollide().radius(d => Math.max(10, Math.sqrt(d.wins) * 4) + 10));
 
     const link = svg.append('g')
-      .attr('stroke', '#4a4a5a')
+      .attr('stroke', '#4f4f4f')
       .attr('stroke-opacity', 0.6)
       .selectAll('line')
       .data(links)
@@ -173,7 +173,7 @@ const ConstructorNetworkGraph = ({ data, onTooltip }) => {
       .attr('stroke-width', d => Math.sqrt(d.value) * 3);
 
     const node = svg.append('g')
-      .attr('stroke', '#fff')
+      .attr('stroke', '#ffffff')
       .attr('stroke-width', 2)
       .selectAll('circle')
       .data(nodes)
@@ -199,7 +199,7 @@ const ConstructorNetworkGraph = ({ data, onTooltip }) => {
     node.on('mouseover', (event, d) => {
       // Highlight links
       link
-        .attr('stroke', l => l.source.id === d.id || l.target.id === d.id ? '#ffffff' : '#2a2a35')
+        .attr('stroke', l => l.source.id === d.id || l.target.id === d.id ? '#ffffff' : '#2e2e2e')
         .attr('stroke-opacity', l => l.source.id === d.id || l.target.id === d.id ? 1 : 0.1);
       
       // Highlight nodes
@@ -227,7 +227,7 @@ const ConstructorNetworkGraph = ({ data, onTooltip }) => {
       });
     })
     .on('mouseout', () => {
-      link.attr('stroke', '#4a4a5a').attr('stroke-opacity', 0.6);
+      link.attr('stroke', '#4f4f4f').attr('stroke-opacity', 0.6);
       node.attr('opacity', 1);
       label.attr('opacity', 1);
       onTooltip({ visible: false });
@@ -411,7 +411,7 @@ function PitWallAI() {
       
       {/* Header */}
       <div>
-        <h1 className="text-4xl font-black text-f1-light tracking-tight">🧠 Pit Wall AI</h1>
+        <h1 className="text-4xl font-black text-f1-light tracking-tight">F1 Data Lab</h1>
         <p className="text-f1-muted text-sm mt-2 max-w-2xl">Smart tools that help you understand driver habits, predict who will finish on the podium, find unusual lap times, and pick the best race strategy.</p>
       </div>
 
@@ -443,7 +443,7 @@ function PitWallAI() {
             <div className="h-[400px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <ScatterChart margin={{ top: 10, right: 20, bottom: 20, left: -10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1a1a24" opacity={0.6} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1d1d1d" opacity={0.6} />
                   <XAxis 
                     type="number" 
                     dataKey="podium_rate" 
@@ -452,7 +452,7 @@ function PitWallAI() {
                     fontSize={12} 
                     tickLine={false} 
                     domain={['auto', 'auto']}
-                    label={{ value: "Podium Rate (Ratio)", position: "insideBottom", offset: -10, fill: "#666" }}
+                    label={{ value: "Podium Rate (Ratio)", position: "insideBottom", offset: -10, fill: "#666666" }}
                   />
                   <YAxis 
                     type="number" 
@@ -462,7 +462,7 @@ function PitWallAI() {
                     fontSize={12} 
                     tickLine={false} 
                     domain={['auto', 'auto']}
-                    label={{ value: "Avg Position Gain", angle: -90, position: "insideLeft", fill: "#666" }}
+                    label={{ value: "Avg Position Gain", angle: -90, position: "insideLeft", fill: "#666666" }}
                   />
                   <ZAxis type="category" dataKey="name" name="Driver" />
                   <Tooltip content={<DriverTooltip />} cursor={{strokeDasharray: '3 3'}} />
@@ -478,7 +478,7 @@ function PitWallAI() {
                             key={`cell-${index}`} 
                             fill={CLUSTER_COLORS[entry.cluster]} 
                             fillOpacity={isFaded ? 0.1 : 0.8}
-                            stroke={isFaded ? 'transparent' : '#fff'}
+                            stroke={isFaded ? 'transparent' : '#ffffff'}
                             strokeWidth={isFaded ? 0 : 1}
                             className="transition-all duration-300"
                           />
@@ -514,7 +514,7 @@ function PitWallAI() {
                     <div className="flex items-center gap-2">
                       <h4 className="font-bold text-sm text-f1-light">{summary.label}</h4>
                     </div>
-                    <span className="text-[10px] font-bold bg-[#1a1a24] text-f1-muted px-2 py-0.5 rounded uppercase tracking-widest">
+                    <span className="text-[10px] font-bold bg-[#1d1d1d] text-f1-muted px-2 py-0.5 rounded uppercase tracking-widest">
                       {summary.count} Drivers
                     </span>
                   </div>
@@ -523,7 +523,7 @@ function PitWallAI() {
                     <p className="text-[10px] text-f1-muted uppercase tracking-wider font-semibold mb-1">Top Drivers</p>
                     <div className="flex flex-wrap gap-1.5">
                       {summary.top3.length > 0 ? summary.top3.map(d => (
-                        <span key={d.driverId} className="text-[10px] bg-black/30 border border-[#2a2a35] text-gray-300 px-1.5 py-0.5 rounded-sm">
+                        <span key={d.driverId} className="text-[10px] bg-black/30 border border-[#2e2e2e] text-gray-300 px-1.5 py-0.5 rounded-sm">
                           {d.name}
                         </span>
                       )) : (
@@ -566,11 +566,11 @@ function PitWallAI() {
                     <div className="w-6 text-right font-black text-f1-muted text-sm group-hover:text-f1-light transition-colors">
                       {idx + 1}
                     </div>
-                    <div className="w-1.5 h-6 rounded-sm" style={{ backgroundColor: pred.teamColor || '#666' }}></div>
+                    <div className="w-1.5 h-6 rounded-sm" style={{ backgroundColor: pred.teamColor || '#666666' }}></div>
                     <div className="w-32 md:w-48 font-bold text-sm text-f1-light truncate">
                       {pred.driverName}
                     </div>
-                    <div className="flex-1 relative h-6 bg-[#0f0f18] rounded overflow-hidden">
+                    <div className="flex-1 relative h-6 bg-[#121212] rounded overflow-hidden">
                       <motion.div 
                         initial={{ width: 0 }}
                         animate={{ width: `${pred.podiumProbability * 100}%` }}
@@ -592,13 +592,13 @@ function PitWallAI() {
               <h3 className="text-xs font-bold text-f1-muted uppercase tracking-widest mb-4">Highest example podium score</h3>
               {likelyWinner ? (
                 <div className="flex flex-col items-center justify-center py-6 text-center">
-                  <div className="w-16 h-16 rounded-full border-4 flex items-center justify-center mb-4 shadow-lg" style={{ borderColor: likelyWinner.teamColor || '#e10600', backgroundColor: '#1a1a24' }}>
+                  <div className="w-16 h-16 rounded-full border-4 flex items-center justify-center mb-4 shadow-lg" style={{ borderColor: likelyWinner.teamColor || '#e10600', backgroundColor: '#1d1d1d' }}>
                     <span className="text-xl font-black text-f1-light">Top 3</span>
                   </div>
                   <h4 className="text-2xl font-black text-f1-light mb-1">{likelyWinner.driverName}</h4>
                   <p className="text-sm text-f1-muted mb-4 font-semibold">{likelyWinner.circuit}</p>
                   
-                  <div className="bg-[#0f0f18] px-4 py-2 rounded border border-[#2a2a35] inline-block">
+                  <div className="bg-[#121212] px-4 py-2 rounded border border-[#2e2e2e] inline-block">
                     <span className="text-f1-red font-black text-lg">{(likelyWinner.podiumProbability * 100).toFixed(1)}%</span>
                     <span className="text-xs text-f1-muted ml-2 font-bold uppercase">Example podium score</span>
                   </div>
@@ -644,7 +644,7 @@ function PitWallAI() {
           <div className="h-[400px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={anomalyLapData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1a1a24" opacity={0.6} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#1d1d1d" opacity={0.6} />
                 <XAxis dataKey="lap" stroke="#666666" fontSize={12} tickLine={false} />
                 <YAxis 
                   dataKey="seconds" 
@@ -660,7 +660,7 @@ function PitWallAI() {
                   type="monotone" 
                   name="Lap Time (s)" 
                   dataKey="seconds" 
-                  stroke="#4a4a5a" 
+                  stroke="#4f4f4f"
                   strokeWidth={2} 
                   dot={<AnomalyDot />}
                   activeDot={{ r: 6 }}
@@ -673,7 +673,7 @@ function PitWallAI() {
         {flaggedLaps.length > 0 && (
           <div className="bg-f1-panel border border-f1-border rounded-lg shadow-xl overflow-hidden">
             <table className="w-full text-left text-sm">
-              <thead className="bg-[#1a1a24] text-f1-muted">
+              <thead className="bg-[#1d1d1d] text-f1-muted">
                 <tr>
                   <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Lap Number</th>
                   <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Time (s)</th>
@@ -692,7 +692,7 @@ function PitWallAI() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`font-mono font-bold ${lap.deviation > 0 ? 'text-orange-400' : 'text-green-400'}`}>
+                      <span className={`font-mono font-bold ${lap.deviation > 0 ? 'text-red-400' : 'text-red-400'}`}>
                         {lap.deviation > 0 ? '+' : ''}{lap.deviation.toFixed(2)}%
                       </span>
                     </td>
@@ -731,13 +731,13 @@ function PitWallAI() {
           <h3 className="text-lg font-bold text-f1-light mb-2">How Teams Share Drivers</h3>
           <p className="text-xs text-f1-muted mb-6">The circles are teams (bigger circles mean more wins). The lines show teams that have hired the same drivers during this time period.</p>
           
-          <div className="h-[400px] w-full bg-[#0a0a0f] border border-[#1a1a24] rounded-lg overflow-hidden relative">
+          <div className="h-[400px] w-full bg-[#0c0c0c] border border-[#1d1d1d] rounded-lg overflow-hidden relative">
             <ConstructorNetworkGraph data={currentNetworkData} onTooltip={setSnaTooltip} />
             
             {/* D3 Tooltip overlay */}
             {snaTooltip.visible && (
               <div 
-                className="absolute bg-[#0f0f18] border border-[#1a1a24] p-3 rounded-md shadow-xl pointer-events-none"
+                className="absolute bg-[#121212] border border-[#1d1d1d] p-3 rounded-md shadow-xl pointer-events-none"
                 style={{
                   left: snaTooltip.x - 20, // Offset from mouse slightly, or we can use fixed positioning if needed
                   top: snaTooltip.y - 120, // using a hard offset, but since this is inside a relative container we might need to adjust.
@@ -763,7 +763,7 @@ function PitWallAI() {
             <h3 className="text-lg font-bold text-f1-light">Team Influence Rankings</h3>
           </div>
           <table className="w-full text-left text-sm">
-            <thead className="bg-[#1a1a24] text-f1-muted">
+            <thead className="bg-[#1d1d1d] text-f1-muted">
               <tr>
                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Team</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Direct Connections</th>
@@ -778,7 +778,7 @@ function PitWallAI() {
                   <td className="px-6 py-4 text-f1-muted font-mono">{(row.degree).toFixed(2)}</td>
                   <td className="px-6 py-4 text-f1-muted font-mono">{(row.betweenness).toFixed(2)}</td>
                   <td className="px-6 py-4">
-                    <span className="bg-[#1a1a24] border border-[#2a2a35] text-gray-300 px-2 py-1 rounded text-xs font-bold">
+                    <span className="bg-[#1d1d1d] border border-[#2e2e2e] text-gray-300 px-2 py-1 rounded text-xs font-bold">
                       {row.mostConnected}
                     </span>
                   </td>
@@ -844,7 +844,7 @@ function PitWallAI() {
                     data={activeStrategy.degGraph}
                     margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1a1a24" opacity={0.6} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1d1d1d" opacity={0.6} />
                     <XAxis dataKey="lap" type="number" domain={[0, 70]} stroke="#666666" fontSize={12} tickLine={false} />
                     <YAxis domain={[0, 100]} stroke="#666666" fontSize={12} tickLine={false} />
                     <Tooltip content={<PlotlyTooltip xKey="lap" yFormatter={(val, item) => `${val}% Grip (${item.payload.type} Compound)`} />} />
