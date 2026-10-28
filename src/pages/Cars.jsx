@@ -1,3 +1,5 @@
+import OfficialTeamLogo from '../components/TeamLogo';
+import { Link } from 'react-router-dom';
 import useDialogAccessibility from '../hooks/useDialogAccessibility';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useMotionValue, animate, AnimatePresence, useTransform } from 'framer-motion';
@@ -20,7 +22,7 @@ import erasData from '../data/eras.json';
 import constructorsData from '../data/constructors.json';
 import DataNote from '../components/DataNote';
 import FadeInSection from '../components/FadeInSection';
-import getWikipediaImage from '../utils/getWikipediaImage';
+import getWikipediaImage, { localImage } from '../utils/getWikipediaImage';
 import carVault from '../data/carVault.json';
 import CarViewer2D from '../components/CarViewer2D';
 import CarVaultFilters from '../components/CarVaultFilters';
@@ -37,68 +39,10 @@ class LocalErrorBoundary extends React.Component {
   }
 }
 
-const TeamLogo = ({ team, size = "small" }) => {
-  const [imgError, setImgError] = useState(false);
-  const [imgLoaded, setImgLoaded] = useState(false);
-  
-  const isSmall = size === "small";
-  const containerClass = isSmall 
-    ? "w-12 h-12 rounded-xl p-1 border border-white/5 shadow-md aspect-square" 
-    : "h-20 min-w-[5rem] max-w-[16rem] px-3 py-1.5 rounded-2xl border border-white/5 shadow-xl";
-
-  const fallbackText = team.name.substring(0, 2).toUpperCase();
-  const color = team.teamColor || '#e10600';
-
-  return (
-    <div 
-      className={`relative bg-gradient-to-br from-[#1a1a24] to-[#0a0a0f] flex items-center justify-center shrink-0 overflow-hidden transition-all duration-500 group/logo ${containerClass}`}
-      style={{ boxShadow: `0 4px 20px ${color}15` }}
-    >
-      {/* Elegant Hover Glow */}
-      <div 
-        className="absolute inset-0 opacity-0 group-hover/logo:opacity-20 transition-opacity duration-700 blur-xl"
-        style={{ backgroundColor: color }}
-      />
-      
-      {(!team.logoUrl || imgError) ? (
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, type: 'spring' }}
-          className="relative z-10 flex flex-col items-center justify-center w-full h-full"
-        >
-          <span 
-            className="font-black uppercase italic text-white/30 tracking-tighter transition-transform duration-300 group-hover/logo:scale-110" 
-            style={{ fontSize: isSmall ? '16px' : '26px' }}
-          >
-            {fallbackText}
-          </span>
-          <div 
-            className="absolute bottom-1 w-1/2 h-[3px] rounded-full opacity-60 group-hover/logo:opacity-100 transition-opacity"
-            style={{ backgroundColor: color, boxShadow: `0 0 8px ${color}` }}
-          />
-        </motion.div>
-      ) : (
-        <div className="relative z-10 w-full h-full flex items-center justify-center rounded-lg overflow-hidden bg-black/40">
-          {!imgLoaded && (
-            <div className="absolute inset-0 animate-pulse bg-white/5" />
-          )}
-          <motion.img 
-            src={team.logoUrl} 
-            alt={team.name} 
-            className={`max-w-full h-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.15)] transition-all duration-700 ease-out group-hover/logo:scale-110 group-hover/logo:-rotate-3 ${imgLoaded ? 'opacity-100' : 'opacity-0 scale-95'}`}
-            referrerPolicy="no-referrer"
-            onLoad={() => setImgLoaded(true)}
-            onError={() => setImgError(true)}
-          />
-        </div>
-      )}
-    </div>
-  );
-};
+const TeamLogo = ({team}) => <OfficialTeamLogo id={team.id} name={team.name}/>;
 
 const CarCard = ({ car, onClick, imageCache = {}, setImageCache = () => {} }) => {
-  const [imgUrl, setImgUrl] = useState(null);
+  const [imgUrl, setImgUrl] = useState(() => localImage(car.wikiSearchTerm));
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
@@ -129,7 +73,7 @@ const CarCard = ({ car, onClick, imageCache = {}, setImageCache = () => {} }) =>
       layout
       whileHover={{ scale: 1.02 }}
       onClick={onClick}
-      className="group relative h-[240px] bg-[#0f0f18] rounded-lg overflow-hidden border border-[#2a2a2a] cursor-pointer flex flex-col transition-colors duration-150"
+      className="group relative h-[240px] bg-[#121212] rounded-lg overflow-hidden border border-[#2a2a2a] cursor-pointer flex flex-col transition-colors duration-150"
       style={{ '--hover-border': car.teamColor }}
     >
       <style>{`
@@ -138,7 +82,7 @@ const CarCard = ({ car, onClick, imageCache = {}, setImageCache = () => {} }) =>
       <div className="h-1 w-full shrink-0" style={{ backgroundColor: car.teamColor }} />
       <div className="h-[120px] bg-black relative flex items-center justify-center overflow-hidden shrink-0">
         {loading ? (
-          <div className="w-full h-full bg-[#1a1a24] animate-pulse" />
+          <div className="w-full h-full bg-[#1d1d1d] animate-pulse" />
         ) : imgUrl ? (
           <img src={imgUrl} alt={car.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
         ) : (
@@ -146,11 +90,11 @@ const CarCard = ({ car, onClick, imageCache = {}, setImageCache = () => {} }) =>
         )}
       </div>
       <div className="h-[100px] p-3 flex flex-col justify-between relative shrink-0">
-        <div className="absolute top-[-10px] left-3 px-2 py-0.5 rounded-full text-[9px] font-black uppercase text-[#0a0a0f] shadow" style={{ backgroundColor: car.eraColor }}>
+        <div className="absolute top-[-10px] left-3 px-2 py-0.5 rounded-full text-[9px] font-black uppercase text-[#0c0c0c] shadow" style={{ backgroundColor: car.eraColor }}>
           {car.eraName}
         </div>
         {car.isChampionshipCar && (
-          <div className="absolute top-[-10px] right-3 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-gradient-to-r from-yellow-400 to-yellow-600 text-black shadow">
+          <div className="absolute top-[-10px] right-3 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-gradient-to-r from-red-400 to-red-600 text-black shadow">
             🏆 WCC
           </div>
         )}
@@ -163,7 +107,7 @@ const CarCard = ({ car, onClick, imageCache = {}, setImageCache = () => {} }) =>
         </p>
       </div>
       <div className="absolute bottom-2 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
-        <button className="w-full py-1.5 border border-f1-red text-f1-red text-[11px] font-bold uppercase rounded bg-[#0f0f18]/90 backdrop-blur-sm transition-colors pointer-events-auto">
+        <button className="w-full py-1.5 border border-f1-red text-f1-red text-[11px] font-bold uppercase rounded bg-[#121212]/90 backdrop-blur-sm transition-colors pointer-events-auto">
           View Car
         </button>
       </div>
@@ -172,7 +116,7 @@ const CarCard = ({ car, onClick, imageCache = {}, setImageCache = () => {} }) =>
 };
 
 const EraCard = ({ era, onClick }) => {
-  const [imgUrl, setImgUrl] = useState(null);
+  const [imgUrl, setImgUrl] = useState(() => localImage(era.wikiSearchTerm));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -182,12 +126,12 @@ const EraCard = ({ era, onClick }) => {
       if (url) {
         setImgUrl(url);
       } else {
-        setImgUrl(ERA_IMAGES[era.id] || null);
+        setImgUrl(localImage(era.wikiSearchTerm));
       }
       setLoading(false);
     }).catch(() => {
       if (!isMounted) return;
-      setImgUrl(ERA_IMAGES[era.id] || null);
+      setImgUrl(localImage(era.wikiSearchTerm));
       setLoading(false);
     });
     return () => { isMounted = false; };
@@ -198,9 +142,9 @@ const EraCard = ({ era, onClick }) => {
       onClick={() => onClick(imgUrl)}
       className="w-[300px] bg-f1-panel border border-f1-border rounded-lg overflow-hidden hover:border-f1-red/60 transition duration-300 flex flex-col group shrink-0 cursor-pointer"
     >
-      <div className="h-40 relative bg-[#09090f] flex items-center justify-center overflow-hidden">
+      <div className="h-40 relative bg-[#0b0b0b] flex items-center justify-center overflow-hidden">
         {loading ? (
-          <div className="w-full h-full bg-[#1a1a24] animate-pulse" />
+          <div className="w-full h-full bg-[#1d1d1d] animate-pulse" />
         ) : imgUrl ? (
           <img 
             src={imgUrl} 
@@ -208,7 +152,7 @@ const EraCard = ({ era, onClick }) => {
             className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500 pointer-events-none"
             onError={(e) => {
               e.target.onerror = null;
-              e.target.src = ERA_IMAGES[era.id];
+              e.target.style.display = 'none';
             }}
           />
         ) : (
@@ -248,16 +192,7 @@ const CARS_DATA = [
 ];
 
 
-const ERA_IMAGES = {
-  early_years: 'https://images.unsplash.com/photo-1544829728-e5cb9eedc20e?auto=format&fit=crop&q=80&w=800',
-  rear_engine: 'https://images.unsplash.com/photo-1616004975510-9114f7b60da4?auto=format&fit=crop&q=80&w=800',
-  wings_dfv: 'https://images.unsplash.com/photo-1574526315843-c0d235c5c00e?auto=format&fit=crop&q=80&w=800',
-  turbo_ground_effect: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=800',
-  v10_era: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800',
-  v8_era: 'https://images.unsplash.com/photo-1506469717960-433cebe3f181?auto=format&fit=crop&q=80&w=800',
-  turbo_hybrid: 'https://images.unsplash.com/photo-1535732820275-9ffd998cac22?auto=format&fit=crop&q=80&w=800',
-  ground_effect_hybrid: 'https://images.unsplash.com/photo-1707038166547-8a8f15d74268?auto=format&fit=crop&q=80&w=800'
-};
+
 
 const ERA_DETAILS = {
   early_years: {
@@ -735,6 +670,8 @@ function Cars() {
 
   return (
     <div className="pt-24 pb-12 px-6 max-w-7xl mx-auto space-y-16">
+      <header className="experience-heading"><p className="experience-kicker">THE ENGINEERING BEHIND THE RACING</p><h1>Understand the machine.</h1><p>Explore how car design changed, compare reference specifications, and inspect the parts that help a driver find lap time.</p><nav className="technology-jumps" aria-label="Car technology topics"><Link to="/cars?section=car-anatomy">Car anatomy</Link><Link to="/cars?section=car-vault">Car collection</Link><Link to="/cars?section=car-comparison">Compare cars</Link><Link to="/cars?section=car-eras">Design eras</Link><Link to="/teams">Meet the teams →</Link></nav></header>
+      <span id="car-eras" className="block scroll-mt-48"/>
       {/* SECTION 1: Era Timeline Gallery */}
       <FadeInSection>
         <div className="border-l-2 border-f1-red pl-2 mb-4">
@@ -860,6 +797,7 @@ function Cars() {
         </div>
       </FadeInSection>
 
+      <span id="car-vault" className="block scroll-mt-48"/>
       {/* SECTION: Car Vault */}
       <FadeInSection>
         <div className="border-l-2 border-f1-red pl-2 mb-4">
@@ -873,16 +811,16 @@ function Cars() {
             <p className="text-f1-muted text-xs mt-1">89 iconic F1 cars from 1950 to today — explore every era.</p>
           </div>
           
-          <div className="flex bg-[#1a1a24] p-1 rounded-lg border border-[#2a2a2a] shrink-0">
+          <div className="flex bg-[#1d1d1d] p-1 rounded-lg border border-[#2a2a2a] shrink-0">
             <button 
               onClick={() => setIsGroupedView(false)}
-              className={`px-4 py-1.5 text-xs font-bold rounded transition-colors ${!isGroupedView ? 'bg-[#2a2a35] text-white' : 'text-f1-muted hover:text-white'}`}
+              className={`px-4 py-1.5 text-xs font-bold rounded transition-colors ${!isGroupedView ? 'bg-[#2e2e2e] text-white' : 'text-f1-muted hover:text-white'}`}
             >
               Grid View
             </button>
             <button 
               onClick={() => setIsGroupedView(true)}
-              className={`px-4 py-1.5 text-xs font-bold rounded transition-colors ${isGroupedView ? 'bg-[#2a2a35] text-white' : 'text-f1-muted hover:text-white'}`}
+              className={`px-4 py-1.5 text-xs font-bold rounded transition-colors ${isGroupedView ? 'bg-[#2e2e2e] text-white' : 'text-f1-muted hover:text-white'}`}
             >
               Era Groups
             </button>
@@ -957,7 +895,7 @@ function Cars() {
             className="fixed inset-0 bg-black/92 z-[100] flex items-center justify-center p-2 sm:p-4"
             >
               <LocalErrorBoundary>
-              <div className="w-full max-w-[1000px] max-h-[90vh] bg-[#0f0f18] border border-[#2a2a2a] rounded-xl flex flex-col relative overflow-hidden shadow-2xl">
+              <div className="w-full max-w-[1000px] max-h-[90vh] bg-[#121212] border border-[#2a2a2a] rounded-xl flex flex-col relative overflow-hidden shadow-2xl">
                 
                 <button 
                   onClick={() => {
@@ -967,7 +905,7 @@ function Cars() {
                     }
                   }}
                   disabled={selectedCarIndex === 0}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#1a1a24] text-white flex items-center justify-center z-50 hover:bg-f1-red disabled:opacity-30 disabled:hover:bg-[#1a1a24] transition-all"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#1d1d1d] text-white flex items-center justify-center z-50 hover:bg-f1-red disabled:opacity-30 disabled:hover:bg-[#1d1d1d] transition-all"
                 >
                   ◀
                 </button>
@@ -979,14 +917,14 @@ function Cars() {
                     }
                   }}
                   disabled={selectedCarIndex === filteredCars.length - 1}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#1a1a24] text-white flex items-center justify-center z-50 hover:bg-f1-red disabled:opacity-30 disabled:hover:bg-[#1a1a24] transition-all"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#1d1d1d] text-white flex items-center justify-center z-50 hover:bg-f1-red disabled:opacity-30 disabled:hover:bg-[#1d1d1d] transition-all"
                 >
                   ▶
                 </button>
 
-                <div className="flex justify-between items-center p-4 border-b border-[#2a2a2a] bg-[#1a1a24] shrink-0 pl-14 pr-4">
+                <div className="flex justify-between items-center p-4 border-b border-[#2a2a2a] bg-[#1d1d1d] shrink-0 pl-14 pr-4">
                   <div className="flex items-center gap-3">
-                    <span className="px-2 py-0.5 rounded-sm text-[10px] font-black uppercase text-[#0a0a0f]" style={{ backgroundColor: vaultSelectedCar.eraColor }}>
+                    <span className="px-2 py-0.5 rounded-sm text-[10px] font-black uppercase text-[#0c0c0c]" style={{ backgroundColor: vaultSelectedCar.eraColor }}>
                       {vaultSelectedCar.eraName}
                     </span>
                     <AnimatePresence mode="wait">
@@ -999,7 +937,7 @@ function Cars() {
                   <motion.button 
                     whileTap={{ scale: 0.9 }} 
                     onClick={() => setVaultSelectedCar(null)}
-                    className="w-8 h-8 rounded-full bg-[#2a2a35] hover:bg-f1-red text-white flex items-center justify-center transition-colors shrink-0"
+                    className="w-8 h-8 rounded-full bg-[#2e2e2e] hover:bg-f1-red text-white flex items-center justify-center transition-colors shrink-0"
                   >
                     ✕
                   </motion.button>
@@ -1016,7 +954,7 @@ function Cars() {
                       className="flex flex-col md:flex-row gap-6 md:gap-8"
                     >
                       <div className="w-full md:w-[55%] flex flex-col gap-6">
-                        <div className="h-[300px] md:h-[360px] bg-[#0a0a0f] rounded-lg border border-[#2a2a2a] overflow-hidden flex items-center justify-center shadow-inner relative">
+                        <div className="h-[300px] md:h-[360px] bg-[#0c0c0c] rounded-lg border border-[#2a2a2a] overflow-hidden flex items-center justify-center shadow-inner relative">
                           <CarViewer2D key={vaultSelectedCar.carId} car={vaultSelectedCar} />
                         </div>
                         {imageCache[vaultSelectedCar.carId] && (
@@ -1031,39 +969,39 @@ function Cars() {
 
                       <div className="w-full md:w-[45%] flex flex-col gap-6">
                         <div className="grid grid-cols-2 gap-3">
-                          <div className="bg-[#1a1a24] p-3 border border-[#2a2a2a] rounded">
+                          <div className="bg-[#1d1d1d] p-3 border border-[#2a2a2a] rounded">
                             <div className="text-[9px] text-f1-muted uppercase font-black tracking-wider mb-1">Engine</div>
                             <div className="text-sm font-extrabold text-white truncate">{vaultSelectedCar.engineType}</div>
                           </div>
-                          <div className="bg-[#1a1a24] p-3 border border-[#2a2a2a] rounded">
+                          <div className="bg-[#1d1d1d] p-3 border border-[#2a2a2a] rounded">
                             <div className="text-[9px] text-f1-muted uppercase font-black tracking-wider mb-1">Power</div>
                             <div className="text-sm font-extrabold text-white">{vaultSelectedCar.horsepowerEst} hp <span className="text-[10px] font-normal text-f1-muted">(est.)</span></div>
                           </div>
-                          <div className="bg-[#1a1a24] p-3 border border-[#2a2a2a] rounded">
+                          <div className="bg-[#1d1d1d] p-3 border border-[#2a2a2a] rounded">
                             <div className="text-[9px] text-f1-muted uppercase font-black tracking-wider mb-1">Weight</div>
                             <div className="text-sm font-extrabold text-white">{vaultSelectedCar.weightKg} kg</div>
                           </div>
-                          <div className="bg-[#1a1a24] p-3 border border-[#2a2a2a] rounded">
+                          <div className="bg-[#1d1d1d] p-3 border border-[#2a2a2a] rounded">
                             <div className="text-[9px] text-f1-muted uppercase font-black tracking-wider mb-1">Top Speed</div>
                             <div className="text-sm font-extrabold text-white">{vaultSelectedCar.topSpeedKmh} km/h</div>
                           </div>
-                          <div className="bg-[#1a1a24] p-3 border border-[#2a2a2a] rounded col-span-2 sm:col-span-1">
+                          <div className="bg-[#1d1d1d] p-3 border border-[#2a2a2a] rounded col-span-2 sm:col-span-1">
                             <div className="text-[9px] text-f1-muted uppercase font-black tracking-wider mb-1 flex justify-between">
                               Downforce <span>{vaultSelectedCar.downforceLevel}/10</span>
                             </div>
                             <div className="flex gap-1 h-2 mt-2">
                               {[...Array(10)].map((_, i) => (
-                                <div key={i} className={`flex-1 rounded-full ${i < vaultSelectedCar.downforceLevel ? 'bg-f1-red' : 'bg-[#333]'}`} />
+                                <div key={i} className={`flex-1 rounded-full ${i < vaultSelectedCar.downforceLevel ? 'bg-f1-red' : 'bg-[#333333]'}`} />
                               ))}
                             </div>
                           </div>
-                          <div className="bg-[#1a1a24] p-3 border border-[#2a2a2a] rounded col-span-2 sm:col-span-1">
+                          <div className="bg-[#1d1d1d] p-3 border border-[#2a2a2a] rounded col-span-2 sm:col-span-1">
                             <div className="text-[9px] text-f1-muted uppercase font-black tracking-wider mb-1 flex justify-between">
                               Reliability <span>{vaultSelectedCar.reliabilityScore}/10</span>
                             </div>
                             <div className="flex gap-1 h-2 mt-2">
                               {[...Array(10)].map((_, i) => (
-                                <div key={i} className={`flex-1 rounded-full ${i < vaultSelectedCar.reliabilityScore ? 'bg-[#52B788]' : 'bg-[#333]'}`} />
+                                <div key={i} className={`flex-1 rounded-full ${i < vaultSelectedCar.reliabilityScore ? 'bg-[#868686]' : 'bg-[#333333]'}`} />
                               ))}
                             </div>
                           </div>
@@ -1073,9 +1011,9 @@ function Cars() {
                           <h4 className="text-[10px] text-f1-muted font-bold uppercase tracking-wider mb-2">Drivers</h4>
                           <div className="flex flex-wrap gap-2">
                             {Array.isArray(vaultSelectedCar.drivers) ? vaultSelectedCar.drivers.map(d => (
-                              <span key={d} className="px-3 py-1 bg-[#2a2a35] text-white text-[11px] rounded font-bold">{d}</span>
+                              <span key={d} className="px-3 py-1 bg-[#2e2e2e] text-white text-[11px] rounded font-bold">{d}</span>
                             )) : (vaultSelectedCar.driver || '').split(',').map(d => (
-                              <span key={d.trim()} className="px-3 py-1 bg-[#2a2a35] text-white text-[11px] rounded font-bold">{d.trim()}</span>
+                              <span key={d.trim()} className="px-3 py-1 bg-[#2e2e2e] text-white text-[11px] rounded font-bold">{d.trim()}</span>
                             ))}
                           </div>
                         </div>
@@ -1085,7 +1023,7 @@ function Cars() {
                           <div className="text-[13px] font-bold text-white flex items-center gap-2">
                             {vaultSelectedCar.championships > 0 ? (
                               <>
-                                <span className="text-yellow-500 text-lg">🏆</span>
+                                <span className="text-red-500 text-lg">🏆</span>
                                 {vaultSelectedCar.championships} World Championship(s)
                               </>
                             ) : (
@@ -1099,7 +1037,7 @@ function Cars() {
                         </div>
 
                         {vaultSelectedCar.funFact && (
-                          <div className="border-l-4 border-f1-red pl-4 py-3 bg-[#1a1a24]/50 rounded-r">
+                          <div className="border-l-4 border-f1-red pl-4 py-3 bg-[#1d1d1d]/50 rounded-r">
                             <span className="block text-[10px] font-black uppercase text-f1-red mb-1">Did you know?</span>
                             <p className="text-[12px] italic text-white leading-relaxed">{vaultSelectedCar.funFact}</p>
                           </div>
@@ -1115,6 +1053,7 @@ function Cars() {
         </AnimatePresence>
       </FadeInSection>
 
+      <span id="car-comparison" className="block scroll-mt-48"/>
       {/* SECTION 3: Car Spec Comparator */}
       <FadeInSection>
         <div className="border-l-2 border-f1-red pl-2 mb-4">
@@ -1134,7 +1073,7 @@ function Cars() {
             <select
               value={carAId}
               onChange={(e) => setCarAId(e.target.value)}
-              className="w-full bg-[#0f0f18] border border-f1-border text-f1-light text-xs px-4 py-3 rounded outline-none focus:ring-1 focus:ring-f1-red transition cursor-pointer"
+              className="w-full bg-[#121212] border border-f1-border text-f1-light text-xs px-4 py-3 rounded outline-none focus:ring-1 focus:ring-f1-red transition cursor-pointer"
             >
               {allCars.map(car => (
                 <option key={`optA-${car.carId}`} value={car.carId} className="bg-f1-panel">
@@ -1149,7 +1088,7 @@ function Cars() {
             <select
               value={carBId}
               onChange={(e) => setCarBId(e.target.value)}
-              className="w-full bg-[#0f0f18] border border-f1-border text-f1-light text-xs px-4 py-3 rounded outline-none focus:ring-1 focus:ring-f1-red transition cursor-pointer"
+              className="w-full bg-[#121212] border border-f1-border text-f1-light text-xs px-4 py-3 rounded outline-none focus:ring-1 focus:ring-f1-red transition cursor-pointer"
             >
               {allCars.map(car => (
                 <option key={`optB-${car.carId}`} value={car.carId} className="bg-f1-panel">
@@ -1167,12 +1106,12 @@ function Cars() {
                 <h3 className="text-base font-extrabold text-f1-light mb-4 border-b border-f1-border/40 pb-2 uppercase tracking-wide">
                   Specs Head-to-Head
                 </h3>
-                <table className="w-full text-xs">
+                <div className="responsive-table" role="region" aria-label="Scrollable statistics table" tabIndex={0}><table className="w-full text-xs">
                   <thead>
                     <tr className="border-b border-f1-border text-f1-muted uppercase font-bold">
                       <th className="py-2 text-left">Spec Dimension</th>
                       <th className="py-2 text-center text-f1-red font-black text-xs sm:text-sm">{carA.name}</th>
-                      <th className="py-2 text-center text-[#ffd300] font-black text-xs sm:text-sm">{carB.name}</th>
+                      <th className="py-2 text-center text-[#9b9b9b] font-black text-xs sm:text-sm">{carB.name}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-f1-border/30 font-mono text-f1-light">
@@ -1212,7 +1151,7 @@ function Cars() {
                       <td className={`py-3 text-center font-bold ${carB.reliabilityScore > carA.reliabilityScore ? 'text-f1-red' : ''}`}>{carB.reliabilityScore}</td>
                     </tr>
                   </tbody>
-                </table>
+                </table></div>
               </div>
             </div>
 
@@ -1226,9 +1165,9 @@ function Cars() {
               <div className="h-72 w-full flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart cx="50%" cy="50%" outerRadius="75%" data={radarData}>
-                    <PolarGrid stroke="#1a1a24" />
+                    <PolarGrid stroke="#1d1d1d" />
                     <PolarAngleAxis dataKey="subject" stroke="#666666" fontSize={10} />
-                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} stroke="#1a1a24" />
+                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} stroke="#1d1d1d" />
                     <Radar 
                       name={carA.name} 
                       dataKey="A" 
@@ -1239,8 +1178,8 @@ function Cars() {
                     <Radar 
                       name={carB.name} 
                       dataKey="B" 
-                      stroke="#ffd300" 
-                      fill="#ffd300" 
+                      stroke="#9b9b9b"
+                      fill="#9b9b9b"
                       fillOpacity={0.2} 
                     />
                     <Legend verticalAlign="bottom" height={24} fontSize={10} />
@@ -1252,6 +1191,7 @@ function Cars() {
         )}
       </FadeInSection>
 
+      <span id="car-anatomy" className="block scroll-mt-48"/>
       {/* SECTION 4: Modern F1 Car Anatomy */}
       <FadeInSection>
         <div className="border-l-2 border-f1-red pl-2 mb-4">
@@ -1261,13 +1201,13 @@ function Cars() {
         </div>
         <div className="mb-6">
           <h2 className="text-2xl md:text-3xl font-extrabold text-f1-light tracking-tight">Modern F1 Car Anatomy</h2>
-          <p className="text-f1-muted text-xs mt-1">Hover over labels or parts to inspect the engineering anatomy of a formula race car.</p>
+          <p className="text-f1-muted text-xs mt-1">Select a component below, or hover over a label on larger screens, to explore the engineering.</p>
         </div>
 
-        <div className="bg-[#07070a] border border-[#1a1a24] rounded-xl shadow-[0_30px_60px_-15px_rgba(225,6,0,0.15)] relative overflow-hidden group/anatomy aspect-square md:aspect-[3/2] w-full max-w-[1400px] mx-auto flex items-center justify-center min-h-[600px]">
+        <div className="car-anatomy-stage bg-[#080808] border border-[#1d1d1d] rounded-xl shadow-[0_30px_60px_-15px_rgba(225,6,0,0.15)] relative overflow-hidden group/anatomy aspect-square md:aspect-[3/2] w-full max-w-[1400px] mx-auto flex items-center justify-center min-h-[600px]">
           
           {/* Glowing Background Elements */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-f1-red/10 via-[#07070a]/20 to-transparent opacity-40 pointer-events-none mix-blend-screen transition-opacity duration-1000 group-hover/anatomy:opacity-70" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-f1-red/10 via-[#080808]/20 to-transparent opacity-40 pointer-events-none mix-blend-screen transition-opacity duration-1000 group-hover/anatomy:opacity-70" />
           
           {/* Grid lines inside the box */}
           <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
@@ -1277,24 +1217,24 @@ function Cars() {
             <defs>
               <linearGradient id="neonGlow" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#e10600" stopOpacity="0.8" />
-                <stop offset="100%" stopColor="#800000" stopOpacity="0.2" />
+                <stop offset="100%" stopColor="#e10600" stopOpacity="0.2" />
               </linearGradient>
               <linearGradient id="carbon" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#1a1a24" />
-                <stop offset="100%" stopColor="#07070a" />
+                <stop offset="0%" stopColor="#1d1d1d" />
+                <stop offset="100%" stopColor="#080808" />
               </linearGradient>
               <linearGradient id="metallic" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#444" />
-                <stop offset="50%" stopColor="#888" />
-                <stop offset="100%" stopColor="#444" />
+                <stop offset="0%" stopColor="#444444" />
+                <stop offset="50%" stopColor="#888888" />
+                <stop offset="100%" stopColor="#444444" />
               </linearGradient>
               <filter id="glowEffect" x="-20%" y="-20%" width="140%" height="140%">
                 <feGaussianBlur stdDeviation="6" result="blur" />
                 <feComposite in="SourceGraphic" in2="blur" operator="over" />
               </filter>
               <pattern id="carbonPattern" width="4" height="4" patternUnits="userSpaceOnUse">
-                <rect width="4" height="4" fill="#111" />
-                <path d="M0,0 L4,4 M4,0 L0,4" stroke="#222" strokeWidth="1" />
+                <rect width="4" height="4" fill="#111111" />
+                <path d="M0,0 L4,4 M4,0 L0,4" stroke="#222222" strokeWidth="1" />
               </pattern>
             </defs>
 
@@ -1305,57 +1245,57 @@ function Cars() {
 
               {/* FLOOR */}
               <g filter={hoveredPart === 'floor' ? 'url(#glowEffect)' : 'none'} className="transition-all duration-300">
-                <path d="M 480,330 C 450,400 440,500 450,620 C 455,660 480,720 510,740 L 690,740 C 720,720 745,660 750,620 C 760,500 750,400 720,330 C 700,300 650,250 600,250 C 550,250 500,300 480,330 Z" fill="url(#carbonPattern)" stroke={hoveredPart === 'floor' ? '#e10600' : '#222'} strokeWidth={hoveredPart === 'floor' ? 4 : 2} />
+                <path d="M 480,330 C 450,400 440,500 450,620 C 455,660 480,720 510,740 L 690,740 C 720,720 745,660 750,620 C 760,500 750,400 720,330 C 700,300 650,250 600,250 C 550,250 500,300 480,330 Z" fill="url(#carbonPattern)" stroke={hoveredPart === 'floor' ? '#e10600' : '#222222'} strokeWidth={hoveredPart === 'floor' ? 4 : 2} />
               </g>
 
               {/* FRONT WING */}
               <g filter={hoveredPart === 'front_wing' ? 'url(#glowEffect)' : 'none'} className="transition-all duration-300">
-                <path d="M 460,180 C 500,140 550,130 600,125 C 650,130 700,140 740,180 C 740,190 730,195 720,190 C 680,160 620,150 600,150 C 580,150 520,160 480,190 C 470,195 460,190 460,180 Z" fill="#07070a" stroke={hoveredPart === 'front_wing' ? '#fff' : '#e10600'} strokeWidth={hoveredPart === 'front_wing' ? 3 : 2} />
-                <path d="M 470,170 C 520,130 570,110 600,110 C 630,110 680,130 730,170 C 735,160 740,140 740,140 C 680,100 620,80 600,80 C 580,80 520,100 460,140 C 460,140 465,160 470,170 Z" fill="url(#carbon)" stroke={hoveredPart === 'front_wing' ? '#e10600' : '#333'} strokeWidth="1" />
-                <path d="M 450,130 Q 440,160 460,190 L 465,185 Q 450,160 460,130 Z" fill={hoveredPart === 'front_wing' ? '#fff' : '#e10600'} />
-                <path d="M 750,130 Q 760,160 740,190 L 735,185 Q 750,160 740,130 Z" fill={hoveredPart === 'front_wing' ? '#fff' : '#e10600'} />
+                <path d="M 460,180 C 500,140 550,130 600,125 C 650,130 700,140 740,180 C 740,190 730,195 720,190 C 680,160 620,150 600,150 C 580,150 520,160 480,190 C 470,195 460,190 460,180 Z" fill="#080808" stroke={hoveredPart === 'front_wing' ? '#ffffff' : '#e10600'} strokeWidth={hoveredPart === 'front_wing' ? 3 : 2} />
+                <path d="M 470,170 C 520,130 570,110 600,110 C 630,110 680,130 730,170 C 735,160 740,140 740,140 C 680,100 620,80 600,80 C 580,80 520,100 460,140 C 460,140 465,160 470,170 Z" fill="url(#carbon)" stroke={hoveredPart === 'front_wing' ? '#e10600' : '#333333'} strokeWidth="1" />
+                <path d="M 450,130 Q 440,160 460,190 L 465,185 Q 450,160 460,130 Z" fill={hoveredPart === 'front_wing' ? '#ffffff' : '#e10600'} />
+                <path d="M 750,130 Q 760,160 740,190 L 735,185 Q 750,160 740,130 Z" fill={hoveredPart === 'front_wing' ? '#ffffff' : '#e10600'} />
               </g>
 
               {/* FRONT SUSPENSION */}
               <g className="transition-all duration-300">
-                <path d="M 420,240 L 580,260 M 420,250 L 575,280 M 420,280 L 565,310" stroke="#777" strokeWidth="3" fill="none" />
-                <path d="M 780,240 L 620,260 M 780,250 L 625,280 M 780,280 L 635,310" stroke="#777" strokeWidth="3" fill="none" />
+                <path d="M 420,240 L 580,260 M 420,250 L 575,280 M 420,280 L 565,310" stroke="#777777" strokeWidth="3" fill="none" />
+                <path d="M 780,240 L 620,260 M 780,250 L 625,280 M 780,280 L 635,310" stroke="#777777" strokeWidth="3" fill="none" />
               </g>
 
               {/* FRONT WHEELS */}
               <g>
-                <rect x="385" y="210" width="45" height="110" rx="10" fill="#050508" stroke="#222" strokeWidth="3" />
-                <rect x="770" y="210" width="45" height="110" rx="10" fill="#050508" stroke="#222" strokeWidth="3" />
-                <ellipse cx="407" cy="265" rx="18" ry="45" fill="#111" stroke="#333" strokeWidth="2" />
-                <ellipse cx="792" cy="265" rx="18" ry="45" fill="#111" stroke="#333" strokeWidth="2" />
+                <rect x="385" y="210" width="45" height="110" rx="10" fill="#060606" stroke="#222222" strokeWidth="3" />
+                <rect x="770" y="210" width="45" height="110" rx="10" fill="#060606" stroke="#222222" strokeWidth="3" />
+                <ellipse cx="407" cy="265" rx="18" ry="45" fill="#111111" stroke="#333333" strokeWidth="2" />
+                <ellipse cx="792" cy="265" rx="18" ry="45" fill="#111111" stroke="#333333" strokeWidth="2" />
               </g>
 
               {/* MONOCOQUE & COCKPIT */}
               <g filter={hoveredPart === 'monocoque' ? 'url(#glowEffect)' : 'none'} className="transition-all duration-300">
-                <path d="M 590,110 C 600,105 610,110 610,140 C 615,200 625,280 635,320 L 565,320 C 575,280 585,200 590,140 Z" fill="url(#carbon)" stroke={hoveredPart === 'monocoque' ? '#e10600' : '#444'} strokeWidth={hoveredPart === 'monocoque' ? 3 : 2} />
+                <path d="M 590,110 C 600,105 610,110 610,140 C 615,200 625,280 635,320 L 565,320 C 575,280 585,200 590,140 Z" fill="url(#carbon)" stroke={hoveredPart === 'monocoque' ? '#e10600' : '#444444'} strokeWidth={hoveredPart === 'monocoque' ? 3 : 2} />
                 <ellipse cx="600" cy="120" rx="6" ry="10" fill="#e10600" />
-                <path d="M 565,320 L 635,320 C 645,360 650,400 650,450 L 550,450 C 550,400 555,360 565,320 Z" fill="#111" stroke={hoveredPart === 'monocoque' ? '#e10600' : '#e10600'} strokeWidth={hoveredPart === 'monocoque' ? 4 : 2} />
-                <path d="M 580,360 C 580,340 620,340 620,360 C 625,380 625,410 600,410 C 575,410 575,380 580,360 Z" fill="#000" stroke={hoveredPart === 'monocoque' ? '#e10600' : '#444'} strokeWidth="3" />
-                <circle cx="600" cy="375" r="12" fill="#fff" stroke={hoveredPart === 'monocoque' ? '#ff0000' : '#ff0000'} strokeWidth="2" />
+                <path d="M 565,320 L 635,320 C 645,360 650,400 650,450 L 550,450 C 550,400 555,360 565,320 Z" fill="#111111" stroke={hoveredPart === 'monocoque' ? '#e10600' : '#e10600'} strokeWidth={hoveredPart === 'monocoque' ? 4 : 2} />
+                <path d="M 580,360 C 580,340 620,340 620,360 C 625,380 625,410 600,410 C 575,410 575,380 580,360 Z" fill="#000000" stroke={hoveredPart === 'monocoque' ? '#e10600' : '#444444'} strokeWidth="3" />
+                <circle cx="600" cy="375" r="12" fill="#ffffff" stroke={hoveredPart === 'monocoque' ? '#e10600' : '#e10600'} strokeWidth="2" />
               </g>
 
               {/* FUEL TANK (INTERNAL SCHEMATIC) */}
               <g filter={hoveredPart === 'fuel_tank' ? 'url(#glowEffect)' : 'none'} className="transition-all duration-300">
-                <path d="M 570,410 L 630,410 C 640,430 640,490 630,510 L 570,510 C 560,490 560,430 570,410 Z" fill={hoveredPart === 'fuel_tank' ? 'rgba(225,6,0,0.3)' : 'rgba(255,255,255,0.03)'} stroke={hoveredPart === 'fuel_tank' ? '#e10600' : '#666'} strokeWidth={hoveredPart === 'fuel_tank' ? 3 : 1.5} strokeDasharray={hoveredPart === 'fuel_tank' ? 'none' : '4 4'} />
-                <rect x="590" y="420" width="20" height="20" rx="4" fill="none" stroke={hoveredPart === 'fuel_tank' ? '#e10600' : '#666'} strokeWidth={hoveredPart === 'fuel_tank' ? 2 : 1} strokeDasharray={hoveredPart === 'fuel_tank' ? 'none' : '2 2'} />
+                <path d="M 570,410 L 630,410 C 640,430 640,490 630,510 L 570,510 C 560,490 560,430 570,410 Z" fill={hoveredPart === 'fuel_tank' ? 'rgba(225,6,0,0.3)' : 'rgba(255,255,255,0.03)'} stroke={hoveredPart === 'fuel_tank' ? '#e10600' : '#666666'} strokeWidth={hoveredPart === 'fuel_tank' ? 3 : 1.5} strokeDasharray={hoveredPart === 'fuel_tank' ? 'none' : '4 4'} />
+                <rect x="590" y="420" width="20" height="20" rx="4" fill="none" stroke={hoveredPart === 'fuel_tank' ? '#e10600' : '#666666'} strokeWidth={hoveredPart === 'fuel_tank' ? 2 : 1} strokeDasharray={hoveredPart === 'fuel_tank' ? 'none' : '2 2'} />
               </g>
 
               {/* HALO */}
               <g filter={hoveredPart === 'halo' ? 'url(#glowEffect)' : 'none'} className="transition-all duration-300">
-                <path d="M 598,360 L 602,360 L 604,390 L 596,390 Z" fill={hoveredPart === 'halo' ? '#fff' : 'url(#metallic)'} />
-                <path d="M 560,400 C 560,370 600,370 600,370 C 600,370 640,370 640,400 C 645,430 630,430 600,430 C 570,430 555,430 560,400 Z" fill="none" stroke={hoveredPart === 'halo' ? '#fff' : 'url(#metallic)'} strokeWidth={hoveredPart === 'halo' ? 8 : 6} opacity="0.9" />
+                <path d="M 598,360 L 602,360 L 604,390 L 596,390 Z" fill={hoveredPart === 'halo' ? '#ffffff' : 'url(#metallic)'} />
+                <path d="M 560,400 C 560,370 600,370 600,370 C 600,370 640,370 640,400 C 645,430 630,430 600,430 C 570,430 555,430 560,400 Z" fill="none" stroke={hoveredPart === 'halo' ? '#ffffff' : 'url(#metallic)'} strokeWidth={hoveredPart === 'halo' ? 8 : 6} opacity="0.9" />
               </g>
 
               {/* SIDEPODS */}
               <g filter={hoveredPart === 'sidepod' ? 'url(#glowEffect)' : 'none'} className="transition-all duration-300">
-                <path d="M 530,370 C 480,380 470,450 480,520 C 490,590 530,650 560,680 L 580,680 C 570,600 550,550 560,450 C 565,420 540,380 530,370 Z" fill="url(#carbonPattern)" stroke={hoveredPart === 'sidepod' ? '#fff' : '#e10600'} strokeWidth={hoveredPart === 'sidepod' ? 4 : 2} />
-                <path d="M 670,370 C 720,380 730,450 720,520 C 710,590 670,650 640,680 L 620,680 C 630,600 650,550 640,450 C 635,420 660,380 670,370 Z" fill="url(#carbonPattern)" stroke={hoveredPart === 'sidepod' ? '#fff' : '#e10600'} strokeWidth={hoveredPart === 'sidepod' ? 4 : 2} />
-                <g stroke={hoveredPart === 'sidepod' ? '#e10600' : '#111'} strokeWidth="4" fill="none">
+                <path d="M 530,370 C 480,380 470,450 480,520 C 490,590 530,650 560,680 L 580,680 C 570,600 550,550 560,450 C 565,420 540,380 530,370 Z" fill="url(#carbonPattern)" stroke={hoveredPart === 'sidepod' ? '#ffffff' : '#e10600'} strokeWidth={hoveredPart === 'sidepod' ? 4 : 2} />
+                <path d="M 670,370 C 720,380 730,450 720,520 C 710,590 670,650 640,680 L 620,680 C 630,600 650,550 640,450 C 635,420 660,380 670,370 Z" fill="url(#carbonPattern)" stroke={hoveredPart === 'sidepod' ? '#ffffff' : '#e10600'} strokeWidth={hoveredPart === 'sidepod' ? 4 : 2} />
+                <g stroke={hoveredPart === 'sidepod' ? '#e10600' : '#111111'} strokeWidth="4" fill="none">
                   <path d="M 490,440 Q 520,445 540,435 M 485,460 Q 520,465 545,455 M 485,480 Q 520,485 545,475 M 490,500 Q 520,505 540,495 M 495,520 Q 520,525 535,515" />
                   <path d="M 710,440 Q 680,445 660,435 M 715,460 Q 680,465 655,455 M 715,480 Q 680,485 655,475 M 710,500 Q 680,505 660,495 M 705,520 Q 680,525 665,515" />
                 </g>
@@ -1363,9 +1303,9 @@ function Cars() {
 
               {/* MGU-K & ENGINE BLOCK (INTERNAL SCHEMATIC) */}
               <g filter={hoveredPart === 'mgu_k' ? 'url(#glowEffect)' : 'none'} className="transition-all duration-300">
-                <path d="M 575,520 L 625,520 L 620,650 L 580,650 Z" fill="none" stroke={hoveredPart === 'mgu_k' ? '#ffaa00' : '#444'} strokeWidth={hoveredPart === 'mgu_k' ? 2 : 1} strokeDasharray="2 2" />
-                <rect x="575" y="600" width="20" height="40" rx="4" fill={hoveredPart === 'mgu_k' ? 'rgba(255,170,0,0.3)' : 'none'} stroke={hoveredPart === 'mgu_k' ? '#fff' : '#ffaa00'} strokeWidth={hoveredPart === 'mgu_k' ? 3 : 1} opacity={hoveredPart === 'mgu_k' ? 1 : 0.6} />
-                <g stroke={hoveredPart === 'mgu_k' ? '#fff' : '#ffaa00'} strokeWidth={hoveredPart === 'mgu_k' ? 2 : 1} opacity={hoveredPart === 'mgu_k' ? 1 : 0.6}>
+                <path d="M 575,520 L 625,520 L 620,650 L 580,650 Z" fill="none" stroke={hoveredPart === 'mgu_k' ? '#e10600' : '#444444'} strokeWidth={hoveredPart === 'mgu_k' ? 2 : 1} strokeDasharray="2 2" />
+                <rect x="575" y="600" width="20" height="40" rx="4" fill={hoveredPart === 'mgu_k' ? 'rgba(255,170,0,0.3)' : 'none'} stroke={hoveredPart === 'mgu_k' ? '#ffffff' : '#e10600'} strokeWidth={hoveredPart === 'mgu_k' ? 3 : 1} opacity={hoveredPart === 'mgu_k' ? 1 : 0.6} />
+                <g stroke={hoveredPart === 'mgu_k' ? '#ffffff' : '#e10600'} strokeWidth={hoveredPart === 'mgu_k' ? 2 : 1} opacity={hoveredPart === 'mgu_k' ? 1 : 0.6}>
                   <line x1="575" y1="610" x2="595" y2="610" />
                   <line x1="575" y1="620" x2="595" y2="620" />
                   <line x1="575" y1="630" x2="595" y2="630" />
@@ -1374,48 +1314,48 @@ function Cars() {
 
               {/* ENGINE COVER & SHARK FIN */}
               <g className="transition-all duration-300">
-                <path d="M 550,450 C 550,500 580,680 590,700 L 610,700 C 620,680 650,500 650,450 Z" fill="#111" stroke="#333" strokeWidth="2" opacity="0.8" />
+                <path d="M 550,450 C 550,500 580,680 590,700 L 610,700 C 620,680 650,500 650,450 Z" fill="#111111" stroke="#333333" strokeWidth="2" opacity="0.8" />
                 <line x1="600" y1="450" x2="600" y2="700" stroke="#e10600" strokeWidth="3" filter="url(#glowEffect)" />
               </g>
 
               {/* REAR SUSPENSION */}
               <g className="transition-all duration-300">
-                <path d="M 440,630 L 575,650 M 440,660 L 580,680 M 440,680 L 585,695" stroke="#777" strokeWidth="3" fill="none" />
-                <path d="M 760,630 L 625,650 M 760,660 L 620,680 M 760,680 L 615,695" stroke="#777" strokeWidth="3" fill="none" />
+                <path d="M 440,630 L 575,650 M 440,660 L 580,680 M 440,680 L 585,695" stroke="#777777" strokeWidth="3" fill="none" />
+                <path d="M 760,630 L 625,650 M 760,660 L 620,680 M 760,680 L 615,695" stroke="#777777" strokeWidth="3" fill="none" />
               </g>
 
               {/* REAR WHEELS */}
               <g>
-                <rect x="380" y="600" width="55" height="120" rx="10" fill="#050508" stroke="#222" strokeWidth="3" />
-                <rect x="765" y="600" width="55" height="120" rx="10" fill="#050508" stroke="#222" strokeWidth="3" />
-                <ellipse cx="407" cy="660" rx="22" ry="50" fill="#111" stroke="#333" strokeWidth="2" />
-                <ellipse cx="792" cy="660" rx="22" ry="50" fill="#111" stroke="#333" strokeWidth="2" />
+                <rect x="380" y="600" width="55" height="120" rx="10" fill="#060606" stroke="#222222" strokeWidth="3" />
+                <rect x="765" y="600" width="55" height="120" rx="10" fill="#060606" stroke="#222222" strokeWidth="3" />
+                <ellipse cx="407" cy="660" rx="22" ry="50" fill="#111111" stroke="#333333" strokeWidth="2" />
+                <ellipse cx="792" cy="660" rx="22" ry="50" fill="#111111" stroke="#333333" strokeWidth="2" />
               </g>
 
               {/* DIFFUSER */}
               <g filter={hoveredPart === 'diffuser' ? 'url(#glowEffect)' : 'none'} className="transition-all duration-300">
                 <path d="M 500,740 L 700,740 L 670,780 L 530,780 Z" fill={hoveredPart === 'diffuser' ? 'rgba(225,6,0,0.3)' : 'none'} stroke={hoveredPart === 'diffuser' ? '#e10600' : 'none'} />
-                <path d="M 530,740 L 530,780 M 550,735 L 550,785 M 570,735 L 570,785 M 630,735 L 630,785 M 650,735 L 650,785 M 670,740 L 670,780" stroke={hoveredPart === 'diffuser' ? '#fff' : '#111'} strokeWidth={hoveredPart === 'diffuser' ? 5 : 3} />
+                <path d="M 530,740 L 530,780 M 550,735 L 550,785 M 570,735 L 570,785 M 630,735 L 630,785 M 650,735 L 650,785 M 670,740 L 670,780" stroke={hoveredPart === 'diffuser' ? '#ffffff' : '#111111'} strokeWidth={hoveredPart === 'diffuser' ? 5 : 3} />
               </g>
 
               {/* REAR WING */}
               <g filter={hoveredPart === 'rear_wing' ? 'url(#glowEffect)' : 'none'} className="transition-all duration-300">
-                <path d="M 480,720 Q 470,740 480,770 L 490,770 L 490,720 Z" fill={hoveredPart === 'rear_wing' ? '#fff' : '#e10600'} />
-                <path d="M 720,720 Q 730,740 720,770 L 710,770 L 710,720 Z" fill={hoveredPart === 'rear_wing' ? '#fff' : '#e10600'} />
-                <path d="M 485,735 C 550,725 650,725 715,735 L 715,750 C 650,740 550,740 485,750 Z" fill="url(#carbonPattern)" stroke={hoveredPart === 'rear_wing' ? '#e10600' : '#444'} strokeWidth={hoveredPart === 'rear_wing' ? 4 : 2} />
-                <path d="M 485,755 C 550,748 650,748 715,755 L 715,765 C 650,760 550,760 485,765 Z" fill="#07070a" stroke={hoveredPart === 'rear_wing' ? '#fff' : '#e10600'} strokeWidth={hoveredPart === 'rear_wing' ? 4 : 2} />
+                <path d="M 480,720 Q 470,740 480,770 L 490,770 L 490,720 Z" fill={hoveredPart === 'rear_wing' ? '#ffffff' : '#e10600'} />
+                <path d="M 720,720 Q 730,740 720,770 L 710,770 L 710,720 Z" fill={hoveredPart === 'rear_wing' ? '#ffffff' : '#e10600'} />
+                <path d="M 485,735 C 550,725 650,725 715,735 L 715,750 C 650,740 550,740 485,750 Z" fill="url(#carbonPattern)" stroke={hoveredPart === 'rear_wing' ? '#e10600' : '#444444'} strokeWidth={hoveredPart === 'rear_wing' ? 4 : 2} />
+                <path d="M 485,755 C 550,748 650,748 715,755 L 715,765 C 650,760 550,760 485,765 Z" fill="#080808" stroke={hoveredPart === 'rear_wing' ? '#ffffff' : '#e10600'} strokeWidth={hoveredPart === 'rear_wing' ? 4 : 2} />
               </g>
 
               {/* DRS ACTUATOR */}
               <g filter={hoveredPart === 'drs_actuator' ? 'url(#glowEffect)' : 'none'} className="transition-all duration-300">
-                <rect x="592" y="730" width="16" height="25" rx="3" fill={hoveredPart === 'drs_actuator' ? '#e10600' : 'url(#metallic)'} stroke={hoveredPart === 'drs_actuator' ? '#fff' : '#222'} strokeWidth={hoveredPart === 'drs_actuator' ? 3 : 1} />
+                <rect x="592" y="730" width="16" height="25" rx="3" fill={hoveredPart === 'drs_actuator' ? '#e10600' : 'url(#metallic)'} stroke={hoveredPart === 'drs_actuator' ? '#ffffff' : '#222222'} strokeWidth={hoveredPart === 'drs_actuator' ? 3 : 1} />
               </g>
 
               {/* EXHAUST */}
               <g>
-                <ellipse cx="600" cy="710" rx="12" ry="15" fill="#000" stroke="#777" strokeWidth="3" />
+                <ellipse cx="600" cy="710" rx="12" ry="15" fill="#000000" stroke="#777777" strokeWidth="3" />
                 <circle cx="600" cy="710" r="8" fill="#e10600" filter="url(#glowEffect)" opacity="0.9" className="animate-pulse" />
-                <circle cx="600" cy="710" r="4" fill="#fff" filter="url(#glowEffect)" opacity="0.9" className="animate-pulse" />
+                <circle cx="600" cy="710" r="4" fill="#ffffff" filter="url(#glowEffect)" opacity="0.9" className="animate-pulse" />
               </g>
             </g>
 
@@ -1489,10 +1429,10 @@ function Cars() {
               onMouseEnter={() => setHoveredPart(part.id)}
               onMouseLeave={() => setHoveredPart(null)}
               style={{ ...part.labelPos, transform: 'translateY(-50%)', width: '22%' }}
-              className={`absolute p-2 sm:p-4 rounded-lg border backdrop-blur-md transition-all duration-300 cursor-crosshair overflow-hidden z-30 ${
+              className={`car-anatomy-label absolute p-2 sm:p-4 rounded-lg border backdrop-blur-md transition-all duration-300 cursor-crosshair overflow-hidden z-30 ${
                 hoveredPart === part.id 
                   ? 'bg-f1-red/15 border-f1-red text-white shadow-[0_0_20px_rgba(225,6,0,0.3)] scale-[1.05]' 
-                  : 'bg-[#0a0a0f]/80 border-white/10 text-f1-muted hover:border-white/30 hover:bg-[#1a1a24]/90'
+                  : 'bg-[#0c0c0c]/80 border-white/10 text-f1-muted hover:border-white/30 hover:bg-[#1d1d1d]/90'
               } ${part.align === 'left' ? 'text-left' : 'text-right'}`}
             >
               {hoveredPart === part.id && (
@@ -1504,6 +1444,7 @@ function Cars() {
           ))}
         </div>
 
+        <div className="anatomy-mobile-controls" role="group" aria-label="Choose a car component">{ANATOMY_PARTS.map(part => <button key={part.id} aria-pressed={hoveredPart === part.id} onClick={() => setHoveredPart(part.id)}>{part.name}</button>)}</div>
         {/* Info Box Card */}
         <div className="mt-8">
           <AnimatePresence mode="wait">
@@ -1513,7 +1454,7 @@ function Cars() {
                 initial={{ opacity: 0, y: 15, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -10, scale: 0.98 }}
-                className="bg-gradient-to-r from-[#0f0f18] to-[#07070a] border border-f1-red/50 p-8 rounded-xl shadow-[0_10px_40px_rgba(225,6,0,0.15)] relative overflow-hidden group/infobox"
+                className="bg-gradient-to-r from-[#121212] to-[#080808] border border-f1-red/50 p-8 rounded-xl shadow-[0_10px_40px_rgba(225,6,0,0.15)] relative overflow-hidden group/infobox"
               >
                 {/* Techy background lines */}
                 <div className="absolute top-0 right-0 w-64 h-full bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(225,6,0,0.03)_10px,rgba(225,6,0,0.03)_20px)] pointer-events-none" />
@@ -1546,7 +1487,7 @@ function Cars() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="bg-[#07070a] border border-white/5 p-8 rounded-xl flex flex-col items-center justify-center text-center h-[200px]"
+                className="bg-[#080808] border border-white/5 p-8 rounded-xl flex flex-col items-center justify-center text-center h-[200px]"
               >
                 <div className="w-12 h-12 rounded-full border-2 border-dashed border-f1-muted/20 animate-[spin_10s_linear_infinite] flex items-center justify-center mb-4">
                   <div className="w-2 h-2 bg-f1-red rounded-full animate-pulse" />
@@ -1668,15 +1609,15 @@ function Cars() {
             >
               <button 
                 onClick={() => setSelectedEra(null)}
-                className="absolute top-4 right-4 text-f1-muted hover:text-f1-light text-base font-bold z-10 bg-[#0f0f18]/60 p-2 rounded-full w-8 h-8 flex items-center justify-center transition duration-300"
+                className="absolute top-4 right-4 text-f1-muted hover:text-f1-light text-base font-bold z-10 bg-[#121212]/60 p-2 rounded-full w-8 h-8 flex items-center justify-center transition duration-300"
               >
                 ✕
               </button>
 
-              <div className="relative h-56 w-full bg-[#09090f] flex items-center justify-center">
-                {(selectedEra.displayImage || ERA_IMAGES[selectedEra.id]) ? (
+              <div className="relative h-56 w-full bg-[#0b0b0b] flex items-center justify-center">
+                {(selectedEra.displayImage || localImage(selectedEra.wikiSearchTerm)) ? (
                   <img 
-                    src={selectedEra.displayImage || ERA_IMAGES[selectedEra.id]} 
+                    src={selectedEra.displayImage || localImage(selectedEra.wikiSearchTerm)}
                     alt={selectedEra.name} 
                     className="w-full h-full object-cover object-center"
                     onError={(e) => {
@@ -1687,7 +1628,7 @@ function Cars() {
                 ) : (
                   <span className="text-2xl font-black text-white/50 text-center px-4">{selectedEra.name}</span>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f18] via-[#0f0f18]/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/40 to-transparent" />
                 <div className="absolute bottom-4 left-6 right-6">
                   <span className="text-xs bg-f1-red text-f1-light font-black px-2 py-0.5 rounded-sm uppercase tracking-wider">
                     {selectedEra.years}
@@ -1699,17 +1640,17 @@ function Cars() {
               </div>
 
               <div className="p-6 space-y-4">
-                <div className="bg-[#07070a] p-3.5 border border-f1-border rounded">
+                <div className="bg-[#080808] p-3.5 border border-f1-border rounded">
                   <span className="text-[9px] text-f1-red uppercase font-black tracking-wider block mb-1">Engine & Power Output</span>
                   <span className="text-xs font-bold text-f1-light leading-relaxed">{selectedEra.engineType}</span>
                 </div>
 
-                <div className="bg-[#07070a] p-3.5 border border-f1-border rounded">
+                <div className="bg-[#080808] p-3.5 border border-f1-border rounded">
                   <span className="text-[9px] text-f1-red uppercase font-black tracking-wider block mb-1">Notable Constructors</span>
                   <span className="text-xs font-bold text-f1-light leading-relaxed">{ERA_DETAILS[selectedEra.id]?.teams || "N/A"}</span>
                 </div>
 
-                <div className="bg-[#07070a] p-3.5 border border-f1-border rounded">
+                <div className="bg-[#080808] p-3.5 border border-f1-border rounded">
                   <span className="text-[9px] text-f1-red uppercase font-black tracking-wider block mb-1">Regulation & Technical Changes</span>
                   <span className="text-xs text-f1-muted leading-relaxed block">
                     {ERA_DETAILS[selectedEra.id]?.regulations || "N/A"}
@@ -1741,12 +1682,12 @@ function Cars() {
             >
               <button 
                 onClick={() => setSelectedConstructor(null)}
-                className="absolute top-4 right-4 text-f1-muted hover:text-f1-light text-base font-bold z-10 bg-[#0f0f18]/60 p-2 rounded-full w-8 h-8 flex items-center justify-center transition duration-300"
+                className="absolute top-4 right-4 text-f1-muted hover:text-f1-light text-base font-bold z-10 bg-[#121212]/60 p-2 rounded-full w-8 h-8 flex items-center justify-center transition duration-300"
               >
                 ✕
               </button>
 
-              <div className="p-6 border-b border-f1-border/40 flex items-center gap-4 bg-[#09090f]">
+              <div className="p-6 border-b border-f1-border/40 flex items-center gap-4 bg-[#0b0b0b]">
                 <TeamLogo team={selectedConstructor} size="large" />
                 <div>
                   <h2 className="text-2xl font-black text-f1-light leading-tight">
@@ -1762,25 +1703,25 @@ function Cars() {
 
               <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="bg-[#07070a] p-3 border border-f1-border rounded">
+                  <div className="bg-[#080808] p-3 border border-f1-border rounded">
                     <span className="text-[9px] text-f1-muted uppercase font-black tracking-wider block mb-0.5">GP Entries</span>
                     <span className="text-sm font-extrabold text-f1-light">{activeConstructorDetails.entries}</span>
                   </div>
-                  <div className="bg-[#07070a] p-3 border border-f1-border rounded">
+                  <div className="bg-[#080808] p-3 border border-f1-border rounded">
                     <span className="text-[9px] text-f1-muted uppercase font-black tracking-wider block mb-0.5">GP Wins</span>
                     <span className="text-sm font-extrabold text-f1-red">{activeConstructorDetails.wins}</span>
                   </div>
-                  <div className="bg-[#07070a] p-3 border border-f1-border rounded">
+                  <div className="bg-[#080808] p-3 border border-f1-border rounded">
                     <span className="text-[9px] text-f1-muted uppercase font-black tracking-wider block mb-0.5">Pole Positions</span>
                     <span className="text-sm font-extrabold text-f1-light">{activeConstructorDetails.poles}</span>
                   </div>
-                  <div className="bg-[#07070a] p-3 border border-f1-border rounded">
+                  <div className="bg-[#080808] p-3 border border-f1-border rounded">
                     <span className="text-[9px] text-f1-muted uppercase font-black tracking-wider block mb-0.5">Podiums</span>
                     <span className="text-sm font-extrabold text-f1-light">{activeConstructorDetails.podiums}</span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center bg-[#07070a] p-4 border border-f1-border rounded">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center bg-[#080808] p-4 border border-f1-border rounded">
                   <div>
                     <span className="text-[9px] text-f1-red uppercase font-black tracking-wider block mb-1">Most Iconic Car</span>
                     <h4 className="font-extrabold text-f1-light text-base leading-tight mb-2">
@@ -1790,10 +1731,10 @@ function Cars() {
                       Representing the pinnacle of their design history, this chassis delivered outstanding aerodynamics and racing dominance.
                     </p>
                   </div>
-                  <div className="h-28 rounded overflow-hidden bg-[#09090f] flex items-center justify-center">
-                    {activeConstructorDetails.iconicCarImage ? (
+                  <div className="h-28 rounded overflow-hidden bg-[#0b0b0b] flex items-center justify-center">
+                    {localImage(activeConstructorDetails.iconicCar.replace(/ 'six-wheeler'/, '')) || localImage(selectedConstructor.wikiSearchTerm) ? (
                       <img 
-                        src={activeConstructorDetails.iconicCarImage} 
+                        src={localImage(activeConstructorDetails.iconicCar.replace(/ 'six-wheeler'/, '')) || localImage(selectedConstructor.wikiSearchTerm)}
                         alt={activeConstructorDetails.iconicCar} 
                         className="w-full h-full object-cover object-center"
                         onError={(e) => {
@@ -1814,7 +1755,7 @@ function Cars() {
                     <div className="h-44 w-full">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={activeConstructorDetails.championshipsDecade} margin={{ top: 0, right: 10, left: -25, bottom: 0 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#1a1a24" opacity={0.4} />
+                          <CartesianGrid strokeDasharray="3 3" stroke="#1d1d1d" opacity={0.4} />
                           <XAxis dataKey="decade" stroke="#666666" fontSize={9} tickLine={false} />
                           <YAxis stroke="#666666" fontSize={9} tickLine={false} allowDecimals={false} />
                           <Tooltip content={<PlotlyTooltip xKey="decade" />} />
