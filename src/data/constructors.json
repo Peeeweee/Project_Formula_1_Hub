@@ -4,39 +4,39 @@
     "name": "Ferrari",
     "fullName": "Scuderia Ferrari",
     "nationality": "Italian",
-    "yearsActive": "1950\u2013Present",
+    "yearsActive": "1950–Present",
     "championships": 16,
     "drivers": [
       "Michael Schumacher",
       "Niki Lauda",
-      "Kimi R\u00e4ikk\u00f6nen"
+      "Kimi Räikkönen"
     ],
     "teamColor": "#e10600",
     "wikiSearchTerm": "Scuderia Ferrari",
-    "logoUrl": "https://media.formula1.com/content/dam/fom-website/teams/2024/ferrari-logo.png"
+    "logoUrl": "/formula-dc1/assets/logos/ferrari.webp"
   },
   {
     "id": "mclaren",
     "name": "McLaren",
     "fullName": "McLaren Formula 1 Team",
     "nationality": "British",
-    "yearsActive": "1966\u2013Present",
-    "championships": 8,
+    "yearsActive": "1966–Present",
+    "championships": 10,
     "drivers": [
       "Ayrton Senna",
       "Alain Prost",
-      "Mika H\u00e4kkinen"
+      "Mika Häkkinen"
     ],
     "teamColor": "#FF8700",
     "wikiSearchTerm": "McLaren in Formula One",
-    "logoUrl": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.mclaren.com&size=256"
+    "logoUrl": "/formula-dc1/assets/logos/mclaren.webp"
   },
   {
     "id": "williams",
     "name": "Williams",
     "fullName": "Williams Racing",
     "nationality": "British",
-    "yearsActive": "1977\u2013Present",
+    "yearsActive": "1977–Present",
     "championships": 9,
     "drivers": [
       "Nigel Mansell",
@@ -45,14 +45,14 @@
     ],
     "teamColor": "#002B49",
     "wikiSearchTerm": "Williams Grand Prix Engineering",
-    "logoUrl": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.williamsf1.com&size=256"
+    "logoUrl": "/formula-dc1/assets/logos/williams.webp"
   },
   {
     "id": "mercedes",
     "name": "Mercedes",
     "fullName": "Mercedes-AMG Petronas F1 Team",
     "nationality": "German",
-    "yearsActive": "1954\u20131955, 2010\u2013Present",
+    "yearsActive": "1954–1955, 2010–Present",
     "championships": 8,
     "drivers": [
       "Lewis Hamilton",
@@ -61,14 +61,14 @@
     ],
     "teamColor": "#00A19B",
     "wikiSearchTerm": "Mercedes-Benz in Formula One",
-    "logoUrl": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.mercedesamgf1.com&size=256"
+    "logoUrl": "/formula-dc1/assets/logos/mercedes.webp"
   },
   {
     "id": "redbull",
     "name": "Red Bull",
     "fullName": "Oracle Red Bull Racing",
     "nationality": "Austrian",
-    "yearsActive": "2005\u2013Present",
+    "yearsActive": "2005–Present",
     "championships": 6,
     "drivers": [
       "Sebastian Vettel",
@@ -77,14 +77,14 @@
     ],
     "teamColor": "#0C2340",
     "wikiSearchTerm": "Red Bull Racing",
-    "logoUrl": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.redbullracing.com&size=256"
+    "logoUrl": "/formula-dc1/assets/logos/red_bull.webp"
   },
   {
     "id": "lotus",
     "name": "Lotus",
     "fullName": "Team Lotus",
     "nationality": "British",
-    "yearsActive": "1958\u20131994",
+    "yearsActive": "1958–1994",
     "championships": 7,
     "drivers": [
       "Jim Clark",
@@ -93,14 +93,14 @@
     ],
     "teamColor": "#004225",
     "wikiSearchTerm": "Team Lotus",
-    "logoUrl": "/formula-dc1/assets/logos/lotus.png"
+    "logoUrl": "/formula-dc1/assets/logos/lotus-archive.jpg"
   },
   {
     "id": "renault",
     "name": "Renault",
     "fullName": "Renault F1 Team",
     "nationality": "French",
-    "yearsActive": "1977\u20131985, 2002\u20132011, 2016\u20132020",
+    "yearsActive": "1977–1985, 2002–2011, 2016–2020",
     "championships": 2,
     "drivers": [
       "Fernando Alonso",
@@ -109,14 +109,14 @@
     ],
     "teamColor": "#FFF500",
     "wikiSearchTerm": "Renault in Formula One",
-    "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/0/08/Renault_logo.svg"
+    "logoUrl": "/formula-dc1/assets/logos/renault-archive.png"
   },
   {
     "id": "brabham",
     "name": "Brabham",
     "fullName": "Motor Racing Developments Ltd.",
     "nationality": "British",
-    "yearsActive": "1962\u20131992",
+    "yearsActive": "1962–1992",
     "championships": 2,
     "drivers": [
       "Jack Brabham",
@@ -125,14 +125,14 @@
     ],
     "teamColor": "#002E1B",
     "wikiSearchTerm": "Brabham",
-    "logoUrl": "https://upload.wikimedia.org/wikipedia/en/5/53/Brabham91.png"
+    "logoUrl": "/formula-dc1/assets/logos/brabham-archive.png"
   },
   {
     "id": "benetton",
     "name": "Benetton",
     "fullName": "Benetton Formula Ltd.",
     "nationality": "Italian",
-    "yearsActive": "1986\u20132001",
+    "yearsActive": "1986–2001",
     "championships": 1,
     "drivers": [
       "Michael Schumacher",
@@ -141,30 +141,30 @@
     ],
     "teamColor": "#009639",
     "wikiSearchTerm": "Benetton Formula",
-    "logoUrl": "/formula-dc1/assets/logos/benetton.png"
+    "logoUrl": "/formula-dc1/assets/logos/benetton-archive.jpg"
   },
   {
     "id": "tyrrell",
     "name": "Tyrrell",
     "fullName": "Tyrrell Racing Organisation",
     "nationality": "British",
-    "yearsActive": "1970\u20131998",
+    "yearsActive": "1970–1998",
     "championships": 1,
     "drivers": [
       "Jackie Stewart",
-      "Fran\u00e7ois Cevert",
+      "François Cevert",
       "Jody Scheckter"
     ],
     "teamColor": "#001A4E",
     "wikiSearchTerm": "Tyrrell Racing",
-    "logoUrl": "/formula-dc1/assets/logos/tyrrell.png"
+    "logoUrl": "/formula-dc1/assets/logos/tyrrell-archive.png"
   },
   {
     "id": "cooper",
     "name": "Cooper",
     "fullName": "Cooper Car Company",
     "nationality": "British",
-    "yearsActive": "1950\u20131969",
+    "yearsActive": "1950–1969",
     "championships": 2,
     "drivers": [
       "Jack Brabham",
@@ -173,14 +173,14 @@
     ],
     "teamColor": "#003300",
     "wikiSearchTerm": "Cooper Car Company",
-    "logoUrl": "/formula-dc1/assets/logos/cooper.png"
+    "logoUrl": "/formula-dc1/assets/logos/cooper-archive.png"
   },
   {
     "id": "brm",
     "name": "BRM",
     "fullName": "British Racing Motors",
     "nationality": "British",
-    "yearsActive": "1951\u20131977",
+    "yearsActive": "1951–1977",
     "championships": 1,
     "drivers": [
       "Graham Hill",
@@ -189,14 +189,14 @@
     ],
     "teamColor": "#21281A",
     "wikiSearchTerm": "British Racing Motors",
-    "logoUrl": "/formula-dc1/assets/logos/brm.png"
+    "logoUrl": "/formula-dc1/assets/logos/brm-archive.png"
   },
   {
     "id": "alfa",
     "name": "Alfa Romeo",
     "fullName": "Alfa Romeo Racing",
     "nationality": "Italian",
-    "yearsActive": "1950\u20131951, 1979\u20131985, 2019\u20132023",
+    "yearsActive": "1950–1951, 1979–1985, 2019–2023",
     "championships": 0,
     "drivers": [
       "Giuseppe Farina",
@@ -205,14 +205,14 @@
     ],
     "teamColor": "#900020",
     "wikiSearchTerm": "Alfa Romeo in Formula One",
-    "logoUrl": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.alfaromeo.com&size=256"
+    "logoUrl": "/formula-dc1/assets/logos/alfa-archive.png"
   },
   {
     "id": "maserati",
     "name": "Maserati",
     "fullName": "Officine Alfieri Maserati",
     "nationality": "Italian",
-    "yearsActive": "1950\u20131957",
+    "yearsActive": "1950–1957",
     "championships": 0,
     "drivers": [
       "Juan Manuel Fangio",
@@ -221,14 +221,14 @@
     ],
     "teamColor": "#0F2D59",
     "wikiSearchTerm": "Maserati in motorsport",
-    "logoUrl": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.maserati.com&size=256"
+    "logoUrl": "/formula-dc1/assets/logos/maserati-archive.png"
   },
   {
     "id": "astonmartin",
     "name": "Aston Martin",
     "fullName": "Aston Martin Aramco F1 Team",
     "nationality": "British",
-    "yearsActive": "1959\u20131960, 2021\u2013Present",
+    "yearsActive": "1959–1960, 2021–Present",
     "championships": 0,
     "drivers": [
       "Sebastian Vettel",
@@ -237,14 +237,14 @@
     ],
     "teamColor": "#005A49",
     "wikiSearchTerm": "Aston Martin in Formula One",
-    "logoUrl": "https://media.formula1.com/content/dam/fom-website/teams/2024/aston-martin-logo.png"
+    "logoUrl": "/formula-dc1/assets/logos/aston_martin.webp"
   },
   {
     "id": "alpine",
     "name": "Alpine",
     "fullName": "BWT Alpine F1 Team",
     "nationality": "French",
-    "yearsActive": "2021\u2013Present",
+    "yearsActive": "2021–Present",
     "championships": 0,
     "drivers": [
       "Fernando Alonso",
@@ -253,46 +253,46 @@
     ],
     "teamColor": "#0078C1",
     "wikiSearchTerm": "Alpine F1 Team",
-    "logoUrl": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.alpinecars.com&size=256"
+    "logoUrl": "/formula-dc1/assets/logos/alpine.webp"
   },
   {
     "id": "sauber",
     "name": "Sauber",
     "fullName": "Sauber Motorsport AG",
     "nationality": "Swiss",
-    "yearsActive": "1993\u20132018, 2024\u2013Present",
+    "yearsActive": "1993–2005, 2010–2018, 2024–2025",
     "championships": 0,
     "drivers": [
       "Kamui Kobayashi",
       "Nick Heidfeld",
-      "Kimi R\u00e4ikk\u00f6nen"
+      "Kimi Räikkönen"
     ],
     "teamColor": "#52E252",
     "wikiSearchTerm": "Sauber Motorsport",
-    "logoUrl": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.sauber-group.com&size=256"
+    "logoUrl": "/formula-dc1/assets/logos/sauber-archive.png"
   },
   {
     "id": "haas",
     "name": "Haas",
     "fullName": "MoneyGram Haas F1 Team",
     "nationality": "American",
-    "yearsActive": "2016\u2013Present",
+    "yearsActive": "2016–Present",
     "championships": 0,
     "drivers": [
       "Romain Grosjean",
       "Kevin Magnussen",
-      "Nico H\u00fclkenberg"
+      "Nico Hülkenberg"
     ],
     "teamColor": "#E60000",
     "wikiSearchTerm": "Haas F1 Team",
-    "logoUrl": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.haasf1team.com&size=256"
+    "logoUrl": "/formula-dc1/assets/logos/haas.webp"
   },
   {
     "id": "rb",
-    "name": "RB",
-    "fullName": "Visa Cash App RB F1 Team",
+    "name": "Racing Bulls",
+    "fullName": "Racing Bulls Formula One Team",
     "nationality": "Italian",
-    "yearsActive": "2024\u2013Present",
+    "yearsActive": "2024–Present",
     "championships": 0,
     "drivers": [
       "Daniel Ricciardo",
@@ -301,7 +301,7 @@
     ],
     "teamColor": "#0000FF",
     "wikiSearchTerm": "RB Formula One Team",
-    "logoUrl": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.visacashapprb.com&size=256"
+    "logoUrl": "/formula-dc1/assets/logos/rb.webp"
   },
   {
     "id": "brawn",
@@ -317,6 +317,30 @@
     ],
     "teamColor": "#E3FC00",
     "wikiSearchTerm": "Brawn GP",
-    "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/2/24/Brawn_GP_logo.svg"
+    "logoUrl": "/formula-dc1/assets/logos/brawn-archive.png"
+  },
+  {
+    "id": "audi",
+    "name": "Audi",
+    "fullName": "Audi F1 Team",
+    "nationality": "German",
+    "yearsActive": "2026–Present",
+    "drivers": [],
+    "teamColor": "#e10600",
+    "wikiSearchTerm": "Audi in Formula One",
+    "logoUrl": "/formula-dc1/assets/logos/audi.webp",
+    "championships": 0
+  },
+  {
+    "id": "cadillac",
+    "name": "Cadillac",
+    "fullName": "Cadillac Formula 1 Team",
+    "nationality": "American",
+    "yearsActive": "2026–Present",
+    "drivers": [],
+    "teamColor": "#e10600",
+    "wikiSearchTerm": "Cadillac Formula One Team",
+    "logoUrl": "/formula-dc1/assets/logos/cadillac.webp",
+    "championships": 0
   }
 ]
