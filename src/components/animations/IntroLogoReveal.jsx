@@ -37,11 +37,11 @@ function Emblem({ started, reducedMotion, onReady }) {
   });
   return <>
     <ambientLight intensity={.7} />
-    <directionalLight position={[0, 3, 5]} intensity={3} color="#ffe4e3" />
-    <pointLight ref={light} position={[-5, 1, 3]} intensity={65} distance={14} color="#ffffff" />
-    <pointLight position={[3, -2, 1]} intensity={14} color="#ff152d" />
+    <directionalLight position={[0, 3, 5]} intensity={2.2} color="#ffffff" />
+    <pointLight ref={light} position={[-5, 1, 3]} intensity={12} distance={14} color="#ffffff" />
+    <pointLight position={[3, -2, 1]} intensity={3} color="#ffffff" />
     <group ref={group}>{geometries.map((geometry, index) => <mesh key={index} geometry={geometry}>
-      <meshStandardMaterial color="#ed1025" metalness={.6} roughness={.23} />
+      <meshStandardMaterial color="#eeeeee" metalness={.35} roughness={.33} />
     </mesh>)}</group>
   </>;
 }
