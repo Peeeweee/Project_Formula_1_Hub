@@ -82,6 +82,19 @@ The project includes several Python scripts that process raw F1 CSV datasets int
    npm run dev
    ```
 
+### Preview the production build
+
+Build the application and serve the generated `dist/` output locally:
+
+```bash
+npm run build
+npm run preview -- --host 127.0.0.1 --port 5178 --strictPort
+```
+
+Open [Formula DC-1 locally](http://127.0.0.1:5178/formula-dc1/). The `/formula-dc1/` base path is required; direct page links use hash routes, such as `/formula-dc1/#/teams`. Run the preview command again after stopping the server, and rebuild after source changes to update the preview.
+
+For a quick responsive review, check the navigation drawer, season selector, expanded constructor profiles, driver comparison tables, and garage controls in both portrait and landscape layouts. Browser zoom should reflow the page while wide statistics tables scroll within their own panels. Physical iPhone Safari testing remains a separate check from desktop browser emulation.
+
 ### Data Scripts
 
 1. Ensure you have the required Python libraries installed:
